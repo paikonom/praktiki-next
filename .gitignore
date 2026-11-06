@@ -16,6 +16,8 @@
 /auth.json
 /docker-data
 /praktiki-production.sql
+/mac-push.sh
+/server-deploy.sh
 /node_modules
 /public/fonts-manifest.dev.json
 /public/hot
