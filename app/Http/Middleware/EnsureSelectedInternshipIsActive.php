@@ -21,7 +21,7 @@ class EnsureSelectedInternshipIsActive
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('student.login')->withErrors([
+        return redirect()->route('student.test_login')->withErrors([
             'AMF' => 'Η επιλεγμένη πρακτική έχει ακυρωθεί και δεν επιτρέπονται ενέργειες.',
         ]);
     }

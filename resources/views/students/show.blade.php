@@ -16,7 +16,10 @@
         ];
     @endphp
 
-    @include('students.partials.summary', ['backUrl' => session('students.index_url', route('students.index'))])
+    @include('students.partials.summary', [
+        'backUrl' => session('students.index_url', route('students.index')),
+        'showUuid' => true,
+        ])
 
     @if (session('status'))
         <div class="alert alert-{{ session('status_type', 'success') }} alert-dismissible fade show" role="alert">

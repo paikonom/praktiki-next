@@ -16,11 +16,10 @@
                 <div class="card-body d-flex flex-column p-4">
                     <h2 class="h5">Φοιτητής / Φοιτήτρια</h2>
                     <p class="text-body-secondary flex-grow-1">Σύνδεση για τη συμπλήρωση και παρακολούθηση της πρακτικής.</p>
-                    @auth('student')
-                        <a class="btn btn-primary" href="{{ route('student.dashboard') }}">Είσοδος στην εφαρμογή</a>
-                    @else
+                     <div class="d-grid gap-2">
+                        <a class="btn btn-primary" href="{{ route('student.test_login') }}">Σύνδεση Φοιτητή (test)</a>
                         <a class="btn btn-outline-primary" href="{{ route('student.login') }}">Σύνδεση φοιτητή</a>
-                    @endauth
+                    </div>
                 </div>
             </div>
         </div>
@@ -40,11 +39,7 @@
                 <div class="card-body d-flex flex-column p-4">
                     <h2 class="h5">Φορέας Υποδοχής</h2>
                     <p class="text-body-secondary flex-grow-1">Πρόσβαση του φορέα στα στοιχεία και τις ενέργειες της πρακτικής.</p>
-                    @auth('provider')
-                        <a class="btn btn-primary" href="{{ route('provider.dashboard') }}">Είσοδος στην εφαρμογή</a>
-                    @else
-                        <a class="btn btn-outline-primary" href="{{ route('provider.login') }}">Σύνδεση φορέα</a>
-                    @endauth
+                    <a class="btn btn-outline-primary" href="{{ route('provider.login') }}">Σύνδεση φορέα</a>
                 </div>
             </div>
         </div>
@@ -54,11 +49,10 @@
                 <div class="card-body d-flex flex-column p-4">
                     <h2 class="h5">Γραφείο Πρακτικής Άσκησης / ΕΠ/ΥΠ</h2>
                     <p class="text-body-secondary flex-grow-1">Σύνδεση χειριστών και επιστημονικών υπευθύνων.</p>
-                    @auth('web')
-                        <a class="btn btn-primary" href="{{ route('dashboard') }}">Είσοδος στην εφαρμογή</a>
-                    @else
-                        <div class="d-grid gap-2"><a class="btn btn-primary" href="{{ route('login') }}">Σύνδεση χειριστή</a><a class="btn btn-outline-primary" href="{{ route('scientific_supervisor.login') }}">Σύνδεση ΕΠ/ΥΠ</a></div>
-                    @endauth
+                    <div class="d-grid gap-2">
+                        <a class="btn btn-primary" href="{{ route('login') }}">Σύνδεση χειριστή</a>
+                        <a class="btn btn-outline-primary" href="{{ route('scientific_supervisor.login') }}">Σύνδεση ΕΠ/ΥΠ</a>
+                    </div>
                 </div>
             </div>
         </div>

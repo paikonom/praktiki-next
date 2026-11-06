@@ -11,6 +11,25 @@ class StudentAuthenticatedSessionControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_temporary_login_requires_matching_amf_and_uuid(): void
+    {
+        DB::table('students')->insert([
+            'AMF' => '1234567890123',
+            'uuid' => '9b4998d2-2937-4f69-86d7-681edabf586f',
+        ]);
+
+        $this->post(route('student.test_login'), [
+            'AMF' => '1234567890123',
+            'uuid' => '7fd1da46-0267-48ee-a4e5-23a114aa705a',
+        ])->assertSessionHasErrors('AMF');
+
+        $this->post(route('student.test_login'), [
+            'AMF' => '1234567890123',
+            'uuid' => '9b4998d2-2937-4f69-86d7-681edabf586f',
+        ])->assertRedirect(route('student.internships'))
+            ->assertSessionHas('student_login_amf', '1234567890123');
+    }
+
     public function test_student_selects_one_of_the_internships_found_by_amf(): void
     {
         $firstId = DB::table('students')->insertGetId([
@@ -64,7 +83,7 @@ class StudentAuthenticatedSessionControllerTest extends TestCase
 
         $this->post(route('student.login'), ['AMF' => '1234567890123']);
         $this->post(route('student.internships.select'), ['student_id' => $studentId])
-            ->assertRedirect(route('student.login'))
+            ->assertRedirect(route('student.test_login'))
             ->assertSessionHasErrors('AMF');
 
         $this->assertGuest('student');
@@ -81,7 +100,7 @@ class StudentAuthenticatedSessionControllerTest extends TestCase
 
         $this->actingAs(Student::findOrFail($studentId), 'student')
             ->get(route('student.dashboard'))
-            ->assertRedirect(route('student.login'))
+            ->assertRedirect(route('student.test_login'))
             ->assertSessionHasErrors('AMF');
 
         $this->assertGuest('student');

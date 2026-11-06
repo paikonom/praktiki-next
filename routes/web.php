@@ -82,6 +82,12 @@ Route::prefix('student')->name('student.')->group(function () {
     Route::post('/internships', [StudentAuthenticatedSessionController::class, 'selectInternship'])
         ->middleware('guest:web,student,provider,scientific_supervisor')
         ->name('internships.select');
+    Route::get('/test_login', [StudentAuthenticatedSessionController::class, 'test_create'])
+        ->middleware('guest:web,student,provider,scientific_supervisor')
+        ->name('test_login');
+
+    Route::post('/test_login', [StudentAuthenticatedSessionController::class, 'test_store'])
+        ->middleware(['guest:web,student,provider,scientific_supervisor', 'throttle:5,1']);
 
     Route::middleware(['auth:student', EnsureSelectedInternshipIsActive::class])->group(function () {
         Route::get('/dashboard', PortalDashboardController::class)->name('dashboard');

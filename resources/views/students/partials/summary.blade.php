@@ -17,6 +17,11 @@
                 <div class="small text-body-secondary">
                     ΑΜ: {{ $summaryValue($student->AMF) }} · sid: {{ $student->id }} · {{ $summaryValue($department?->tmhma) }}
                 </div>
+                @if ($showUuid ?? false)
+                    <div class="small text-body-secondary">
+                        UUID: <span class="fw-semibold text-body">{{ $summaryValue($student->uuid) }}</span>
+                    </div>
+                @endif  
                 <div class="small text-body-secondary">
                     Επιστημονικός Υπεύθυνος:
                     <span class="fw-semibold text-body">{{ $summaryValue($student->supervisor?->full_name) }}</span>

@@ -15,6 +15,7 @@
 /.zed
 /auth.json
 /docker-data
+/praktiki-production.sql
 /node_modules
 /public/fonts-manifest.dev.json
 /public/hot
