@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\ScientificSupervisor;
+use App\Models\Student;
 use App\Models\User;
 
 return [
@@ -42,8 +44,20 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'student' => [
+            'driver' => 'session',
+            'provider' => 'students',
+        ],
+        'provider' => [
+            'driver' => 'session',
+            'provider' => 'students',
+        ],
+        // Ο Επιστημονικός Υπεύθυνος συνδέεται με session και φορτώνεται από το ScientificSupervisor model.
+        'scientific_supervisor' => [
+            'driver' => 'session',
+            'provider' => 'scientific_supervisors',
+        ],
     ],
-
     /*
     |--------------------------------------------------------------------------
     | User Providers
@@ -65,6 +79,14 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+        'students' => [
+            'driver' => 'eloquent',
+            'model' => Student::class,
+        ],
+        'scientific_supervisors' => [
+            'driver' => 'eloquent',
+            'model' => ScientificSupervisor::class,
         ],
 
         // 'users' => [
