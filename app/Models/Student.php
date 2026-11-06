@@ -14,6 +14,12 @@ class Student extends Authenticatable
 {
     protected $table = 'students';
 
+    /** @var array<string, string|null>|null */
+    private ?array $preloadedWorkflowStatuses = null;
+
+    /** @var array<string, int>|null */
+    private ?array $preloadedSentEmailCounts = null;
+
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
@@ -46,7 +52,7 @@ class Student extends Authenticatable
 
     public function internshipStatus(): string
     {
-        return $this->action('katastash_praktikis')?->status ?? 'active';
+        return $this->workflowStatus('action', 'katastash_praktikis') ?? 'active';
     }
 
     public function isLegacy(): bool
@@ -70,12 +76,52 @@ class Student extends Authenticatable
 
     public function actionHasStatus(string $code, string|array $statuses): bool
     {
-        return in_array($this->action($code)?->status, (array) $statuses, true);
+        return in_array($this->workflowStatus('action', $code), (array) $statuses, true);
     }
 
     public function actionIsComplete(string $code): bool
     {
-        return $this->action($code)?->isComplete() ?? false;
+        return in_array($this->workflowStatus('action', $code), ['approved', 'not_required'], true);
+    }
+
+    /** @param array<string, string|null> $statuses */
+    public function setPreloadedWorkflowStatuses(array $statuses): void
+    {
+        $this->preloadedWorkflowStatuses = $statuses;
+    }
+
+    public function workflowStatus(string $sourceType, string $sourceKey): ?string
+    {
+        if ($this->preloadedWorkflowStatuses !== null) {
+            return $this->preloadedWorkflowStatuses["{$sourceType}:{$sourceKey}"] ?? null;
+        }
+
+        return match ($sourceType) {
+            'action' => $this->action($sourceKey)?->status,
+            'document' => $this->latestDocumentStatus($sourceKey),
+            'apografiko' => $this->apografika->firstWhere('type', $sourceKey)?->status,
+            'student_questionnaire' => $this->questionnaire?->status,
+            'provider_questionnaire' => $this->providerQuestionnaire?->status,
+            default => null,
+        };
+    }
+
+    /** @param array<string, int> $counts */
+    public function setPreloadedSentEmailCounts(array $counts): void
+    {
+        $this->preloadedSentEmailCounts = $counts;
+    }
+
+    /** @return Collection<string, int> */
+    public function sentEmailCounts(): Collection
+    {
+        if ($this->preloadedSentEmailCounts !== null) {
+            return collect($this->preloadedSentEmailCounts);
+        }
+
+        $this->loadMissing('emailLogs');
+
+        return $this->emailLogs->where('status', 'sent')->countBy('type');
     }
 
     public function questionnaire(): HasOne
@@ -179,6 +225,10 @@ class Student extends Authenticatable
 
     public function latestDocumentStatus(string $code): ?string
     {
+        if ($this->preloadedWorkflowStatuses !== null) {
+            return $this->preloadedWorkflowStatuses["document:{$code}"] ?? null;
+        }
+
         if ($this->relationLoaded('documents')) {
             return $this->documents
                 ->filter(fn (StudentDocument $document): bool => $document->type?->code === $code)

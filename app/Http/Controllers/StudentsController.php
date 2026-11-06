@@ -181,9 +181,62 @@ class StudentsController extends Controller
             ->orderBy('students.id')
             ->get();
 
-        $students->load(['actions', 'documents.type', 'apografika', 'questionnaire', 'providerQuestionnaire', 'emailLogs']);
+        $this->preloadListStatuses($students);
 
         return $students;
+    }
+
+    private function preloadListStatuses(Collection $students): void
+    {
+        $studentIds = $students->pluck('id');
+        $statuses = array_fill_keys($studentIds->all(), []);
+        $emailCounts = array_fill_keys($studentIds->all(), []);
+
+        foreach (DB::table('student_actions')->whereIn('student_id', $studentIds)->cursor() as $row) {
+            $statuses[$row->student_id]["action:{$row->action}"] = $row->status;
+        }
+
+        $latestDocuments = DB::table('student_documents as document')
+            ->join('document_types as type', 'type.id', '=', 'document.document_type_id')
+            ->whereIn('document.s_id', $studentIds)
+            ->whereNotExists(fn ($query) => $query
+                ->selectRaw('1')
+                ->from('student_documents as newer_document')
+                ->whereColumn('newer_document.s_id', 'document.s_id')
+                ->whereColumn('newer_document.document_type_id', 'document.document_type_id')
+                ->whereColumn('newer_document.version', '>', 'document.version'))
+            ->select('document.s_id as student_id', 'type.code', 'document.status');
+
+        foreach ($latestDocuments->cursor() as $row) {
+            $statuses[$row->student_id]["document:{$row->code}"] = $row->status;
+        }
+
+        foreach (DB::table('student_apografika')->whereIn('student_id', $studentIds)->cursor() as $row) {
+            $statuses[$row->student_id]["apografiko:{$row->type}"] = $row->status;
+        }
+
+        foreach (DB::table('student_questionnaires')->whereIn('s_id', $studentIds)->cursor() as $row) {
+            $statuses[$row->s_id]['student_questionnaire:student'] = $row->status;
+        }
+
+        foreach (DB::table('provider_questionnaires')->whereIn('s_id', $studentIds)->cursor() as $row) {
+            $statuses[$row->s_id]['provider_questionnaire:provider'] = $row->status;
+        }
+
+        $sentEmails = DB::table('email_logs')
+            ->whereIn('student_id', $studentIds)
+            ->where('status', 'sent')
+            ->select('student_id', 'type', DB::raw('COUNT(*) as total'))
+            ->groupBy('student_id', 'type');
+
+        foreach ($sentEmails->cursor() as $row) {
+            $emailCounts[$row->student_id][$row->type] = (int) $row->total;
+        }
+
+        foreach ($students as $student) {
+            $student->setPreloadedWorkflowStatuses($statuses[$student->id]);
+            $student->setPreloadedSentEmailCounts($emailCounts[$student->id]);
+        }
     }
 
     private function nextActions(Collection $students, StudentEmailService $emails, Request $request): Collection

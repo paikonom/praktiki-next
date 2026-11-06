@@ -9,6 +9,9 @@ use Illuminate\Validation\ValidationException;
 
 class StudentEmailService
 {
+    /** @var array<string, Collection<int, WorkflowAction>> */
+    private array $workflowActions = [];
+
     private const EMAILS = [
         'stoixeiaFoit' => ['title' => 'Φοιτητής: Εισαγωγή Στοιχείων Συμφωνητικού', 'button' => 'Στχ. Φ.', 'recipient_role' => 'student'],
         'stoixeiaFoitEgkrish' => ['title' => 'Φοιτητής: Υπογραφή & Επισύναψη Συμφωνητικού', 'button' => '2 Υπογραφές', 'recipient_role' => 'student'],
@@ -24,7 +27,7 @@ class StudentEmailService
     /** @return Collection<int, array<string, mixed>> */
     public function entries(Student $student): Collection
     {
-        $counts = $student->emailLogs->where('status', 'sent')->countBy('type');
+        $counts = $student->sentEmailCounts();
 
         return collect(self::EMAILS)->map(function (array $definition, string $type) use ($student, $counts): array {
             return $definition + [
@@ -83,7 +86,6 @@ class StudentEmailService
     public function typeForPendingActions(string $section, Collection $pendingActions): ?string
     {
         $pendingCodes = $pendingActions->pluck('code');
-        // echo $pendingCodes;
 
         if ($pendingCodes->intersect(['stoix_student', 'stoix_forea'])->isNotEmpty()) {
             return 'stoixeiaFoit';
@@ -153,7 +155,11 @@ class StudentEmailService
 
     private function endActionsAreCompleteFor(Student $student, string $role): bool
     {
-        $actions = WorkflowAction::activeForFunding($student->fundingCode())
+        $funding = $student->fundingCode();
+        $workflowActions = $this->workflowActions[$funding]
+            ??= WorkflowAction::activeForFunding($funding);
+
+        $actions = $workflowActions
             ->where('section', 'G')
             ->where('responsible_role', $role)
             ->where('counts_for_section', true);

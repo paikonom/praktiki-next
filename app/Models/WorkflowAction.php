@@ -68,14 +68,7 @@ class WorkflowAction extends Model
 
     public function statusFor(Student $student): ?string
     {
-        return match ($this->source_type) {
-            'action' => $student->action($this->source_key)?->status,
-            'document' => $student->latestDocumentStatus($this->source_key),
-            'apografiko' => $student->apografika->firstWhere('type', $this->source_key)?->status,
-            'student_questionnaire' => $student->questionnaire?->status,
-            'provider_questionnaire' => $student->providerQuestionnaire?->status,
-            default => null,
-        };
+        return $student->workflowStatus($this->source_type, $this->source_key);
     }
 
     public function isCompleteFor(Student $student): bool
