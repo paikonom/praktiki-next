@@ -11,6 +11,8 @@
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}" defer></script>
     <script src="{{ asset('js/email-actions.js') }}" defer></script>
     <script src="{{ asset('js/scroll-restore.js') }}?v=3" defer></script>
+    <link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body class="bg-body-tertiary d-flex flex-column min-vh-100">
     <header class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
@@ -57,6 +59,8 @@
                             </div>
                         @endcan
                     </nav>
+
+                    @include('layouts.notifications')
 
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf

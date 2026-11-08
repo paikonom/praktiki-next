@@ -24,8 +24,12 @@
     $appUrl = url('/');
     $studentDocumentsUrl = route('student.documents');
     $providerDocumentsUrl = route('provider.documents');
-    $hours = (int) $student->merikhsPlhrhs === 1 ? 20 : 40;
-    $employment = $student->apasxolhsh ?: ((int) $student->merikhsPlhrhs === 1 ? 'ΜΕΡΙΚΗ' : 'ΠΛΗΡΗΣ');
+    $hours = $student->wresPerWeek;
+    $employment = match ((int) $student->wresPerWeek) {
+        20 => 'ΜΕΡΙΚΗ',
+        40 => 'ΠΛΗΡΗΣ',
+        default => '—',
+    };
 @endphp
 
 @if (in_array($type, ['stoixeiaFoit', 'stoixeiaFoitEgkrish', 'symf_SN_FULL', 'input', 'lhxh'], true))

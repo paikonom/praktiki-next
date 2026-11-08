@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Collection;
 
+#new gia rescom
+use App\Support\RescomReferenceData;
+
 class Student extends Authenticatable
 {
     protected $table = 'students';
@@ -19,6 +22,19 @@ class Student extends Authenticatable
 
     /** @var array<string, int>|null */
     private ?array $preloadedSentEmailCounts = null;
+
+    public function studentAddress(): string
+    {
+        
+        if (filled($this->address_polh_rescom) && filled($this->address_odos) && filled($this->address_tk)) {
+            return collect([
+                app(RescomReferenceData::class)->label('cities', $this->address_polh_rescom),
+                $this->address_odos,
+               'ΤΚ ' . $this->address_tk,
+            ])->filter()->implode(', ');
+        }
+        return '';
+    }
 
     public function department(): BelongsTo
     {

@@ -19,6 +19,7 @@ return [
         ],
         'Institution' => [
             'ep_yp_ergou' => ['label' => 'Ιδρυματικός Υπεύθυνος', 'max' => 255],
+            'ep_yp_ergou_title' => ['label' => 'Ιδιότητα επιστημονικού υπεύθυνου έργου', 'max' => 255],
             'K_E_ergou' => ['label' => 'Κ.Ε. ΕΛΚΕ', 'max' => 50],
             'legal_representative' => ['label' => 'Νόμιμος εκπρόσωπος ΕΛΚΕ', 'max' => 255],
             'legal_representative_title' => ['label' => 'Ιδιότητα νόμιμου εκπροσώπου ΕΛΚΕ', 'max' => 255],

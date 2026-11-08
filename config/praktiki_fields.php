@@ -71,7 +71,6 @@ return [
         'doy_rescom' => 'select',
         'xwra_rescom' => 'select',
         'address_polh_rescom' => 'city',
-        'merikhsPlhrhs' => 'select',
         'f_nomikhMorfh_rescom' => 'select',
         'f_doy_rescom' => 'select',
         'dhm_idiwt_rescom' => 'select',
@@ -152,9 +151,9 @@ return [
             18 => 'Τριτοβάθμια Εκπαίδευση (ΑΕΙ) (6 έτη) - Μεταπτυχιακό, Διδακτορικό',
             19 => 'Τριτοβάθμια Εκπαίδευση (ΤΕΙ) - Μεταπτυχιακό, Διδακτορικό',
         ],
-        'merikhsPlhrhs' => [
-            1 => 'ΜΕΡΙΚΗΣ (20 ώρες εβδομαδιαίως)',
-            2 => 'ΠΛΗΡΟΥΣ (40 ώρες εβδομαδιαίως)',
+        'wresPerWeek' => [
+            20 => 'ΜΕΡΙΚΗΣ (20 ώρες εβδομαδιαίως)',
+            40 => 'ΠΛΗΡΟΥΣ (40 ώρες εβδομαδιαίως)',
         ],
         'f_nomikhMorfh_rescom' => [
             1 => 'Εκπαιδευτικοί Φορείς/Ειδικοί Λογαριασμοί',

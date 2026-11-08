@@ -81,7 +81,6 @@ return new class extends Migration
             $table->decimal('numMhnes', 4, 2)->nullable();
             $table->unsignedTinyInteger('wresPerDays')->nullable();
             $table->unsignedTinyInteger('wresPerWeek')->nullable();
-            $table->integer('merikhsPlhrhs')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
         });

@@ -39,19 +39,25 @@ class StudentProvider extends Model
             ? null
             : app(RescomReferenceData::class)->label('countries', $this->f_xwra_rescom);
 
-        return collect([$city, $this->f_odos, $this->f_tk, $country])->filter()->implode(', ');
+        return collect([
+            $city, 
+            $this->f_odos, 
+            filled($this->f_tk) ? 'ΤΚ ' . $this->f_tk : null,
+            $country])->filter()->implode(', ');
     }
 
     public function internshipAddress(): string
     {
+        
         if (filled($this->f_ektPrakt_polh_rescom) && filled($this->f_ektPrakt_odos) && filled($this->f_ektPrakt_tk)) {
             return collect([
                 app(RescomReferenceData::class)->label('cities', $this->f_ektPrakt_polh_rescom),
                 $this->f_ektPrakt_odos,
-                $this->f_ektPrakt_tk,
+               'ΤΚ ' . $this->f_ektPrakt_tk,
             ])->filter()->implode(', ');
         }
-
+        return '';
+        //λογικα αυτο ειναι για τις παλιες πρακτικες.... 
         return (string) $this->f_topos_ekt_prakt;
     }
 
@@ -61,4 +67,11 @@ class StudentProvider extends Model
 
         return collect([$name, $this->f_ekprIdiothta])->filter()->implode(', ');
     }
+    public function providerSupervisor(): string
+    {
+        $name = trim(($this->f_epopt_foreaFname ?? '').' '.($this->f_epopt_foreaLname ?? ''));
+        return $name;
+        // return collect([$name, $this->f_ekprIdiothta])->filter()->implode(', ');
+    }
+    
 }

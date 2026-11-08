@@ -1,3 +1,5 @@
+
+
 <div class="accordion" id="{{ $accordionId }}">
 @foreach ($sections as $section)
     <div class="accordion-item mb-3 shadow-sm">
@@ -9,6 +11,7 @@
         </div>
         <div id="{{ $accordionId }}-{{ strtolower($section['code']) }}" class="accordion-collapse collapse" data-bs-parent="#{{ $accordionId }}">
             <div class="list-group list-group-flush">
+                
                 @forelse ($section['rows'] as $row)
                     @include('student.partials.action', $row + [
                         'currentRole' => $currentRole,

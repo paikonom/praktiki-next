@@ -8,6 +8,8 @@ use App\Models\DocumentType;
 use App\Models\ScientificSupervisor;
 use App\Models\Student;
 use App\Models\StudentDocument;
+use App\Models\User;
+use App\Notifications\StudentActionNotification;
 use App\Services\StudentDocumentService;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\View\View;
@@ -49,6 +51,43 @@ class DocumentController extends Controller
 
         Gate::forUser($context['user'])->authorize('upload', [StudentDocument::class, $documentType, $context['student'], $context['role']]);
         $this->documentService->store($context['student'], $documentType, $request->file('file'), $context['user'], $context['role']);
+
+        if ($context['role'] !== 'member') {
+            $student = $context['student'];
+            $handler = $student->handler();
+
+            if ($context['role'] === 'student') {
+                $senderLabel = 'Φοιτητής/τρια';
+            } elseif ($context['role'] === 'provider') {
+                $senderLabel = 'Φορέας Υποδοχής';
+            } else {
+                $senderLabel = 'ΕΠ/ΥΠ';
+            }
+
+            if ($handler) {
+                $handler->notify(new StudentActionNotification(
+                    $senderLabel.' - Νέο έγγραφο',
+                    $student->full_name.': '.$documentType->title,
+                    route('students.show', ['student' => $student->id, 'panel' => 'documents']),
+                    $context['role'],
+                    (int) $context['user']->getAuthIdentifier(),
+                    'bi-file-earmark-arrow-up',
+                ));
+            }
+
+            $admin = User::find(1);
+
+            if ($admin && $admin->id !== $handler?->id) {
+                $admin->notify(new StudentActionNotification(
+                    $senderLabel.' - Νέο έγγραφο',
+                    $student->full_name.': '.$documentType->title,
+                    route('students.show', ['student' => $student->id, 'panel' => 'documents']),
+                    $context['role'],
+                    (int) $context['user']->getAuthIdentifier(),
+                    'bi-file-earmark-arrow-up',
+                ));
+            }
+        }
 
         return $this->returnToDocuments($request, $context['student'])
             ->with('status', 'Το αρχείο ανέβηκε επιτυχώς.');

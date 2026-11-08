@@ -32,6 +32,17 @@ use App\Http\Controllers\StudentWorkflowActionController;
 use App\Http\Controllers\SupervisorPortalController;
 use App\Http\Middleware\EnsureSelectedInternshipIsActive;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\NotificationController;
+
+Route::middleware('auth:web')->group(function () {
+    Route::patch(
+        '/notifications/{id}/read',
+        [NotificationController::class, 'markAsRead']
+    )->name('notifications.read');
+    
+    Route::get('/notifications', [NotificationController::class, 'index'])
+    ->name('notifications.index');
+});
 
 Route::middleware(['auth', 'can:view-admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/department-access', DepartmentAccessController::class)

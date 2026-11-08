@@ -27,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Fasi::class, FasiPolicy::class);
         Gate::policy(Praktiki::class, PraktikiPolicy::class);
         Gate::define('view-admin', fn ($user): bool => $user instanceof User && $user->role === 'admin');
+        Gate::define('viewLogViewer', fn (?User $user): bool => $user?->id === 1);
 
         RateLimiter::for('login', function (Request $request) {
             $username = Str::lower($request->string('username')->toString());

@@ -99,7 +99,6 @@ return new class extends Migration
             ['student', 'address_odos_polh', '["all"]', '["member","student"]', 'ΔΙΕΥΘΥΝΣΗ: ΠΟΛΗ', 'Η πόλη πρέπει να αντιστοιχεί στη διεύθυνση που θα δηλώσετε.', 'Διεύθυνση', 32],
             ['student', 'address_tk', '["all"]', '["member","student"]', 'ΔΙΕΥΘΥΝΣΗ: ΤΑΧΥΔΡΟΜΙΚΟΣ ΚΩΔΙΚΑΣ', '5 ψηφία.', 'Διεύθυνση', 33],
             ['student', 'workDaysDescription', '["all"]', '["all"]', 'ΗΜΕΡΕΣ ΠΡΑΚΤΙΚΗΣ ΑΣΚΗΣΗΣ', 'Π.χ. ΔΕΥΤΕΡΑ ΕΩΣ ΠΑΡΑΣΚΕΥΗ.', 'Στοιχεία πρακτικής', 35],
-            ['student', 'merikhsPlhrhs', '["all"]', '["member"]', 'ΜΕΡΙΚΗ - ΠΛΗΡΗΣ ΑΠΑΣΧΟΛΗΣΗ', null, 'Στοιχεία πρακτικής', 36],
             ['student', 'payPerMonth', '["all"]', '["member","student"]', 'ΜΗΝΙΑΙΑ ΑΠΟΖΗΜΙΩΣΗ', 'Ποσό σε ευρώ.', 'Οικονομικά', 37],
             ['student', 'payTotal', '["all"]', '["member","student"]', 'ΣΥΝΟΛΙΚΟ ΚΟΣΤΟΣ ΠΡΑΚΤΙΚΗΣ ΑΣΚΗΣΗΣ', 'Συνολικό ποσό σε ευρώ.', 'Οικονομικά', 38],
             ['student', 'doseis_count', '["all"]', '["member"]', 'ΠΛΗΘΟΣ ΔΟΣΕΩΝ', null, 'Οικονομικά', 39],

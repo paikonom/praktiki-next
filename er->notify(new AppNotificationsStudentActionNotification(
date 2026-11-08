@@ -1,0 +1,14 @@
+[90m= [39m[34;4mApp\Models\User[39;24m {#8893
+    [34mid[39m: [35m1[39m,
+    [34mname[39m: [32m"[39m[32mΠαναγιώτης Οικονόμου[39m[32m"[39m,
+    [34musername[39m: [32m"[39m[32mpaikonom[39m[32m"[39m,
+    [34memail[39m: [32m"[39m[32mpaoikon@uoa.gr[39m[32m"[39m,
+    [34mtelephone[39m: [32m"[39m[32m-[39m[32m"[39m,
+    [34memail_verified_at[39m: [36mnull[39m,
+    #[33mpassword[39m: [32m"[39m\$[32m2y[39m\$[32m12[39m\$[32m1NXP8E3CHJ9oFCD3WljW9.XkyqVga7sn5bCkvUwqzJMgyjxJhEmS6[39m[32m"[39m,
+    [34mrole[39m: [32m"[39m[32madmin[39m[32m"[39m,
+    [34mview_only[39m: [35m0[39m,
+    #[33mremember_token[39m: [36mnull[39m,
+    [34mcreated_at[39m: [32m"[39m[32m2026-10-25 22:38:52[39m[32m"[39m,
+    [34mupdated_at[39m: [32m"[39m[32m2026-10-25 22:39:47[39m[32m"[39m,
+  }

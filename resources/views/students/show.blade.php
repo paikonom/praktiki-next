@@ -55,10 +55,10 @@
         <div class="col-lg-9 col-xl-10">
             @if ($panel === 'office')
                 <div class="mb-4">
-                    <h2 class="h4 mb-1">Ενέργειες χειριστή</h2>
-                    <p class="small text-body-secondary mb-3">Όλες οι ενέργειες του χειριστή βρίσκονται αποκλειστικά εδώ.</p>
+                    <!-- <h2 class="h4 mb-1">Ενέργειες χειριστή</h2>
+                    <p class="small text-body-secondary mb-3">Όλες οι ενέργειες του χειριστή βρίσκονται αποκλειστικά εδώ.</p> -->
 
-                    <h3 class="h5 mt-4 mb-3">Καταστάσεις ροής</h3>
+                    <!-- <h3 class="h5 mt-4 mb-3">Καταστάσεις ροής</h3> -->
                     @include('shared.workflow', ['sections' => $officeWorkflowSections, 'currentRole' => 'member', 'accordionId' => 'office-workflow'])
 
                 </div>

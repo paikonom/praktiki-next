@@ -81,6 +81,7 @@ class StudentAgreementService
         if ($funding === 'Espa') {
             $fields += [
                 'Επιστημονικός Υπεύθυνος έργου' => $details['ep_yp_ergou'] ?? null,
+                'Ιδιότητα επιστημονικού υπεύθυνου έργου' => $details['ep_yp_ergou_title'] ?? null,
                 'Κωδικός έργου Κ.Ε.' => $details['K_E_ergou'] ?? null,
                 'Τίτλος υποέργου' => $details['titlos_ypoergou'] ?? null,
                 'Κωδικός ΟΠΣ' => $details['kwdikos_OPS'] ?? null,
@@ -97,6 +98,7 @@ class StudentAgreementService
         if ($funding === 'Institution') {
             $fields += [
                 'Ιδρυματικός Υπεύθυνος έργου' => $details['ep_yp_ergou'] ?? null,
+                'Ιδιότητα επιστημονικού υπεύθυνου έργου' => $details['ep_yp_ergou_title'] ?? null,
                 'Κωδικός έργου Κ.Ε.' => $details['K_E_ergou'] ?? null,
                 'Εγκριτική απόφαση ΕΛΚΕ' => $phaseDetails['apofash_ELKE'] ?? null,
                 'Ώρες ανά εβδομάδα' => $student->wresPerWeek,

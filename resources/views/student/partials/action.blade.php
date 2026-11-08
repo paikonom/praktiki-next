@@ -14,7 +14,10 @@
 
 <div class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 {{ $isResponsible ? '' : 'bg-secondary-subtle' }}">
     <div class="flex-grow-1">
-        <span class="badge text-bg-secondary me-2">{{ $number }}</span>
+        <span class="badge {{ $statusClass }} me-2">{{ $number }}</span>
+        @php
+           // echo $statusClass;
+        @endphp
         <span class="fw-semibold">{{ $title }}</span>
         <span class="badge rounded-pill text-bg-light border text-dark ms-2">Υπεύθυνος: {{ $responsibleLabel }}</span>
         @if (! $isResponsible)
