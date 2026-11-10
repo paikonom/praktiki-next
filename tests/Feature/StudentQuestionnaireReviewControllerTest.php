@@ -20,23 +20,11 @@ class StudentQuestionnaireReviewControllerTest extends TestCase
         $questionnairesResponse = $this->actingAs($admin)
             ->get(route('students.show', ['student' => $student, 'panel' => 'questionnaires']))
             ->assertOk()
-            ->assertSee('Ερωτηματολόγιο φοιτητή')
-            ->assertSee('Ερωτηματολόγιο φορέα')
+            ->assertSee('Αξιολόγηση Συνολικής Εμπειρίας Πρακτικής Άσκησης από τον/τη Φοιτητή/τρια')
+            ->assertSee('Αξιολόγηση Φοιτητή/τριας Πρακτικής Άσκησης από τον/την αρμόδιο/α Επόπτη/τρια')
             ->assertSee('Απόρριψη');
         preg_match_all('/>\s*Απόρριψη\s*<\/button>/', $questionnairesResponse->getContent(), $rejectButtons);
         $this->assertCount(2, $rejectButtons[0]);
-
-        $this->actingAs($admin)
-            ->get(route('students.questionnaires.show', [$student, 'student']))
-            ->assertOk()
-            ->assertSee('Δοκιμαστική έκθεση φοιτητή')
-            ->assertSee('ΠΑΡΑ ΠΟΛΥ');
-
-        $this->actingAs($admin)
-            ->get(route('students.questionnaires.show', [$student, 'provider']))
-            ->assertOk()
-            ->assertSee('Δοκιμαστική έκθεση φορέα')
-            ->assertSee('ΝΑΙ');
 
         $this->actingAs($admin)
             ->get(route('students.questionnaires.pdf', [$student, 'student']))
@@ -50,7 +38,7 @@ class StudentQuestionnaireReviewControllerTest extends TestCase
 
         $this->actingAs($admin)
             ->patch(route('students.questionnaires.update', [$student, 'student']), ['status' => 'rejected'])
-            ->assertRedirect(route('students.questionnaires.show', [$student, 'student']));
+            ->assertRedirect(route('students.show', ['student' => $student, 'panel' => 'questionnaires']));
 
         $this->assertDatabaseHas('student_questionnaires', [
             's_id' => $student->id,
@@ -64,11 +52,11 @@ class StudentQuestionnaireReviewControllerTest extends TestCase
         $this->actingAs($admin)
             ->get(route('students.show', ['student' => $student, 'panel' => 'questionnaires']))
             ->assertOk()
-            ->assertSeeInOrder(['Ερωτηματολόγιο φοιτητή', 'Απορρίφθηκε', 'Προβολή', 'Αναίρεση απόρριψης']);
+            ->assertSeeInOrder(['Αξιολόγηση Συνολικής Εμπειρίας Πρακτικής Άσκησης από τον/τη Φοιτητή/τρια', 'Απορρίφθηκε', 'Αναίρεση απόρριψης']);
 
         $this->actingAs($admin)
             ->patch(route('students.questionnaires.update', [$student, 'student']), ['status' => 'submitted'])
-            ->assertRedirect(route('students.questionnaires.show', [$student, 'student']));
+            ->assertRedirect(route('students.show', ['student' => $student, 'panel' => 'questionnaires']));
 
         $this->assertDatabaseHas('student_questionnaires', [
             's_id' => $student->id,
@@ -108,10 +96,11 @@ class StudentQuestionnaireReviewControllerTest extends TestCase
             ->where('source_key', 'student')
             ->update(['allowed_statuses' => json_encode(['draft', 'submitted'])]);
 
-        $this->actingAs($admin)
-            ->get(route('students.questionnaires.show', [$student, 'student']))
-            ->assertOk()
-            ->assertDontSee('Απόρριψη');
+        $response = $this->actingAs($admin)
+            ->get(route('students.show', ['student' => $student, 'panel' => 'questionnaires']))
+            ->assertOk();
+        preg_match_all('/>\s*Απόρριψη\s*<\/button>/', $response->getContent(), $rejectButtons);
+        $this->assertCount(1, $rejectButtons[0]);
 
         $this->actingAs($admin)
             ->patch(route('students.questionnaires.update', [$student, 'student']), ['status' => 'rejected'])

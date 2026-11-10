@@ -8,7 +8,7 @@
                 'details' => ['label' => 'Στοιχεία πρακτικής', 'route' => 'student.details'],
                 'student-details' => ['label' => 'Στοιχεία φοιτητή', 'route' => 'student.details.student.edit'],
                 'provider-details' => ['label' => 'Στοιχεία φορέα', 'route' => 'student.details.provider.edit'],
-                'records' => ['label' => 'Δελτία και ερωτηματολόγια', 'route' => 'student.records'],
+                'records' => ['label' => 'Δελτία / Αξιολογήσεις', 'route' => 'student.records'],
                 'documents' => ['label' => 'Έντυπα και ιστορικό', 'route' => 'student.documents'],
                 'contact' => ['label' => 'Επικοινωνία', 'route' => 'student.contact'],
             ]

@@ -45,7 +45,7 @@
             <div class="col-md-6">
                 <fieldset>
                     <legend class="form-label">Ποιος το βλέπει</legend>
-                    @foreach (['all' => 'Όλοι', 'member' => 'Χειριστής', 'student' => 'Φοιτητής', 'provider' => 'Φορέας', 'scientific_supervisor' => 'ΕΠ/ΥΠ'] as $value => $label)
+                    @foreach (['all' => 'Όλοι'] + config('praktiki_workflow.role_labels') as $value => $label)
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" name="visible_to_roles[]" value="{{ $value }}" id="role-{{ $value }}" @checked(in_array($value, old('visible_to_roles', $studentCardField->visible_to_roles ?? []), true))>
                             <label class="form-check-label" for="role-{{ $value }}">{{ $label }}</label>

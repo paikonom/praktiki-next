@@ -43,11 +43,11 @@ class DocumentTypeControllerTest extends TestCase
 
         $this->actingAs($admin)->put(route('admin.document-types.update', $type), [
             'code' => $type->code, 'title' => 'Νέος τίτλος', 'max_size_mb' => 15,
-            'active' => 1, 'sort_order' => 6,
+            'active' => 1, 'sort_order' => 6.25,
             'fundings' => ['Espa'], 'view_roles' => ['provider', 'member'],
             'upload_roles' => ['provider', 'member'],
         ])->assertRedirect(route('admin.document-types.index'));
 
-        $this->assertDatabaseHas('document_types', ['id' => $type->id, 'code' => 'ekthesh_Forea', 'title' => 'Νέος τίτλος']);
+        $this->assertDatabaseHas('document_types', ['id' => $type->id, 'code' => 'ekthesh_Forea', 'title' => 'Νέος τίτλος', 'sort_order' => 6.25]);
     }
 }

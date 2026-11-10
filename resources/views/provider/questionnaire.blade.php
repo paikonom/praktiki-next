@@ -1,13 +1,12 @@
 @extends('layouts.portal', ['portalRole' => 'provider', 'activePortalPage' => 'questionnaire'])
 
-@section('title', 'Ερωτηματολόγιο φορέα')
+@section('title', 'Αξιολόγηση Φοιτητή/τριας Πρακτικής Άσκησης από τον/την αρμόδιο/α Επόπτη/τρια')
 
 @section('portal-content')
     <div class="mb-4">
-        <h1 class="h3 mb-1">Ερωτηματολόγιο αξιολόγησης από τον φορέα</h1>
+        <h1 class="h3 mb-1">Αξιολόγηση Φοιτητή/τριας Πρακτικής Άσκησης από τον/την αρμόδιο/α Επόπτη/τρια</h1>
     </div>
 
-    @if (session('status'))<div class="alert alert-success">{{ session('status') }}</div>@endif
     @if (session('error'))<div class="alert alert-danger">{{ session('error') }}</div>@endif
 
     @if ($completed)
@@ -19,8 +18,8 @@
         <div class="alert alert-warning">Το ερωτηματολόγιο έχει υποβληθεί στην παλιά εφαρμογή.</div>
     @endif
 
-    @unless ($legacyCompleted)
-        @unless ($completed)<form method="POST" action="{{ route('provider.questionnaire.store') }}">@csrf @endunless
+    @if (! $legacyCompleted && ! $completed)
+        <form method="POST" action="{{ route('provider.questionnaire.store') }}">@csrf
 
         @foreach ($sections as $section)
             <section class="card shadow-sm mb-4">
@@ -30,18 +29,7 @@
                         @php($answer = old('answers.'.$question->code, $answers->get($question->code)))
                         <div class="mb-4">
                             <div class="fw-semibold mb-2">{{ $question->label }}</div>
-                            @if ($completed)
-                                @if ($question->type === 'radio')
-                                    <div class="small fst-italic">
-                                        @foreach ($question->options as $option)
-                                            @if ((string) $answer === (string) $option)<strong><u>{{ $option }}</u></strong>@else{{ $option }}@endif
-                                            @unless ($loop->last), @endunless
-                                        @endforeach
-                                    </div>
-                                @else
-                                    <div class="border rounded bg-body-tertiary p-3">{!! filled($answer) ? nl2br(e($answer)) : '—' !!}</div>
-                                @endif
-                            @elseif ($question->type === 'radio')
+                            @if ($question->type === 'radio')
                                 <div class="d-flex flex-wrap gap-3">
                                     @foreach ($question->options as $option)
                                         <div class="form-check">
@@ -64,13 +52,11 @@
             </section>
         @endforeach
 
-        @unless ($completed)
-            <div class="alert alert-warning">Η υποβολή είναι οριστική και αφορά τον συγκεκριμένο φοιτητή ή τη συγκεκριμένη φοιτήτρια.</div>
-            <div class="d-flex flex-wrap justify-content-end gap-2">
-                <button class="btn btn-outline-primary" type="submit" name="submission" value="draft">Προσωρινή αποθήκευση</button>
-                <button class="btn btn-success" type="submit" name="submission" value="final">Οριστική υποβολή</button>
-            </div>
-            </form>
-        @endunless
-    @endunless
+        <div class="alert alert-warning">Η υποβολή είναι οριστική και αφορά τον συγκεκριμένο φοιτητή ή τη συγκεκριμένη φοιτήτρια.</div>
+        <div class="d-flex flex-wrap justify-content-end gap-2">
+            <button class="btn btn-outline-primary" type="submit" name="submission" value="draft">Προσωρινή αποθήκευση</button>
+            <button class="btn btn-success" type="submit" name="submission" value="final">Οριστική υποβολή</button>
+        </div>
+        </form>
+    @endif
 @endsection

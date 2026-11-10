@@ -6,7 +6,9 @@ use App\Http\Requests\UpdateOwnProviderRequest;
 use App\Http\Requests\UpdateOwnStudentRequest;
 use App\Models\Student;
 use App\Models\StudentAction;
+use App\Models\User;
 use App\Models\WorkflowAction;
+use App\Notifications\StudentActionNotification;
 use App\Support\FormFields;
 use App\Support\RescomReferenceData;
 use App\Support\StudentCardMetadata;
@@ -95,6 +97,13 @@ class StudentPortalController extends Controller
             return redirect()->route('student.details.student.edit')->with('status', 'Η προσωρινή αποθήκευση ολοκληρώθηκε. Μπορείτε να συνεχίσετε αργότερα.');
         }
 
+        $this->notifyMembers(
+            $student,
+            'Οριστική υποβολή στοιχείων φοιτητή',
+            'Τα στοιχεία φοιτητή υποβλήθηκαν οριστικά.',
+            'student',
+        );
+
         return redirect()->route('student.dashboard')->with('status', 'Τα στοιχεία φοιτητή υποβλήθηκαν οριστικά.');
     }
 
@@ -141,6 +150,13 @@ class StudentPortalController extends Controller
             return redirect()->route('student.details.provider.edit')->with('status', 'Η προσωρινή αποθήκευση ολοκληρώθηκε. Μπορείτε να συνεχίσετε αργότερα.');
         }
 
+        $this->notifyMembers(
+            $student,
+            'Οριστική υποβολή στοιχείων φορέα',
+            'Τα στοιχεία φορέα υποβλήθηκαν οριστικά.',
+            'provider',
+        );
+
         return redirect()->route('student.dashboard')->with('status', 'Τα στοιχεία του φορέα υποβλήθηκαν οριστικά.');
     }
 
@@ -178,6 +194,25 @@ class StudentPortalController extends Controller
         $recordRows = collect($workflowDisplay->sections($student, 'student'))
             ->flatMap(fn (array $section): array => $section['rows'])
             ->whereIn('sourceType', ['apografiko', 'student_questionnaire'])
+            ->map(function (array $row): array {
+                $pageUrl = $row['sourceType'] === 'apografiko'
+                    ? route('student.apografika.show', $row['sourceKey'])
+                    : route('student.questionnaire');
+                $row['pdfUrl'] = match (true) {
+                    $row['sourceType'] === 'apografiko' && $row['status'] === 'completed' => route('student.apografika.pdf', $row['sourceKey']),
+                    $row['sourceType'] === 'student_questionnaire' && $row['status'] === 'submitted' => route('student.questionnaire.pdf'),
+                    default => null,
+                };
+                [$row['recordUrl'], $row['recordLabel']] = match ($row['status']) {
+                    null, 'pending' => [$pageUrl, 'Συμπλήρωση'],
+                    'draft', 'rejected' => [$pageUrl, 'Συνέχεια συμπλήρωσης'],
+                    'failed' => [$pageUrl, 'Νέα προσπάθεια'],
+                    'processing' => [$pageUrl, 'Έλεγχος κατάστασης'],
+                    default => [null, null],
+                };
+
+                return $row;
+            })
             ->values();
 
         return view('student.records', [
@@ -197,6 +232,22 @@ class StudentPortalController extends Controller
     private function fundingCode(Student $student): string
     {
         return $student->fundingCode();
+    }
+
+    private function notifyMembers(Student $student, string $title, string $message, string $panel): void
+    {
+        $recipients = collect([$student->handler(), User::find(1)])->filter()->unique('id');
+
+        foreach ($recipients as $recipient) {
+            $recipient->notify(new StudentActionNotification(
+                config('praktiki_workflow.role_labels.student').' - '.$title,
+                $student->full_name.': '.$message,
+                route('students.show', ['student' => $student->id, 'panel' => $panel]),
+                'student',
+                $student->id,
+                'bi-person-vcard',
+            ));
+        }
     }
 
     private function profileFields(Student $student): array

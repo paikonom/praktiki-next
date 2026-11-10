@@ -2,7 +2,13 @@
 @section('title', 'Ιδιωτικό Συμφωνητικό Πρακτικής Άσκησης - ΕΣΠΑ')
 @section('content')
 @php
-    require resource_path('views/students/agreements/partials/preprocessing.php');
+    $genderLabel = config('praktiki_fields.select_options.fylo_rescom.'.$student->fylo_rescom, '');
+    $educationLabel = config('praktiki_fields.select_options.katEkp_rescom.'.$student->katEkp_rescom, '');
+    $weeklyHoursLabel = config('praktiki_fields.select_options.wresPerWeek.'.$student->wresPerWeek, '');
+    $countryLabel = app(\App\Support\RescomReferenceData::class)->label('countries', $student->xwra_rescom);
+    $taxOfficeLabel = app(\App\Support\RescomReferenceData::class)->label('doys', $student->doy_rescom);
+    $studentName = trim(($student->fName ?? '').' '.($student->lName ?? ''));
+    $supervisorName = trim(($supervisor?->fName ?? '').' '.($supervisor?->lName ?? ''));
 @endphp
 <h1>
     ΙΔΙΩΤΙΚΟ ΣΥΜΦΩΝΗΤΙΚΟ ΠΡΑΚΤΙΚΗΣ ΑΣΚΗΣΗΣ ΦΟΙΤΗΤΗ/ΡΙΑΣ
@@ -12,7 +18,7 @@
 <br><br>
 <p>
     {{ $department?->polh === 'ΨΑΧΝΑ' ? 'Στα' : 'Στην' }}
-    <x-agreement.value :value="$department?->polh" />
+    <x-pdf.value :value="$department?->polh" />
     σήμερα ..............................<sup>1</sup>
 </p>
 <p>
@@ -26,16 +32,16 @@
 </p>
 <p>
     <strong>β) Ο Επιστημονικός Υπεύθυνος</strong>
-    <x-agreement.value :value="$details['ep_yp_ergou'] ?? null" />
+    <x-pdf.value :value="$praktiki?->details['ep_yp_ergou'] ?? null" />
     του έργου/προγράμματος του Ειδικού Λογαριασμού
     Κονδυλίων Έρευνας του Ε.Κ.Π.Α. με Κ.Ε.
-    <x-agreement.value :value="$details['K_E_ergou'] ?? null" />
+    <x-pdf.value :value="$praktiki?->details['K_E_ergou'] ?? null" />
     και τίτλο
-    <x-agreement.value :value="$details['titlos_ypoergou'] ?? null" />
+    <x-pdf.value :value="$praktiki?->details['titlos_ypoergou'] ?? null" />
     της Πράξης
     «Πρακτική Άσκηση ΕΚΠΑ ακ. ετών 2025-2027»
     με κωδ. ΟΠΣ
-    <x-agreement.value :value="$details['kwdikos_OPS'] ?? null" />
+    <x-pdf.value :value="$praktiki?->details['kwdikos_OPS'] ?? null" />
     του Προγράμματος
     «Ανθρώπινο Δυναμικό και Κοινωνική Συνοχή 2021-2027»,
     ο/η οποίος/α, σύμφωνα με τη διάταξη του άρθρου 234
@@ -48,19 +54,19 @@
 <p>
     <strong>γ)</strong>
     Ο Φορέας με την <strong>επωνυμία</strong>
-    <x-agreement.value :value="$provider?->f_epwnymia" />,
+    <x-pdf.value :value="$provider?->f_epwnymia" />,
     ο οποίος λειτουργεί υπό τη νομική μορφή<sup>2</sup>
-    <x-agreement.value :value="$provider?->legalFormLabel()" />
+    <x-pdf.value :value="$provider?->legalFormLabel()" />
     με Α.Φ.Μ
-    <x-agreement.value :value="$provider?->f_afm" />,
-    @if ($providerAfm === '094014201')
+    <x-pdf.value :value="$provider?->f_afm" />,
+    @if ($provider?->f_afm === '094014201')
         ΚΕΦΟΔΕ ΑΤΤΙΚΗΣ,
         έδρα<sup>3</sup>
-        <x-agreement.value :value="$provider?->f_perioxh" />,
-        <x-agreement.value :value="$provider?->f_odos" />
+        <x-pdf.value :value="$provider?->f_perioxh" />,
+        <x-pdf.value :value="$provider?->f_odos" />
         και στοιχεία επικοινωνίας<sup>4</sup>
         τηλ.
-        <x-agreement.value :value="$provider?->f_thl" />,
+        <x-pdf.value :value="$provider?->f_thl" />,
         ο οποίος στο εξής θα αποκαλείται Φορέας Υποδοχής,
         νομίμως εκπροσωπούμενη από την κ. Φ. Μπόμπου,
         Υποδιευθύντρια της Διεύθυνσης Λειτουργιών &amp;
@@ -69,39 +75,39 @@
         Στέλεχος 3ου κλιμακίου της ίδιας Διεύθυνσης.
     @else
         έδρα<sup>3</sup>
-        <x-agreement.value :value="$provider?->headquartersAddress()" />,
-        <!-- <x-agreement.value :value="$provider?->f_odos" /> -->
+        <x-pdf.value :value="$provider?->headquartersAddress()" />,
+        <!-- <x-pdf.value :value="$provider?->f_odos" /> -->
         <!-- ΤΚ -->
-        <!-- <x-agreement.value :value="$provider?->f_tk" /> -->
+        <!-- <x-pdf.value :value="$provider?->f_tk" /> -->
         και στοιχεία επικοινωνίας<sup>4</sup>
         τηλ.
-        <x-agreement.value :value="$provider?->f_thl" />
+        <x-pdf.value :value="$provider?->f_thl" />
         e-mail
-        <x-agreement.value :value="$provider?->f_email" />,
+        <x-pdf.value :value="$provider?->f_email" />,
         ο οποίος στο εξής θα αποκαλείται Φορέας Υποδοχής,
         εκπροσωπούμενος για την υπογραφή του παρόντος
         από τον/την
-        <x-agreement.value :value="$provider->legalRepresentative()" />.
+        <x-pdf.value :value="$provider->legalRepresentative()" />.
     @endif
 </p>
 <p>
     <strong>
         δ) Ο/Η Υπεύθυνος/η για την Πρακτική Άσκηση,
     </strong>
-    <x-agreement.value :value="$supervisorName" />
+    <x-pdf.value :value="$supervisorName" />
     του Τμήματος
-    <x-agreement.value :value="$department?->tmhma" />,
+    <x-pdf.value :value="$department?->tmhma" />,
     ο/η οποίος/α έχει ορισθεί με την
-    <x-agreement.value :value="$supervisor?->apofash_tmhmatos" />
+    <x-pdf.value :value="$supervisor?->apofash_tmhmatos" />
     απόφαση της
-    <x-agreement.value :value="$supervisor?->syneleush_tmhmatos" />
+    <x-pdf.value :value="$supervisor?->syneleush_tmhmatos" />
     Συνέλευσης του Τμήματος και είναι αρμόδιος/α
     για την παρακολούθηση και υποστήριξη των επιμέρους
     δράσεων της Πρακτικής Άσκησης,
     σύμφωνα με την πρόσκληση
-    <x-agreement.value :value="$details['scientific_supervisor_a_a_prosklhsh'] ?? null" />
+    <x-pdf.value :value="$praktiki?->details['scientific_supervisor_a_a_prosklhsh'] ?? null" />
     (Α/Α Πρόσκλησης ΟΠΣ:
-    <x-agreement.value :value="$details['scientific_supervisor_OPS_prosklhsh'] ?? null" />)
+    <x-pdf.value :value="$praktiki?->details['scientific_supervisor_OPS_prosklhsh'] ?? null" />)
     της Ειδικής Υπηρεσίας Διαχείρισης Προγράμματος
     «Ανθρώπινο Δυναμικό &amp; Κοινωνική Συνοχή».
 </p>
@@ -113,24 +119,24 @@
         <td>ΟΝΟΜΑ, ΕΠΩΝΥΜΟ</td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$student->fName" />,
-            <x-agreement.value :value="$student->lName" />
+            <x-pdf.value :value="$student->fName" />,
+            <x-pdf.value :value="$student->lName" />
         </td>
     </tr>
     <tr>
         <td>ΟΝΟΜΑ, ΕΠΩΝΥΜΟ ΠΑΤΕΡΑ</td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$student->fatFName" />,
-            <x-agreement.value :value="$student->fatLName" />
+            <x-pdf.value :value="$student->fatFName" />,
+            <x-pdf.value :value="$student->fatLName" />
         </td>
     </tr>
     <tr>
         <td>ΟΝΟΜΑ, ΕΠΩΝΥΜΟ ΜΗΤΕΡΑΣ</td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$student->momFName" />,
-            <x-agreement.value :value="$student->momLName" />
+            <x-pdf.value :value="$student->momFName" />,
+            <x-pdf.value :value="$student->momLName" />
         </td>
     </tr>
     @php
@@ -142,7 +148,7 @@
         <td>:</td>
         <td>
             <!-- <strong style="color:red;"> -->
-               <x-agreement.value :value="$fyloFoit_fromConfig" />
+               <x-pdf.value :value="$genderLabel" />
             <!-- </strong> -->
         </td>
     </tr>
@@ -150,21 +156,21 @@
         <td>ΟΙΚΟΓΕΝΕΙΑΚΗ ΚΑΤΑΣΤΑΣΗ<sup>6</sup></td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$student->oikKat" />
+            <x-pdf.value :value="$student->oikKat" />
         </td>
     </tr>
     <tr>
         <td>ΟΝΟΜΑ ΣΥΖΥΓΟΥ</td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$student->syzName" />
+            <x-pdf.value :value="$student->syzName" />
         </td>
     </tr>
     <tr>
         <td>ΑΡΙΘΜΟΣ ΠΑΙΔΙΩΝ</td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$student->numChild" />
+            <x-pdf.value :value="$student->numChild" />
         </td>
     </tr>
     <tr>
@@ -172,7 +178,7 @@
         <td>:</td>
         <td>
             <!-- <strong style="color:red;"> -->
-               <x-agreement.value :value="$katEkp_fromConfig" />
+               <x-pdf.value :value="$educationLabel" />
             <!-- </strong> -->
         </td>
     </tr>
@@ -180,24 +186,24 @@
         <td>ΧΩΡΑ ΚΑΤΟΙΚΙΑΣ</td>
         <td>:</td>
         <td>
-           <x-agreement.value :value="$xwraFoit_fromRescom" />
+           <x-pdf.value :value="$countryLabel" />
         </td>
     </tr>
     <tr>
         <td>ΤΟΠΟΣ/ΗΜΕΡΟΜΗΝΙΑ ΓΕΝΝΗΣΗΣ</td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$student->placeDob" />
+            <x-pdf.value :value="$student->placeDob" />
             /
-            <x-agreement.value :value="$formatDate($student->dob)" />
+            <x-pdf.value :value="filled($student->dob) ? \Illuminate\Support\Carbon::parse($student->dob)->format('d/m/Y') : null" />
         </td>
     </tr>
     <tr>
         <td>Α.Φ.Μ. / Δ.Ο.Υ.</td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$student->afm" /> / 
-            <x-agreement.value :value="$doyFoit_fromRescom" />
+            <x-pdf.value :value="$student->afm" /> / 
+            <x-pdf.value :value="$taxOfficeLabel" />
            
         </td>
     </tr>
@@ -205,103 +211,103 @@
         <td>ΔΙΕΥΘΥΝΣΗ ΚΑΤΟΙΚΙΑΣ</td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$student->studentAddress()" />,
-            <!-- <x-agreement.value :value="$student->address_odos" />
+            <x-pdf.value :value="$student->studentAddress()" />,
+            <!-- <x-pdf.value :value="$student->address_odos" />
             ΤΚ:
-            <x-agreement.value :value="$student->address_tk" /> -->
+            <x-pdf.value :value="$student->address_tk" /> -->
         </td>
     </tr>
     <tr>
         <td>Α.Δ.Τ. / ΕΚΔΟΥΣΑ ΑΡΧΗ</td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$student->adt" />
+            <x-pdf.value :value="$student->adt" />
             /
-            <x-agreement.value :value="$student->adt_ek_arxh" />
+            <x-pdf.value :value="$student->adt_ek_arxh" />
         </td>
     </tr>
     <tr>
         <td>ΗΜΕΡΟΜΗΝΙΑ ΕΚΔΟΣΗΣ</td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$formatDate($student->adt_ek_date)" />
+            <x-pdf.value :value="filled($student->adt_ek_date) ? \Illuminate\Support\Carbon::parse($student->adt_ek_date)->format('d/m/Y') : null" />
         </td>
     </tr>
     <tr>
         <td>ΤΗΛΕΦΩΝΟ</td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$student->tel" />
+            <x-pdf.value :value="$student->tel" />
         </td>
     </tr>
     <tr>
         <td>e-mail</td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$student->email" />
+            <x-pdf.value :value="$student->email" />
         </td>
     </tr>
     <tr>
         <td>ΙΘΑΓΕΝΕΙΑ</td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$student->ithagen" />
+            <x-pdf.value :value="$student->ithagen" />
         </td>
     </tr>
     <tr>
         <td>ΤΜΗΜΑ ΦΟΙΤΗΣΗΣ</td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$department?->tmhma" />
+            <x-pdf.value :value="$department?->tmhma" />
         </td>
     </tr>
     <tr>
         <td>Α.Μ.Κ.Α.</td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$student->amka" />
+            <x-pdf.value :value="$student->amka" />
         </td>
     </tr>
     <tr>
         <td>ΑΡΙΘΜΟΣ ΜΗΤΡΩΟΥ ΑΣΦΑΛΙΣΜΕΝΟΥ</td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$student->ama" />
+            <x-pdf.value :value="$student->ama" />
         </td>
     </tr>
     <tr>
         <td>ΑΡΙΘΜΟΣ ΜΗΤΡΩΟΥ ΦΟΙΤΗΤΗ</td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$student->AMF" />
+            <x-pdf.value :value="$student->AMF" />
         </td>
     </tr>
     <tr>
         <td>ΚΩΔ. GROUP ΑΤΛΑΣ</td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$student->id_group" />
+            <x-pdf.value :value="$student->id_group" />
         </td>
     </tr>
     <tr>
         <td>ΚΩΔ. ΘΕΣΗΣ ΑΤΛΑΣ</td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$student->id_thesh" />
+            <x-pdf.value :value="$student->id_thesh" />
         </td>
     </tr>
     <tr>
         <td>ΗΜΕΡΕΣ ΠΡΑΚΤΙΚΗΣ ΑΣΚΗΣΗΣ<sup>8</sup></td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$student->workDaysDescription" />
+            <x-pdf.value :value="$student->workDaysDescription" />
         </td>
     </tr>
     <tr>
         <td>ΑΠΑΣΧΟΛΗΣΗ</td>
         <td>:</td>
         <td>
-             <x-agreement.value :value="$wresPerWeek_fromConfig" />
+             <x-pdf.value :value="$weeklyHoursLabel" />
         </td>
     </tr>
     
@@ -309,7 +315,7 @@
         <td>ΜΗΝΙΑΙΑ ΑΠΟΖΗΜΙΩΣΗ</td>
         <td>:</td>
         <td>
-            <x-agreement.value :value="$student->payPerMonth" />
+            <x-pdf.value :value="$student->payPerMonth" />
         </td>
     </tr>
 </table>
@@ -320,24 +326,24 @@
     <li>
         Ο/Η δικαιούχος με την ιδιότητά του ως φοιτητή/τριας
         του Τμήματος
-        <x-agreement.value :value="$department?->tmhma" />
+        <x-pdf.value :value="$department?->tmhma" />
         επιλέχθηκε δυνάμει της από
-        <x-agreement.value :value="$phaseDetails['apofash_tmhmatos'] ?? null" />
+        <x-pdf.value :value="$phase?->details['apofash_tmhmatos'] ?? null" />
         Συνέλευσης του Τμήματος
-        <x-agreement.value :value="$department?->tmhma" />
+        <x-pdf.value :value="$department?->tmhma" />
         της Σχολής
-        <x-agreement.value :value="$department?->sxolh" />
+        <x-pdf.value :value="$department?->sxolh" />
         του Εθνικού και Καποδιστριακού Πανεπιστημίου Αθηνών,
         η οποία εγκρίθηκε με την από
-        <x-agreement.value :value="$phaseDetails['apofash_ELKE'] ?? null" />
+        <x-pdf.value :value="$phase?->details['apofash_ELKE'] ?? null" />
         Απόφαση του καθ’ ύλην αρμοδίου οργάνου του Ε.Λ.Κ.Ε.
         (ΑΔΑ:
-        <x-agreement.value :value="$phaseDetails['ADA_apofash_ELKE'] ?? null" />),
+        <x-pdf.value :value="$phase?->details['ADA_apofash_ELKE'] ?? null" />),
         προκειμένου να διεξάγει πρακτική άσκηση μέσω του
         έργου/προγράμματος με Κ.Ε.
-        <x-agreement.value :value="$details['K_E_ergou'] ?? null" />
+        <x-pdf.value :value="$praktiki?->details['K_E_ergou'] ?? null" />
         και τίτλο
-        <x-agreement.value :value="$details['titlos_ypoergou'] ?? null" />
+        <x-pdf.value :value="$praktiki?->details['titlos_ypoergou'] ?? null" />
         της Πράξης «Πρακτική Άσκηση ΕΚΠΑ ακ. ετών 2025-2027»
         με Κωδικό ΟΠΣ 6020906 του Προγράμματος
         «Ανθρώπινο Δυναμικό και Κοινωνική Συνοχή 2021-2027»
@@ -349,12 +355,12 @@
     </li>
     <li>
         Ως τόπος εκτέλεσης της πρακτικής άσκησης ορίζεται
-        <x-agreement.value :value="$provider?->internshipAddress()" />.
+        <x-pdf.value :value="$provider?->internshipAddress()" />.
     </li>
     <li>
         Ο ΦΟΡΕΑΣ ΥΠΟΔΟΧΗΣ αναλαμβάνει να απασχολήσει
         τον ΑΣΚΟΥΜΕΝΟ ΦΟΙΤΗΤΗ, για διάστημα
-        <x-agreement.value :value="$student->numMhnes" />
+        <x-pdf.value :value="$student->numMhnes" />
         μηνών ενώ παρακολουθεί και καθοδηγεί τον ασκούμενο
         φοιτητή για την επιτυχή εκτέλεση του έργου που
         ανατίθεται αποκλειστικά και μόνο στο πλαίσιο
@@ -362,13 +368,13 @@
         όπως αυτό ορίζεται στο παρόν συμφωνητικό.
         Ορίζει ως ΕΠΟΠΤΗ ΤΟΥ ΦΟΡΕΑ ΥΠΟΔΟΧΗΣ του ασκούμενου
         φοιτητή στο χώρο Πρακτικής Άσκησης τον/την
-        <x-agreement.value :value="$provider?->providerSupervisor()" />,
+        <x-pdf.value :value="$provider?->providerSupervisor()" />,
         εργαζόμενο του Φορέα Υποδοχής στη θέση
-        <x-agreement.value :value="$provider?->f_epopt_foreaThesh" />,
+        <x-pdf.value :value="$provider?->f_epopt_foreaThesh" />,
         ο οποίος διαθέτει την απαιτούμενη επιστημονική
         κατάρτιση και επαγγελματική εμπειρία
         και πιο συγκεκριμένα
-        <x-agreement.value :value="$provider?->f_epopt_foreaKatartish" />.
+        <x-pdf.value :value="$provider?->f_epopt_foreaKatartish" />.
     </li>
     <li>
         Ο Φορέας Υποδοχής οφείλει να παρακολουθεί και να
@@ -458,13 +464,13 @@
     <li>
         Το συνολικό κόστος για την πρακτική άσκηση
         ορίζεται σε
-        <x-agreement.value :value="$amountWords" />
-        (<x-agreement.value :value="$student->payTotal" /> €)<sup>9</sup>,
+        <x-pdf.value :value="\App\Support\AgreementHelper::amountToGreekWords($student->payTotal)" />
+        (<x-pdf.value :value="$student->payTotal" /> €)<sup>9</sup>,
         το οποίο περιλαμβάνει το ποσό αμοιβής του/της
         δικαιούχου (συμπεριλαμβανομένων πάσης φύσης
         νόμιμων κρατήσεων ή εισφορών).
         Το ποσό της αμοιβής θα καταβληθεί σε
-        <x-agreement.value :value="$student->doseis_count" />
+        <x-pdf.value :value="$student->doseis_count" />
         δόσεις.
         Για την καταβολή της αμοιβής απαιτείται
         η προσκόμιση των ακόλουθων στοιχείων:
@@ -498,9 +504,9 @@
         είναι εντός των ορίων του συνόλου των πιστώσεων
         αυτού και έχει εκδοθεί Απόφαση Ανάληψης
         Υποχρέωσης, με α/α
-        <x-agreement.value :value="$details['kostos_apof_a_a'] ?? null" />
+        <x-pdf.value :value="$praktiki?->details['kostos_apof_a_a'] ?? null" />
         (ΑΔΑ
-        <x-agreement.value :value="$details['kostos_apof_ADA'] ?? null" /><sup>10</sup>),
+        <x-pdf.value :value="$praktiki?->details['kostos_apof_ADA'] ?? null" /><sup>10</sup>),
         με την οποία δεσμεύτηκε το σύνολο των πιστώσεων
         του εγκεκριμένου ετήσιου προϋπολογισμού
         του έργου/προγράμματος.
@@ -522,7 +528,7 @@
         λύση του παρόντος δύναται να πραγματοποιηθεί
         όσο η σύμβαση είναι ενεργή.
     </li>
-    @if ($providerAfm === '090012702')
+    @if ($provider?->f_afm === '090012702')
         <li>
             Τα πνευματικά δικαιώματα και το δικαίωμα
             για τυχόν απόκτηση διπλώματος ευρεσιτεχνίας
@@ -557,7 +563,7 @@
         να τροποποιηθούν μόνον εγγράφως και μετά
         από τη σύμφωνη γνώμη όλων των συμβαλλόμενων μερών.
     </li>
-    @if ($providerAfm === '997604027___')
+    @if ($provider?->f_afm === '997604027___')
         <li>
             Ο/η φοιτητής/τριας δύναται, με δική του/ης
             ευθύνη, να συμμετέχει στις εργασίες πεδίου
@@ -618,19 +624,19 @@
     </tr>
     <tr>
         <td>
-            <x-agreement.value :value="$details['legal_representative']" />
+            <x-pdf.value :value="$praktiki?->details['legal_representative'] ?? null" />
         </td>
         <td>
-            <x-agreement.value :value="$studentName" />
+            <x-pdf.value :value="$studentName" />
         </td>
         <td>
-            <x-agreement.value :value="$details['ep_yp_ergou']" />
+            <x-pdf.value :value="$praktiki?->details['ep_yp_ergou'] ?? null" />
         </td>
     </tr>
     <tr class="no-top-padding">
-        <td>{{ $details['legal_representative_title'] }}</td>
+        <td><x-pdf.value :value="$praktiki?->details['legal_representative_title'] ?? null" /></td>
         <td>&nbsp;</td>
-        <td>{{ $details['ep_yp_ergou_title'] }}</td>
+        <td><x-pdf.value :value="$praktiki?->details['ep_yp_ergou_title'] ?? null" /></td>
     </tr>
      <tr>
          <td>(Υπογραφή)</td>
@@ -662,10 +668,10 @@
     </tr>
     <tr>
         <td>
-            <x-agreement.value :value="$supervisorName" />
+            <x-pdf.value :value="$supervisorName" />
         </td>
         <td>
-            <x-agreement.value :value="$provider?->legalRepresentative()" />
+            <x-pdf.value :value="$provider?->legalRepresentative()" />
             
         </td>
     </tr>

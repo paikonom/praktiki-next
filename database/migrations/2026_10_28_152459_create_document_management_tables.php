@@ -17,7 +17,7 @@ return new class extends Migration
             $table->unsignedInteger('max_size_mb')->default(15);
             $table->string('available_after', 30)->default('always');
             $table->boolean('active')->default(true);
-            $table->unsignedInteger('sort_order')->default(0);
+            $table->decimal('sort_order', 6, 2)->default(0);
             $table->timestamps();
         });
 

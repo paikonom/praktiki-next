@@ -10,12 +10,82 @@
     </div>
 @endif
 
-@if (session('status'))
-    <div class="alert alert-success">{{ session('status') }}</div>
-@endif
 @if ($errors->any())
     <div class="alert alert-danger">{{ $errors->first() }}</div>
 @endif
+
+
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+
+        <div class="alert alert-danger border-0 rounded-2 py-3 px-3 mb-3" role="alert">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+                <strong>Προσοχή! Σημαντικές οδηγίες πριν από την υποβολή εντύπων</strong>
+            </div>
+
+            <div class="small">
+                <p class="mb-2">
+                    Τα περισσότερα έντυπα συνοδεύονται από συγκεκριμένες οδηγίες συμπλήρωσης.
+                    <strong>Πριν συμπληρώσετε, υπογράψετε ή ανεβάσετε οποιοδήποτε έντυπο,
+                    είναι απαραίτητο να διαβάσετε προσεκτικά τις αντίστοιχες οδηγίες.</strong>
+                </p>
+
+                <p class="mb-0">
+                    <i class="bi bi-pen-fill me-1"></i>
+                    <strong>Ιδιαίτερη προσοχή απαιτείται στον τρόπο υπογραφής των εντύπων.</strong>
+                    Παρακαλούμε να διαβάσετε οπωσδήποτε την παρακάτω οδηγία,
+                    ώστε να αποφύγετε λανθασμένες υποβολές και πιθανές καθυστερήσεις
+                    στην έγκριση των εγγράφων σας.
+                </p>
+            </div>
+        </div>
+
+        <div class="accordion" id="digital-signature-help">
+            <div class="accordion-item border rounded-2 overflow-hidden">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed bg-info-subtle"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#digital-signature-help-content"
+                            aria-expanded="false"
+                            aria-controls="digital-signature-help-content">
+                        <i class="bi bi-pen-fill me-2" aria-hidden="true"></i>
+                        Οδηγίες για την ψηφιακή υπογραφή εγγράφων
+                    </button>
+                </h2>
+
+                <div id="digital-signature-help-content"
+                     class="accordion-collapse collapse"
+                     data-bs-parent="#digital-signature-help">
+                    <div class="accordion-body">
+                        <p>
+                            Ψηφιακή υπογραφή σημαίνει ότι το έγγραφο υπογράφεται ηλεκτρονικά μέσω υπολογιστή ή κινητού,
+                            χωρίς να χρειάζεται να το εκτυπώσετε, να το υπογράψετε με στυλό και να το σκανάρετε.
+                            Μπορείτε να το κάνετε είτε μέσω του gov.gr, επιλέγοντας «Ψηφιακή Βεβαίωση Εγγράφου»
+                            με τους κωδικούς Taxisnet, είτε με κάποιο εγκεκριμένο ψηφιακό πιστοποιητικό
+                            (π.χ. μέσω Adobe Reader).
+                            Μια απλή εικόνα υπογραφής επικολλημένη στο PDF δεν θεωρείται έγκυρη ψηφιακή υπογραφή.
+                        </p>
+
+                        <p class="fw-semibold">
+                            Προσοχή: το αρχείο δεν πρέπει να τύχει οποιασδήποτε παρέμβασης μετά τις υπογραφές,
+                            γιατί ενδέχεται να θεωρηθεί άκυρο.
+                        </p>
+
+                        <p class="mb-0">
+                            Αν δεν υπάρχει δυνατότητα ψηφιακής υπογραφής, παρακαλούμε επικοινωνήστε
+                            με τον χειριστή του τμήματός σας στο Γραφείο Πρακτικής Άσκησης του ΕΚΠΑ
+                            για καθοδήγηση.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
 
 @php
     $lastPeriod = null;
@@ -27,11 +97,15 @@
         $availabilityIssue = $type->availabilityIssueFor($student, $role);
         $available = $availabilityIssue === null;
         $acceptsNewVersion = $type->acceptsNewVersionFor($student);
-        $canUpload = $available && $acceptsNewVersion && $type->roleCan($role, 'can_upload')
-            && ($role !== 'member' || $allowMemberActions);
         $documents = $type->documents;
         $latestDocument = $documents->first();
         $status = $latestDocument?->status;
+
+        $canUpload = $available
+            && $acceptsNewVersion
+            && $type->roleCan($role, 'can_upload')
+            && ($role !== 'member' || $allowMemberActions);
+
         $statusLabel = \App\Support\StatusBadge::label($status);
         $statusClass = \App\Support\StatusBadge::className($status);
         $borderClass = \App\Support\StatusBadge::borderClass($status);
@@ -46,8 +120,7 @@
             && $allowMemberActions
             && ! auth('web')->user()->view_only
             && $available
-            && $acceptsNewVersion
-            && $status !== 'not_required';
+            && $acceptsNewVersion;
     @endphp
     @if ($lastPeriod !== $type->period($fundingCode))
         <h2 class="h5 mt-4 mb-3">{{ $type->periodLabel($fundingCode) }}</h2>
@@ -60,12 +133,28 @@
                 type="button" data-bs-toggle="collapse" data-bs-target="#document-type-{{ $type->id }}"
                 aria-expanded="false" aria-controls="document-type-{{ $type->id }}">
             <span class="d-flex align-items-center gap-2 flex-wrap">
-                @foreach ($type->roles->where('can_upload', true) as $uploadRole)
-                    <span class="badge rounded-pill border-0 {{ $uploadRole->role === 'student' ? 'text-bg-primary' : ($uploadRole->role === 'provider' ? 'text-bg-success' : 'text-bg-secondary') }}">
-                        {{ ['student' => 'Φοιτητής', 'provider' => 'Φορέας', 'scientific_supervisor' => 'ΕΠ/ΥΠ', 'member' => 'Χειριστής'][$uploadRole->role] }}
+                @php
+                    $uploadRoles = $type->roles->where('can_upload', true);
+
+                    if ($uploadRoles->contains('role', 'member') && $uploadRoles->count() > 1) {
+                        $uploadRoles = $uploadRoles->where('role', '!=', 'member');
+                    }
+
+                    $roleLabels = config('praktiki_workflow.role_labels');
+                    $roleIcons = config('praktiki_workflow.role_icons');
+                @endphp
+<span class="fw-semibold">{{ $type->title }}</span>
+                @foreach ($uploadRoles as $uploadRole)
+                    @php
+                        $roleLabel = $roleLabels[$uploadRole->role] ?? $uploadRole->role;
+                        $roleIcon = $roleIcons[$uploadRole->role] ?? 'bi-person';
+                    @endphp
+
+                    <span class="badge rounded-pill bg-white text-dark border border-secondary-subtle fw-normal">                        <i class="bi {{ $roleIcon }} me-1"></i>
+                        {{ $roleLabel }}
                     </span>
                 @endforeach
-                <span class="fw-semibold">{{ $type->title }}</span>
+
             </span>
             <span class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
                 <span class="badge border-0 {{ $statusClass }}">{{ $statusLabel }}</span>
@@ -77,10 +166,53 @@
         </button>
         <div id="document-type-{{ $type->id }}" class="collapse">
         <div class="card-body">
-            @if ($type->instructions)
-                <p class="text-muted">{{ $type->instructions }}</p>
-            @endif
+            @if ($status === 'not_required')
+                <div class="alert alert-info mb-0">
+                    <div class="fw-semibold">Δεν απαιτείται η υποβολή αυτού του εγγράφου.
+                    <span class="mt-2"><strong>Αιτιολογία:</strong> {{ $latestDocument->review_notes ?: 'Δεν έχει καταχωριστεί αιτιολογία.' }}</span></div>
 
+                    @if ($role === 'member' && $allowMemberActions && ! auth('web')->user()->view_only)
+                        <form method="POST" action="{{ route('students.documents.require-again', [$student, $type]) }}" class="mt-3"
+                              onsubmit="return confirm('Να απαιτείται ξανά αυτό το έγγραφο;')">
+                            @csrf
+                            <button class="btn btn-sm btn-outline-secondary">Να απαιτείται ξανά</button>
+                        </form>
+                    @endif
+                </div>
+            @else
+                @if ($type->instructions)
+                <div class="alert alert-danger border-0 rounded-2 py-2 px-3 mb-3" role="alert">
+                    <div class="d-flex align-items-center flex-wrap gap-2">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span><strong>Προσοχή!</strong> Πριν ξεκινήσετε, παρακαλούμε διαβάστε τις παρακάτω οδηγίες.</span>
+
+                        <button class="btn btn-sm btn-outline-danger ms-auto"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#instructions-collapse-{{ $type->id }}"
+                                aria-expanded="false"
+                                aria-controls="instructions-collapse-{{ $type->id }}">
+                            <i class="bi bi-chevron-down me-1"></i> Οδηγίες
+                        </button>
+                    </div>
+
+                    <div class="collapse mt-2" id="instructions-collapse-{{ $type->id }}">
+                        <div class="pt-2 border-top border-danger-subtle">
+                            @php
+                                $instructions = preg_replace_callback(
+                                    '~<a\s+href=[\'\"](https://[^\'\"]+)[\'\"]\s*>(.*?)</a>~isu',
+                                    fn (array $link): string => '['.strip_tags($link[2]).']('.$link[1].')',
+                                    $type->instructions,
+                                );
+                            @endphp
+                            {!! \Illuminate\Support\Str::markdown($instructions, [
+                                'html_input' => 'strip',
+                                'allow_unsafe_links' => false,
+                            ]) !!}
+                        </div>
+                    </div>
+                </div>
+                @endif
             @if ($role === 'scientific_supervisor' && $fundingCode === 'Espa' && $type->code === 'vevaiwsh_EY')
                 <a class="btn btn-outline-primary mb-3" href="{{ route('scientific_supervisor.completion-certificate.preview', $student) }}" target="_blank" rel="noopener">
                     Προεπισκόπηση έτοιμης βεβαίωσης PDF
@@ -101,7 +233,7 @@
 
             @if ($role === 'member' && $fundingCode === 'Espa' && $type->code === 'vevaiwsh_EY')
                 <a class="btn btn-outline-primary mb-3" href="{{ route('students.completion-certificates.supervisor', $student) }}" target="_blank" rel="noopener">
-                    Προεπισκόπηση βεβαίωσης ΕΠ/ΥΠ
+                    Προεπισκόπηση βεβαίωσης Υπεύθυνου/η Π.Τ.
                 </a>
             @endif
 
@@ -121,7 +253,7 @@
                         'internship_not_started' => 'Το ανέβασμα θα είναι διαθέσιμο μετά την έναρξη της πρακτικής.',
                         'internship_active' => 'Το ανέβασμα θα είναι διαθέσιμο μετά τη λήξη της πρακτικής.',
                         'funding' => 'Το έγγραφο δεν είναι διαθέσιμο για τη χρηματοδότηση του φοιτητή.',
-                        'previous_step' => 'Πρέπει πρώτα να ολοκληρωθεί το προηγούμενο βήμα της διαδικασίας.',
+                        'previous_step' => 'Πρέπει πρώτα να ολοκληρωθεί το προηγούμενο βήμα της διαδικασίας. Δείτε το menu ενέργειες για περισσότερες πληροφορίες.',
                         'previous_sections' => 'Πρέπει πρώτα να ολοκληρωθούν οι ενότητες Α και Β.',
                         default => 'Ο τύπος εγγράφου δεν είναι ενεργός.',
                     } }}
@@ -221,6 +353,7 @@
                         </tbody>
                     </table>
                 </div>
+            @endif
             @endif
         </div>
         </div>

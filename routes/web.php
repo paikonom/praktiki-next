@@ -209,16 +209,13 @@ Route::middleware('auth')->group(function () {
         ->name('students.completion-certificates.provider');
     Route::get('/students/{student}/completion-certificates/supervisor', [CompletionCertificateController::class, 'supervisor'])
         ->name('students.completion-certificates.supervisor');
-    Route::get('/students/{student}/documents', [DocumentController::class, 'index'])->name('students.documents.index');
     Route::post('/students/{student}/documents/{documentType}', [DocumentController::class, 'store'])->name('students.documents.store');
     Route::post('/students/{student}/documents/{documentType}/not-required', [DocumentController::class, 'markNotRequired'])->name('students.documents.not-required');
+    Route::post('/students/{student}/documents/{documentType}/require-again', [DocumentController::class, 'requireAgain'])->name('students.documents.require-again');
     Route::get('/student-documents/{studentDocument}/preview', [DocumentController::class, 'preview'])->name('students.documents.preview');
     Route::get('/student-documents/{studentDocument}', [DocumentController::class, 'download'])->name('students.documents.download');
     Route::patch('/student-documents/{studentDocument}', [DocumentController::class, 'update'])->name('students.documents.update');
     Route::delete('/student-documents/{studentDocument}', [DocumentController::class, 'destroy'])->name('students.documents.destroy');
-    Route::get('/students/{student}/questionnaires/{type}', [StudentQuestionnaireReviewController::class, 'show'])
-        ->whereIn('type', ['student', 'provider'])
-        ->name('students.questionnaires.show');
     Route::get('/students/{student}/questionnaires/{type}/pdf', [StudentQuestionnaireReviewController::class, 'pdf'])
         ->whereIn('type', ['student', 'provider'])
         ->name('students.questionnaires.pdf');

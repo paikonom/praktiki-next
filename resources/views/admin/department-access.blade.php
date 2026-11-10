@@ -84,11 +84,6 @@
         </section>
 
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-            @if (session('status'))
-                <div class="alert alert-success rounded-0 border-0 mb-0 px-4 py-3">
-                    {{ session('status') }}
-                </div>
-            @endif
             <div class="table-responsive">
             <table class="table access-table table-hover align-middle mb-0">
                 <thead>

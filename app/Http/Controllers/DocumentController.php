@@ -56,13 +56,7 @@ class DocumentController extends Controller
             $student = $context['student'];
             $handler = $student->handler();
 
-            if ($context['role'] === 'student') {
-                $senderLabel = 'Φοιτητής/τρια';
-            } elseif ($context['role'] === 'provider') {
-                $senderLabel = 'Φορέας Υποδοχής';
-            } else {
-                $senderLabel = 'ΕΠ/ΥΠ';
-            }
+            $senderLabel = config('praktiki_workflow.role_labels.'.$context['role'], $context['role']);
 
             if ($handler) {
                 $handler->notify(new StudentActionNotification(
@@ -125,6 +119,21 @@ class DocumentController extends Controller
         $this->documentService->markNotRequired($student, $documentType, $request->user(), $validatedData['review_notes']);
 
         return back()->with('status', 'Το έγγραφο σημειώθηκε ως μη απαιτούμενο.');
+    }
+
+    public function requireAgain(Student $student, DocumentType $documentType): RedirectResponse
+    {
+        Gate::authorize('update', $student);
+
+        $latestDocument = $student->documents()
+            ->where('document_type_id', $documentType->id)
+            ->latest('version')
+            ->firstOrFail();
+
+        abort_unless($latestDocument->status === 'not_required' && blank($latestDocument->path), 409);
+        $latestDocument->delete();
+
+        return back()->with('status', 'Το έγγραφο απαιτείται ξανά.');
     }
 
     public function update(ReviewStudentDocumentRequest $request, StudentDocument $studentDocument): RedirectResponse

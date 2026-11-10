@@ -3,10 +3,6 @@
 @section('title', 'Φοιτητές')
 
 @section('content')
-    @if (session('status'))
-        <div class="alert alert-success">{{ session('status') }}</div>
-    @endif
-
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
             <h1 class="h3 mb-1">Φοιτητές</h1>

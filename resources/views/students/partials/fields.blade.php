@@ -31,7 +31,10 @@
                         $type = config('praktiki_fields.field_types.'.$field, 'text');
                         $item = $field === 'diakoptomeno' && is_bool($item) ? (int) $item : $item;
                         $item = $field === 'numMhnes' && is_numeric($item) ? (string) (float) $item : $item;
-                        $isReadOnly = $section === 'student' && in_array($field, ['praxh_year', 'questionnaire_version'], true);
+                        $isReadOnly = in_array($field, [
+                            'praxh_year', 'questionnaire_version', 'address_odos_polh',
+                            'f_perioxh', 'f_topos_ekt_prakt',
+                        ], true);
                         $displayItem = $type === 'date' && $item instanceof \Carbon\CarbonInterface ? $item->format('Y-m-d') : $item;
                         $options = $fieldOptions[$field] ?? [];
                         $hasCurrentOption = collect(array_keys($options))->contains(fn ($value) => (string) $value === (string) $item);

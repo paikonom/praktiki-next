@@ -26,6 +26,7 @@ class StudentDocumentService
         try {
             return DB::transaction(function () use ($internshipStudent, $documentType, $uploadedFile, $loggedInUser, $loggedInRole, &$storedPath): StudentDocument {
                 $version = (int) $internshipStudent->documents()->where('document_type_id', $documentType->id)->lockForUpdate()->max('version') + 1;
+                $uploadedByMember = $loggedInRole === 'member';
                 $studentDocument = StudentDocument::create([
                     's_id' => $internshipStudent->id,
                     'document_type_id' => $documentType->id,
@@ -35,10 +36,12 @@ class StudentDocumentService
                     'original_name' => $uploadedFile->getClientOriginalName(),
                     'mime_type' => $uploadedFile->getMimeType() ?? 'application/pdf',
                     'size' => $uploadedFile->getSize(),
-                    'status' => 'submitted',
+                    'status' => $uploadedByMember ? 'approved' : 'submitted',
                     'uploaded_by_role' => $loggedInRole,
                     'uploaded_by_id' => $loggedInUser->getAuthIdentifier(),
                     'uploaded_at' => now(),
+                    'reviewed_by' => $uploadedByMember ? $loggedInUser->getAuthIdentifier() : null,
+                    'reviewed_at' => $uploadedByMember ? now() : null,
                 ]);
                 $storedPath = $uploadedFile->storeAs("students/{$internshipStudent->id}/documents", "{$studentDocument->id}.pdf", 'local');
                 if (! $storedPath) {

@@ -177,14 +177,16 @@ class DocumentType extends Model
 
     public function acceptsNewVersionFor(Student $student): bool
     {
-        return ! $this->documents()
+        $latestStatus = $this->documents()
             ->where('s_id', $student->id)
-            ->whereIn('status', ['submitted', 'approved'])
-            ->exists();
+            ->latest('version')
+            ->value('status');
+
+        return ! in_array($latestStatus, ['submitted', 'approved', 'not_required'], true);
     }
 
     protected function casts(): array
     {
-        return ['active' => 'boolean'];
+        return ['active' => 'boolean', 'sort_order' => 'decimal:2'];
     }
 }

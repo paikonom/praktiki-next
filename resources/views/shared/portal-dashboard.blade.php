@@ -3,10 +3,6 @@
 @section('title', $role === 'student' ? 'Αρχική φοιτητή' : 'Αρχική φορέα')
 
 @section('portal-content')
-    @if (session('status'))
-        <div class="alert alert-{{ session('status_type', 'success') }}">{{ session('status') }}</div>
-    @endif
-
     @if (session('error'))
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
@@ -36,6 +32,5 @@
         'sections' => $workflowSections,
         'currentRole' => $role,
         'accordionId' => $role.'-workflow',
-        'showActionControls' => false,
     ])
 @endsection

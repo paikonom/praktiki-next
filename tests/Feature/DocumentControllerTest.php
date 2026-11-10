@@ -67,14 +67,18 @@ class DocumentControllerTest extends TestCase
     public function test_each_portal_sees_only_document_types_allowed_for_its_role(): void
     {
         $student = $this->student();
+        DocumentType::where('code', 'ekthesh_Foit')->update([
+            'instructions' => "Κατεβάστε το <a href='https://example.test/form.pdf'>έντυπο</a>.",
+        ]);
 
         $admin = User::factory()->create(['role' => 'admin']);
-        $this->actingAs($admin)->get(route('students.documents.index', $student))
+        $this->actingAs($admin)->get(route('students.show', ['student' => $student, 'panel' => 'documents']))
             ->assertOk()
+            ->assertSee('href="https://example.test/form.pdf"', false)
             ->assertSee('Αναλυτική έκθεση πεπραγμένων φοιτητή')
             ->assertSee('Έκθεση επίδοσης από επόπτη φορέα')
             ->assertSee('Προεπισκόπηση βεβαίωσης φορέα')
-            ->assertSee('Προεπισκόπηση βεβαίωσης ΕΠ/ΥΠ');
+            ->assertSee('Προεπισκόπηση βεβαίωσης Υπεύθυνου/η Π.Τ.');
 
         $this->actingAs($admin)
             ->get(route('students.completion-certificates.provider', $student))
@@ -97,7 +101,7 @@ class DocumentControllerTest extends TestCase
         $student = $this->student();
         $admin = User::factory()->create(['role' => 'admin']);
 
-        $this->actingAs($admin)->get(route('students.documents.index', $student))
+        $this->actingAs($admin)->get(route('students.show', ['student' => $student, 'panel' => 'documents']))
             ->assertOk()
             ->assertSee('Αναλυτική έκθεση πεπραγμένων φοιτητή')
             ->assertDontSee('Βεβαίωση ενσήμων e-ΕΦΚΑ από φοιτητή');
@@ -108,7 +112,7 @@ class DocumentControllerTest extends TestCase
         $student = $this->student();
         $admin = User::factory()->create(['role' => 'admin']);
 
-        $this->actingAs($admin)->get(route('students.documents.index', $student))
+        $this->actingAs($admin)->get(route('students.show', ['student' => $student, 'panel' => 'documents']))
             ->assertOk()
             ->assertSeeInOrder([
                 'Πριν την έναρξη',
@@ -132,7 +136,7 @@ class DocumentControllerTest extends TestCase
         $this->assertSame('missing_end_date', $type->availabilityIssueFor($student, 'member'));
 
         $admin = User::factory()->create(['role' => 'admin']);
-        $this->actingAs($admin)->get(route('students.documents.index', $student))
+        $this->actingAs($admin)->get(route('students.show', ['student' => $student, 'panel' => 'documents']))
             ->assertOk()
             ->assertSee('Δεν έχει οριστεί ημερομηνία λήξης της πρακτικής.');
 
@@ -266,12 +270,12 @@ class DocumentControllerTest extends TestCase
             's_id' => $student->id,
             'document_type_id' => $type->id,
             'version' => 2,
-            'status' => 'submitted',
+            'status' => 'approved',
             'uploaded_by_role' => 'member',
         ]);
     }
 
-    public function test_handler_can_ignore_a_document_without_uploading_a_file(): void
+    public function test_handler_can_mark_a_document_not_required_and_require_it_again(): void
     {
         Storage::fake('local');
         $student = $this->student();
@@ -294,12 +298,29 @@ class DocumentControllerTest extends TestCase
         $this->assertNull($notRequired->path);
         $this->assertTrue($student->fresh()->hasCompletedDocument('ekthesh_Foit'));
 
+        $this->actingAs($admin)
+            ->get(route('students.show', ['student' => $student, 'panel' => 'documents']))
+            ->assertOk()
+            ->assertSee('Το έγγραφο παραδόθηκε εκτός συστήματος.')
+            ->assertSee('Να απαιτείται ξανά')
+            ->assertDontSee('action="'.route('students.documents.store', [$student, $type]).'"', false);
+
+        $this->actingAs($admin)->post(route('students.documents.store', [$student, $type]), [
+            'file' => UploadedFile::fake()->create('later.pdf', 100, 'application/pdf'),
+        ])->assertForbidden();
+
+        $this->actingAs($admin)
+            ->post(route('students.documents.require-again', [$student, $type]))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('student_documents', ['id' => $notRequired->id]);
+
         $this->actingAs($admin)->post(route('students.documents.store', [$student, $type]), [
             'file' => UploadedFile::fake()->create('later.pdf', 100, 'application/pdf'),
         ])->assertRedirect();
 
-        $this->assertFalse($student->fresh()->hasCompletedDocument('ekthesh_Foit'));
-        $this->assertSame('submitted', $student->fresh()->latestDocumentStatus('ekthesh_Foit'));
+        $this->assertTrue($student->fresh()->hasCompletedDocument('ekthesh_Foit'));
+        $this->assertSame('approved', $student->fresh()->latestDocumentStatus('ekthesh_Foit'));
     }
 
     public function test_document_availability_uses_the_workflow_prerequisites_from_the_database(): void

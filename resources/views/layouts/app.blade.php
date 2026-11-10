@@ -51,7 +51,7 @@
                                     <a class="dropdown-item @if (request()->routeIs('admin.department-access*')) active @endif" href="{{ route('admin.department-access') }}">Χρήστες και τμήματα</a>
                                     <a class="dropdown-item @if (request()->routeIs('admin.document-types.*')) active @endif" href="{{ route('admin.document-types.index') }}">Τύποι εγγράφων</a>
                                     <a class="dropdown-item @if (request()->routeIs('admin.student-card-fields.*')) active @endif" href="{{ route('admin.student-card-fields.index') }}">Πεδία καρτέλας</a>
-                                    <a class="dropdown-item @if (request()->routeIs('admin.scientific-supervisors.*')) active @endif" href="{{ route('admin.scientific-supervisors.index') }}">ΕΠ/ΥΠ</a>
+                                    <a class="dropdown-item @if (request()->routeIs('admin.scientific-supervisors.*')) active @endif" href="{{ route('admin.scientific-supervisors.index') }}">Υπεύθυνοι Π.Τ.</a>
                                     <div class="dropdown-divider"></div>
                                     <a class="dropdown-item @if (request()->routeIs('admin.workflow-actions.*')) active @endif" href="{{ route('admin.workflow-actions.index') }}">Ενέργειες ροής</a>
                                     <a class="dropdown-item @if (request()->routeIs('admin.workflow-section-rules.*')) active @endif" href="{{ route('admin.workflow-section-rules.index') }}">Κανόνες ενοτήτων</a>
@@ -102,6 +102,14 @@
     </header>
 
     <main class="container py-5 flex-grow-1">
+        @if (session('status'))
+            <div class="position-fixed end-0 p-3" style="top: 4.5rem; z-index: 1080; width: min(26rem, 100vw);">
+                <div class="alert alert-{{ session('status_type', 'success') }} alert-dismissible fade show shadow" role="alert">
+                    {{ session('status') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Κλείσιμο"></button>
+                </div>
+            </div>
+        @endif
         @yield('content')
     </main>
     @yield('footer')

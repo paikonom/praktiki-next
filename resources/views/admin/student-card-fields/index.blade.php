@@ -10,10 +10,6 @@
         </div>
     </div>
 
-    @if (session('status'))
-        <div class="alert alert-success">{{ session('status') }}</div>
-    @endif
-
     @foreach ($fieldGroups as $cardSection => $fields)
         <section class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">

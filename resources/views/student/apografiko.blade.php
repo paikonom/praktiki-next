@@ -15,10 +15,6 @@
         <div class="text-body-secondary">MIS: {{ $mis ?: 'δεν έχει οριστεί' }}</div>
     </div>
 
-    @if (session('status'))
-        <div class="alert alert-{{ session('status_type', 'success') }}">{{ session('status') }}</div>
-    @endif
-
     @if ($legacyCompleted)
         <div class="alert alert-success">Το απογραφικό δελτίο έχει ολοκληρωθεί στην παλιά εφαρμογή.</div>
     @elseif ($apografiko)

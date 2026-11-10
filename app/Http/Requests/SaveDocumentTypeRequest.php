@@ -30,7 +30,7 @@ class SaveDocumentTypeRequest extends FormRequest
             'instructions' => ['nullable', 'string'],
             'max_size_mb' => ['required', 'integer', 'between:1,100'],
             'active' => ['boolean'],
-            'sort_order' => ['required', 'integer', 'min:0'],
+            'sort_order' => ['required', 'decimal:0,2', 'between:0,9999.99'],
             'fundings' => ['required', 'array', 'min:1'],
             'fundings.*' => ['in:Espa,Institution,InternshipProvider'],
             'view_roles' => ['required', 'array', 'min:1'],

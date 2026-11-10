@@ -7,7 +7,6 @@ use App\Models\WorkflowAction;
 use App\Support\ProviderQuestionnaireDefinition;
 use App\Support\StudentQuestionnaireDefinition;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -15,32 +14,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class StudentQuestionnaireReviewController extends Controller
 {
-    public function show(
-        Student $student,
-        string $type,
-        StudentQuestionnaireDefinition $studentDefinition,
-        ProviderQuestionnaireDefinition $providerDefinition,
-    ): View {
-        $this->authorizeStudent($student, $type);
-        $student->load(['department', 'phase.praktiki.funding', 'provider', 'actions', 'questionnaire', 'providerQuestionnaire']);
-
-        $questionnaire = $type === 'student' ? $student->questionnaire : $student->providerQuestionnaire;
-        abort_unless($questionnaire, 404);
-
-        $sections = $type === 'student'
-            ? $studentDefinition->sections($student, $questionnaire->version)
-            : $providerDefinition->sections($student, $questionnaire->version);
-
-        return view('students.questionnaire', [
-            'student' => $student,
-            'type' => $type,
-            'title' => $type === 'student' ? 'Ερωτηματολόγιο φοιτητή' : 'Ερωτηματολόγιο φορέα',
-            'questionnaire' => $questionnaire,
-            'sections' => $sections,
-            'answers' => collect($questionnaire->answers),
-        ]);
-    }
-
     public function pdf(
         Student $student,
         string $type,
@@ -94,11 +67,8 @@ class StudentQuestionnaireReviewController extends Controller
 
         $questionnaire->update(['status' => $targetStatus]);
 
-        $returnToOffice = in_array($request->input('from'), ['list', 'office'], true);
-
         return redirect()
-            ->route($returnToOffice ? 'students.show' : 'students.questionnaires.show',
-                $returnToOffice ? ['student' => $student, 'panel' => 'questionnaires'] : [$student, $type])
+            ->route('students.show', ['student' => $student, 'panel' => 'questionnaires'])
             ->with('status', $targetStatus === 'rejected'
                 ? 'Το ερωτηματολόγιο απορρίφθηκε και μπορεί να υποβληθεί ξανά.'
                 : 'Η απόρριψη του ερωτηματολογίου αναιρέθηκε.');

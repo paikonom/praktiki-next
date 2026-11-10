@@ -11,10 +11,6 @@
         <a class="btn btn-primary" href="{{ route('admin.scientific-supervisors.create') }}">Νέος ΕΠ/ΥΠ</a>
     </div>
 
-    @if (session('status'))
-        <div class="alert alert-success">{{ session('status') }}</div>
-    @endif
-
     <div class="card border-0 shadow-sm">
         <div class="table-responsive">
             <table class="table align-middle mb-0">

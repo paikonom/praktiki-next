@@ -48,6 +48,9 @@ RUN sed -ri 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
         /etc/apache2/apache2.conf \
         /etc/apache2/conf-available/*.conf
 
+# Η εφαρμογή επιτρέπει έως 3 MB· η PHP χρειάζεται λίγο μεγαλύτερο περιθώριο.
+RUN printf 'upload_max_filesize=15M\npost_max_size=16M\n' > /usr/local/etc/php/conf.d/uploads.ini
+
 WORKDIR /var/www/html
 
 COPY --from=application --chown=www-data:www-data /app /var/www/html

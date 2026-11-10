@@ -34,12 +34,15 @@ class UpdateStudentSectionRequest extends FormRequest
         if ($section === 'student') {
             return array_values(array_diff(
                 $this->activeFields('student'),
-                ['praxh_year', 'questionnaire_version'],
+                ['praxh_year', 'questionnaire_version', 'address_odos_polh'],
             ));
         }
 
         if ($section === 'provider') {
-            return $this->activeFields('provider');
+            return array_values(array_diff(
+                $this->activeFields('provider'),
+                ['f_perioxh', 'f_topos_ekt_prakt'],
+            ));
         }
 
         return $this->activeFields('office');

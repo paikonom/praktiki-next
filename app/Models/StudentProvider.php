@@ -56,8 +56,7 @@ class StudentProvider extends Model
                'ΤΚ ' . $this->f_ektPrakt_tk,
             ])->filter()->implode(', ');
         }
-        return '';
-        //λογικα αυτο ειναι για τις παλιες πρακτικες.... 
+        // Οι παλιές πρακτικές έχουν μόνο το ενιαίο πεδίο τόπου εκτέλεσης.
         return (string) $this->f_topos_ekt_prakt;
     }
 

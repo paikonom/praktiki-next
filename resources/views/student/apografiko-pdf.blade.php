@@ -61,27 +61,27 @@
 
 <table class="summary">
     <tr>
-        <td><span class="label">Ονοματεπώνυμο</span><span class="value">{{ $student->full_name }}</span></td>
-        <td><span class="label">Αριθμός Μητρώου</span><span class="value">{{ $student->AMF }}</span></td>
-        <td><span class="label">ΑΦΜ</span><span class="value">{{ $student->afm }}</span></td>
+        <td><span class="label">Ονοματεπώνυμο</span><span class="value"><x-pdf.value :value="$student->full_name" plain /></span></td>
+        <td><span class="label">Αριθμός Μητρώου</span><span class="value"><x-pdf.value :value="$student->AMF" plain /></span></td>
+        <td><span class="label">ΑΦΜ</span><span class="value"><x-pdf.value :value="$student->afm" plain /></span></td>
     </tr>
-    <tr><td><span class="label">Τμήμα</span><span class="value">{{ $student->department?->tmhma }}</span></td>
-    <td><span class="label">Ημερομηνία δελτίου</span><span class="value">{{ ($isInput ? $student->startDate : $student->endDate)?->format('d/m/Y') }}</span></td><td><span class="label">Ημερομηνία υποβολής</span><span class="value">{{ $apografiko->submitted_at?->format('d/m/Y H:i') }}</span></td></tr>
+    <tr><td><span class="label">Τμήμα</span><span class="value"><x-pdf.value :value="$student->department?->tmhma" plain /></span></td>
+    <td><span class="label">Ημερομηνία δελτίου</span><span class="value"><x-pdf.value :value="($isInput ? $student->startDate : $student->endDate)?->format('d/m/Y')" plain /></span></td><td><span class="label">Ημερομηνία υποβολής</span><span class="value"><x-pdf.value :value="$apografiko->submitted_at?->format('d/m/Y H:i')" plain /></span></td></tr>
 </table>
 
 <div class="ops">
     <strong>Επιτυχής υποβολή στο ΟΠΣ</strong>
-    MIS: {{ $mis ?: '—' }} · ID δελτίου: {{ $apografiko->deltio_id ?: '—' }}
+    MIS: <x-pdf.value :value="$mis" plain /> · ID δελτίου: <x-pdf.value :value="$apografiko->deltio_id" plain />
 </div>
 
 <table class="questions">
     <thead><tr><th>Ερώτηση</th><th class="answer">Απ.</th></tr></thead>
     <tbody>
     @foreach ($questions as $id => $question)
-        @php($answer = $answerLabels[(string) ($apografiko->answers[$id] ?? '')] ?? '—')
+        @php($answer = $answerLabels[(string) ($apografiko->answers[$id] ?? '')] ?? null)
         <tr>
-            <td><span class="question-code">{{ $question->kodikos_erotimatos }}</span> {{ $question->perigrafi }}</td>
-            <td class="answer">{{ $answer }}</td>
+            <td><span class="question-code"><x-pdf.value :value="$question->kodikos_erotimatos" plain /></span> <x-pdf.value :value="$question->perigrafi" plain /></td>
+            <td class="answer"><x-pdf.value :value="$answer" plain /></td>
         </tr>
     @endforeach
     </tbody>

@@ -5,9 +5,9 @@ namespace Tests\Feature;
 use App\Models\Student;
 use App\Models\StudentApografiko;
 use App\Models\StudentQuestionnaire;
+use App\Models\User;
 use App\Support\RescomReferenceData;
 use App\Support\VisibleInternshipDetails;
-use App\Support\WorkflowDisplay;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -37,14 +37,34 @@ class StudentPortalTest extends TestCase
         $this->actingAs($student, 'student')
             ->get(route('student.dashboard'))
             ->assertOk()
-            ->assertSee('Δελτία και ερωτηματολόγια')
+            ->assertSee('Δελτία / Αξιολογήσεις')
             ->assertDontSee(route('student.questionnaire'), false)
             ->assertDontSee('Ανέβασμα αρχείου');
 
         $this->get(route('student.records'))
             ->assertOk()
             ->assertSee('απογραφικού δελτίου εισόδου')
-            ->assertSee('αναλυτικής έκθεσης πεπραγμένων φοιτητή');
+            ->assertSee('αναλυτικής έκθεσης πεπραγμένων φοιτητή')
+            ->assertSee(route('student.apografika.show', 'input'), false)
+            ->assertSee(route('student.questionnaire'), false)
+            ->assertSee('Συμπλήρωση');
+
+        StudentApografiko::create(['student_id' => $student->id, 'type' => 'input', 'status' => 'completed']);
+        StudentQuestionnaire::create([
+            's_id' => $student->id,
+            'version' => 1,
+            'answers' => [],
+            'status' => 'submitted',
+            'submitted_at' => now(),
+        ]);
+        $student->unsetRelation('apografika')->unsetRelation('questionnaire');
+
+        $this->get(route('student.records'))
+            ->assertOk()
+            ->assertSee('href="'.route('student.apografika.pdf', 'input').'"', false)
+            ->assertDontSee('href="'.route('student.apografika.show', 'input').'"', false)
+            ->assertSee('href="'.route('student.questionnaire.pdf').'"', false)
+            ->assertDontSee('href="'.route('student.questionnaire').'"', false);
     }
 
     public function test_dashboard_structure_comes_from_the_workflow_tables(): void
@@ -60,18 +80,9 @@ class StudentPortalTest extends TestCase
             ->assertDontSee('A2.5');
     }
 
-    public function test_workflow_only_links_documents_visible_to_the_student(): void
-    {
-        $student = $this->student(['funding' => 'Espa']);
-        $rows = collect(app(WorkflowDisplay::class)->sections($student, 'student'))
-            ->flatMap(fn (array $section): array => $section['rows']);
-
-        $this->assertNull($rows->firstWhere('code', 'atlas_file_upload')['doneUrl']);
-        $this->assertNotNull($rows->firstWhere('code', 'hmer_prog_upload')['doneUrl']);
-    }
-
     public function test_student_can_submit_personal_details_once(): void
     {
+        $admin = User::factory()->create(['id' => 1, 'role' => 'admin']);
         $student = $this->student(['funding' => 'Espa']);
         $rescomReferenceData = app(RescomReferenceData::class);
 
@@ -107,6 +118,7 @@ class StudentPortalTest extends TestCase
             'afm' => '123456789', 'wresPerWeek' => 40, 'payPerMonth' => 350, 'payTotal' => 1050,
         ]);
         $this->assertDatabaseHas('student_actions', ['student_id' => $student->id, 'action' => 'stoix_student', 'status' => 'submitted']);
+        $this->assertDatabaseHas('notifications', ['notifiable_id' => $admin->id]);
 
         $this->actingAs($student->fresh(), 'student')
             ->patch(route('student.details.student.update'), $data + ['afm' => '987654321'])
@@ -116,6 +128,7 @@ class StudentPortalTest extends TestCase
 
     public function test_student_can_save_an_incomplete_profile_draft_without_completing_the_section(): void
     {
+        User::factory()->create(['id' => 1, 'role' => 'admin']);
         $student = $this->student(['funding' => 'Espa', 'fName' => null, 'lName' => null]);
 
         $this->actingAs($student, 'student')
@@ -133,6 +146,7 @@ class StudentPortalTest extends TestCase
             'lName' => 'ΔΟΚΙΜΗ',
         ]);
         $this->assertDatabaseHas('student_actions', ['student_id' => $student->id, 'action' => 'stoix_student', 'status' => 'draft']);
+        $this->assertDatabaseCount('notifications', 0);
 
         $this->actingAs($student->fresh(), 'student')
             ->patch(route('student.details.student.update'), [
@@ -183,6 +197,7 @@ class StudentPortalTest extends TestCase
 
     public function test_student_can_submit_provider_and_invalid_data_does_not_complete_it(): void
     {
+        $admin = User::factory()->create(['id' => 1, 'role' => 'admin']);
         $student = $this->student(['funding' => 'Espa']);
         $rescomReferenceData = app(RescomReferenceData::class);
 
@@ -233,6 +248,7 @@ class StudentPortalTest extends TestCase
             's_id' => $student->id, 'f_epwnymia' => 'ΔΟΚΙΜΑΣΤΙΚΟΣ ΦΟΡΕΑΣ', 'f_afm' => '987654321',
         ]);
         $this->assertDatabaseHas('student_actions', ['student_id' => $student->id, 'action' => 'stoix_forea', 'status' => 'submitted']);
+        $this->assertDatabaseHas('notifications', ['notifiable_id' => $admin->id]);
     }
 
     public function test_student_can_save_and_clear_an_incomplete_provider_draft_without_completing_the_section(): void
@@ -447,7 +463,7 @@ class StudentPortalTest extends TestCase
         ]);
     }
 
-    public function test_student_can_submit_questionnaire_once_and_review_answers(): void
+    public function test_student_can_submit_questionnaire_and_then_view_only_the_pdf(): void
     {
         $student = $this->eligibleQuestionnaireStudent();
         $questions = DB::table('student_questionnaire_questions')->where('version', 2)->get();
@@ -476,8 +492,8 @@ class StudentPortalTest extends TestCase
         $this->actingAs($student->fresh(), 'student')
             ->get(route('student.questionnaire'))
             ->assertOk()
-            ->assertSee('Δοκιμαστική αναλυτική έκθεση')
             ->assertSee('Προβολή PDF')
+            ->assertDontSee('Δοκιμαστική αναλυτική έκθεση')
             ->assertDontSee('Οριστική υποβολή');
 
         $this->actingAs($student->fresh(), 'student')

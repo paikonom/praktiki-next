@@ -47,11 +47,11 @@
         <div class="col-md-6 col-xl-3">
             <div class="card h-100 border-primary shadow-sm">
                 <div class="card-body d-flex flex-column p-4">
-                    <h2 class="h5">Γραφείο Πρακτικής Άσκησης / ΕΠ/ΥΠ</h2>
-                    <p class="text-body-secondary flex-grow-1">Σύνδεση χειριστών και επιστημονικών υπευθύνων.</p>
+                    <h2 class="h5">Χειριστές Πρακτικής<br> Υπεύθυνοι Π.Τ.</h2>
+                    <p class="text-body-secondary flex-grow-1">Σύνδεση χειριστών και  Υπευθύνων Πρακτικής Άσκησης Τμημάτων.</p>
                     <div class="d-grid gap-2">
                         <a class="btn btn-primary" href="{{ route('login') }}">Σύνδεση χειριστή</a>
-                        <a class="btn btn-outline-primary" href="{{ route('scientific_supervisor.login') }}">Σύνδεση ΕΠ/ΥΠ</a>
+                        <a class="btn btn-outline-primary" href="{{ route('scientific_supervisor.login') }}">Σύνδεση Υπευθύνων Π.Τ</a>
                     </div>
                 </div>
             </div>

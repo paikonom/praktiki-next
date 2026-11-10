@@ -16,7 +16,7 @@
         <div class="col-md-2"><label class="form-label">Σειρά</label><input class="form-control" type="number" step="0.01" min="0" name="sort_order" value="{{ old('sort_order', $workflowAction->sort_order ?? 0) }}" required></div>
         <div class="col-md-5"><label class="form-label">Κωδικός</label><input class="form-control" name="code" value="{{ old('code', $workflowAction->code) }}" required><div class="form-text">Το μοναδικό όνομα της ενέργειας στη ροή. Χρησιμοποιείται στις προϋποθέσεις και στους κανόνες· μην το αλλάζεις χωρίς λόγο.</div></div>
         <div class="col-12"><label class="form-label">Τίτλος</label><input class="form-control" name="title" value="{{ old('title', $workflowAction->title) }}" required></div>
-        <div class="col-md-4"><label class="form-label">Υπεύθυνος</label><select class="form-select" name="responsible_role">@foreach (['student' => 'Φοιτητής', 'provider' => 'Φορέας', 'scientific_supervisor' => 'ΕΠ/ΥΠ', 'member' => 'Χειριστής'] as $value => $label)<option value="{{ $value }}" @selected(old('responsible_role', $workflowAction->responsible_role) === $value)>{{ $label }}</option>@endforeach</select></div>
+        <div class="col-md-4"><label class="form-label">Υπεύθυνος</label><select class="form-select" name="responsible_role">@foreach (config('praktiki_workflow.role_labels') as $value => $label)<option value="{{ $value }}" @selected(old('responsible_role', $workflowAction->responsible_role) === $value)>{{ $label }}</option>@endforeach</select></div>
         <div class="col-12">
             <label class="form-label">Προϋποθέσεις</label>
             <div class="border rounded p-3">

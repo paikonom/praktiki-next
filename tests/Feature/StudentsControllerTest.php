@@ -267,6 +267,12 @@ class StudentsControllerTest extends TestCase
         $studentId = DB::table('students')->insertGetId([
             'department_id' => $departmentId,
             'fName' => 'Παλιό',
+            'address_odos_polh' => 'ΠΑΛΙΑ ΠΟΛΗ',
+        ]);
+        DB::table('providers')->insert([
+            's_id' => $studentId,
+            'f_perioxh' => 'ΠΑΛΙΑ ΕΔΡΑ',
+            'f_topos_ekt_prakt' => 'ΠΑΛΙΟΣ ΤΟΠΟΣ',
         ]);
 
         $this->actingAs($user)
@@ -286,6 +292,14 @@ class StudentsControllerTest extends TestCase
             ->patch(route('students.section.update', [$studentId, 'provider']), ['f_epwnymia' => 'Νέος Φορέας'])
             ->assertRedirect(route('students.show', ['student' => $studentId, 'panel' => 'provider']));
 
+        $this->actingAs($user)->patch(route('students.section.update', [$studentId, 'student']), [
+            'address_odos_polh' => 'ΝΕΑ ΠΟΛΗ',
+        ]);
+        $this->actingAs($user)->patch(route('students.section.update', [$studentId, 'provider']), [
+            'f_perioxh' => 'ΝΕΑ ΕΔΡΑ',
+            'f_topos_ekt_prakt' => 'ΝΕΟΣ ΤΟΠΟΣ',
+        ]);
+
         $this->actingAs($user)
             ->patch(route('students.section.update', [$studentId, 'office']), ['stoix_student' => 'approved'])
             ->assertRedirect(route('students.show', ['student' => $studentId, 'panel' => 'office']));
@@ -294,8 +308,14 @@ class StudentsControllerTest extends TestCase
             'id' => $studentId,
             'fName' => 'Νέο',
             'questionnaire_version' => 2,
+            'address_odos_polh' => 'ΠΑΛΙΑ ΠΟΛΗ',
         ]);
-        $this->assertDatabaseHas('providers', ['s_id' => $studentId, 'f_epwnymia' => 'Νέος Φορέας']);
+        $this->assertDatabaseHas('providers', [
+            's_id' => $studentId,
+            'f_epwnymia' => 'Νέος Φορέας',
+            'f_perioxh' => 'ΠΑΛΙΑ ΕΔΡΑ',
+            'f_topos_ekt_prakt' => 'ΠΑΛΙΟΣ ΤΟΠΟΣ',
+        ]);
         $this->assertDatabaseHas('student_actions', [
             'student_id' => $studentId,
             'action' => 'stoix_student',

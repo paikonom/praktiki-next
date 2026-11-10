@@ -7,7 +7,6 @@ use App\Models\Department;
 use App\Models\DocumentType;
 use App\Models\Student;
 use App\Models\WorkflowAction;
-use App\Services\StudentAgreementService;
 use App\Services\StudentEmailService;
 use App\Support\RescomReferenceData;
 use App\Support\StudentCardMetadata;
@@ -284,7 +283,6 @@ class StudentsController extends Controller
         Student $student,
         RescomReferenceData $rescomReferenceData,
         StudentCardMetadata $metadata,
-        StudentAgreementService $agreements,
         StudentEmailService $emails,
         WorkflowDisplay $workflowDisplay,
     ): View {
@@ -304,7 +302,14 @@ class StudentsController extends Controller
         if (! $student->diakoptomeno) {
             $studentMetadata = $studentMetadata->whereNotIn('field', ['endDate_DKPT_A', 'startDate_DKPT_B'])->values();
         }
+        if (blank($student->address_odos_polh)) {
+            $studentMetadata = $studentMetadata->where('field', '!=', 'address_odos_polh')->values();
+        }
         $providerMetadata = $metadata->fields('provider', $fundingCode, 'member');
+        $providerMetadata = $providerMetadata->reject(fn ($field): bool =>
+            in_array($field->field, ['f_perioxh', 'f_topos_ekt_prakt'], true)
+            && blank($provider?->{$field->field})
+        )->values();
         $officeMetadata = $metadata->fields('office', $fundingCode, 'member');
         $studentFields = $metadata->labels($studentMetadata);
         $providerFields = $metadata->labels($providerMetadata);
@@ -337,10 +342,6 @@ class StudentsController extends Controller
             ->map(fn ($code) => $rescomReferenceData->label('cities', $code) ?? (filled($code) ? "Άγνωστος κωδικός: {$code}" : ''))
             ->all();
 
-        $agreementMissing = collect();
-        if ($panel === 'agreement') {
-            $agreementMissing = $agreements->build($student)['missing'];
-        }
         $emailEntries = $panel === 'emails' ? $emails->entries($student) : collect();
         $officeWorkflowSections = $panel === 'office' ? $workflowDisplay->sections($student, 'member') : [];
         $documentTypes = $panel === 'documents'
@@ -369,7 +370,7 @@ class StudentsController extends Controller
             'student', 'panel', 'department', 'phase', 'praktiki', 'funding', 'provider',
             'studentFields', 'providerFields', 'officeFields',
             'fieldGroups', 'fieldHelp', 'workflow', 'currentState', 'canEdit', 'fieldOptions', 'cityLabels',
-            'agreementMissing', 'emailEntries', 'officeWorkflowSections', 'documentTypes', 'handlerStatusActions',
+            'emailEntries', 'officeWorkflowSections', 'documentTypes', 'handlerStatusActions',
         ));
     }
 

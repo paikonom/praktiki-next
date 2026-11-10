@@ -11,10 +11,10 @@ services:
             DB_PORT: 3306
             PRAKTIKI_PRIVATE_STORAGE_PATH: /var/www/html/storage/app/private
         ports:
-            # Localhost only until HTTPS/reverse proxy is configured.
-            - '127.0.0.1:${APP_PORT:-8080}:80'
+            # Public προσωρινά στο 8080, μέχρι να προστεθεί HTTPS/reverse proxy.
+            - '${APP_PORT:-8080}:80'
         volumes:
-            - './docker-data/private:/var/www/html/storage/app/private'
+            - '/srv/praktiki-data/private:/var/www/html/storage/app/private'
         depends_on:
             mysql:
                 condition: service_healthy
@@ -28,7 +28,7 @@ services:
             MYSQL_PASSWORD: '${DB_PASSWORD}'
             MYSQL_ROOT_PASSWORD: '${DB_ROOT_PASSWORD}'
         volumes:
-            - './docker-data/mysql:/var/lib/mysql'
+            - '/srv/praktiki-data/mysql:/var/lib/mysql'
         healthcheck:
             test: ['CMD-SHELL', 'mysqladmin ping -h localhost -p$$MYSQL_ROOT_PASSWORD --silent']
             interval: 10s

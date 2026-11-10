@@ -104,7 +104,7 @@ class ProviderPortalTest extends TestCase
         $this->assertGuest('provider');
     }
 
-    public function test_provider_can_submit_and_review_the_questionnaire_once(): void
+    public function test_provider_can_submit_questionnaire_and_then_view_only_the_pdf(): void
     {
         $student = $this->eligibleStudent();
         $questions = DB::table('provider_questionnaire_questions')
@@ -130,8 +130,8 @@ class ProviderPortalTest extends TestCase
         $this->actingAs($student->fresh(), 'provider')
             ->get(route('provider.questionnaire'))
             ->assertOk()
-            ->assertSee('Δοκιμαστική αξιολόγηση του φορέα.')
             ->assertSee('Προβολή PDF')
+            ->assertDontSee('Δοκιμαστική αξιολόγηση του φορέα.')
             ->assertDontSee('Οριστική υποβολή');
 
         $this->actingAs($student->fresh(), 'provider')

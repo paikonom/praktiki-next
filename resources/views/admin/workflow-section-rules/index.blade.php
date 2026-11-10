@@ -7,11 +7,10 @@
     <div><h1 class="h3 mb-1">Κανόνες ενοτήτων</h1><p class="text-muted mb-0">Πότε ανοίγει και πότε ολοκληρώνεται κάθε ενότητα για κάθε ρόλο.</p></div>
     <div class="d-flex gap-2"><a class="btn btn-outline-primary" href="{{ route('admin.workflow-actions.index') }}">Ενέργειες</a><a class="btn btn-primary" href="{{ route('admin.workflow-section-rules.create') }}">Νέος κανόνας</a></div>
 </div>
-@if (session('status'))<div class="alert alert-success">{{ session('status') }}</div>@endif
 @php
     $sections = ['A' => 'Α · Πριν την έναρξη', 'B' => 'Β · Κατά τη διάρκεια', 'G' => 'Γ · Μετά τη λήξη', 'D' => 'Δ · Ολοκλήρωση πρακτικής'];
     $fundings = ['all' => 'Όλες οι χρηματοδοτήσεις', 'Espa' => 'ΕΣΠΑ', 'Institution' => 'Ίδρυμα', 'InternshipProvider' => 'Φορέας'];
-    $roles = ['student' => 'Φοιτητής/τρια', 'provider' => 'Φορέας', 'scientific_supervisor' => 'ΕΠ/ΥΠ', 'member' => 'Γραφείο Πρακτικής'];
+    $roles = config('praktiki_workflow.role_labels');
     $availability = ['always' => 'Πάντα', 'internship_start' => 'Μετά την έναρξη', 'internship_end' => 'Μετά τη λήξη'];
 @endphp
 <form method="GET" class="card card-body shadow-sm mb-3"><div class="row g-2 align-items-end">

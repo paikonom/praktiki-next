@@ -2,59 +2,53 @@
 
 
 @section('title', 'Ιδιωτικό Συμφωνητικό Πρακτικής Άσκησης - Ίδρυμα')
- @php
-    //dd(get_defined_vars());
-@endphp
 @section('content')
-@php
-    require resource_path('views/students/agreements/partials/preprocessing.php');
-@endphp
 <h1>ΙΔΙΩΤΙΚΟ ΣΥΜΦΩΝΗΤΙΚΟ ΠΡΑΚΤΙΚΗΣ ΑΣΚΗΣΗΣ<br>(Με κάλυψη ασφαλιστικών εισφορών από τον Ε.Λ.Κ.Ε. σύμφωνα με το άρθρο 69 ν. 4957/2022)</h1>
 
-<p>Στ{{ $department?->polh === 'ΨΑΧΝΑ' ? 'α' : 'ην' }} <x-agreement.value :value="$department?->polh" /> σήμερα .............................., οι κάτωθι συμβαλλόμενοι:</p>
+<p>Στ{{ $department?->polh === 'ΨΑΧΝΑ' ? 'α' : 'ην' }} <x-pdf.value :value="$department?->polh" /> σήμερα .............................., οι κάτωθι συμβαλλόμενοι:</p>
 
-<p><strong>α)</strong> Το νομικό πρόσωπο με την επωνυμία  με επωνυμία <x-agreement.value :value="$provider?->f_epwnymia" />, 
-με έδρα <x-agreement.value :value="$provider?->headquartersAddress()" />,
-με  Α.Φ.Μ. <x-agreement.value :value="$provider?->f_afm" />, 
-Δ.Ο.Υ. <x-agreement.value :value="$provider?->taxOfficeLabel()" /> 
-και εκπροσωπείται νόμιμα τον/την <x-agreement.value :value="$provider?->legalRepresentative()" />
+<p><strong>α)</strong> Το νομικό πρόσωπο με την επωνυμία  με επωνυμία <x-pdf.value :value="$provider?->f_epwnymia" />, 
+με έδρα <x-pdf.value :value="$provider?->headquartersAddress()" />,
+με  Α.Φ.Μ. <x-pdf.value :value="$provider?->f_afm" />, 
+Δ.Ο.Υ. <x-pdf.value :value="$provider?->taxOfficeLabel()" /> 
+και εκπροσωπείται νόμιμα τον/την <x-pdf.value :value="$provider?->legalRepresentative()" />
 .</p>
 
 <p><strong>β)</strong> Το Εθνικό και Καποδιστριακό Πανεπιστήμιο Αθηνών 
 που εκπροσωπείται νόμιμα από τον/την Ιδρυματικό/ή 
 Υπεύθυνο/η Πρακτικής Άσκησης
- <x-agreement.value :value="$details['ep_yp_ergou'] ?? null" /> ,
- <x-agreement.value :value="$details['ep_yp_ergou_title'] ?? null" />
+ <x-pdf.value :value="$praktiki?->details['ep_yp_ergou'] ?? null" /> ,
+ <x-pdf.value :value="$praktiki?->details['ep_yp_ergou_title'] ?? null" />
  .</p>
 
 <p><strong>γ</strong>) Ο Ειδικός Λογαριασμός Κονδυλίων Έρευνας του ου Εθνικού και Καποδιστριακού Πανεπιστημίου Αθηνών,
 που εκπροσωπείται νόμιμα από 
-<x-agreement.value :value="$details['legal_representative'] ?? null" /> ,
- <x-agreement.value :value="$details['legal_representative_title'] ?? null" />
+<x-pdf.value :value="$praktiki?->details['legal_representative'] ?? null" /> ,
+ <x-pdf.value :value="$praktiki?->details['legal_representative_title'] ?? null" />
 , στο εξής ΕΛΚΕ ΕΚΠΑ. .</p>
 
-<p><strong>δ)</strong> Ο/Η Φοιτητής/τρια του Τμήματος <x-agreement.value :value="$department?->tmhma" /> με τα ακόλουθα στοιχεία:</p>
+<p><strong>δ)</strong> Ο/Η Φοιτητής/τρια του Τμήματος <x-pdf.value :value="$department?->tmhma" /> με τα ακόλουθα στοιχεία:</p>
 <table class="details">
-    <tr><td>Ονοματεπώνυμο</td><td><x-agreement.value :value="trim(($student->fName ?? '').' '.($student->lName ?? ''))" /></td></tr>
-    <tr><td>Ονοματεπώνυμο πατέρα</td><td><x-agreement.value :value="trim(($student->fatFName ?? '').' '.($student->fatLName ?? ''))" /></td></tr>
-    <tr><td>Ονοματεπώνυμο μητέρας</td><td><x-agreement.value :value="trim(($student->momFName ?? '').' '.($student->momLName ?? ''))" /></td></tr>
-    <tr><td>Ημερομηνία γέννησης</td><td><x-agreement.value :value="$student->dob ? \Illuminate\Support\Carbon::parse($student->dob)->format('d/m/Y') : null" /></td></tr>
-    <tr><td>Α.Φ.Μ.</td><td><x-agreement.value :value="$student->afm" /></td></tr>
-    <tr><td>Α.Μ.Κ.Α.</td><td><x-agreement.value :value="$student->amka" /></td></tr>
-    <tr><td>Α.Δ.Τ.</td><td><x-agreement.value :value="$student->adt" /></td></tr>
+    <tr><td>Ονοματεπώνυμο</td><td><x-pdf.value :value="trim(($student->fName ?? '').' '.($student->lName ?? ''))" /></td></tr>
+    <tr><td>Ονοματεπώνυμο πατέρα</td><td><x-pdf.value :value="trim(($student->fatFName ?? '').' '.($student->fatLName ?? ''))" /></td></tr>
+    <tr><td>Ονοματεπώνυμο μητέρας</td><td><x-pdf.value :value="trim(($student->momFName ?? '').' '.($student->momLName ?? ''))" /></td></tr>
+    <tr><td>Ημερομηνία γέννησης</td><td><x-pdf.value :value="$student->dob ? \Illuminate\Support\Carbon::parse($student->dob)->format('d/m/Y') : null" /></td></tr>
+    <tr><td>Α.Φ.Μ.</td><td><x-pdf.value :value="$student->afm" /></td></tr>
+    <tr><td>Α.Μ.Κ.Α.</td><td><x-pdf.value :value="$student->amka" /></td></tr>
+    <tr><td>Α.Δ.Τ.</td><td><x-pdf.value :value="$student->adt" /></td></tr>
     <tr><td>Διεύθυνση κατοικίας</td>
     <td>
-        <x-agreement.value :value="$student->studentAddress()" />
+        <x-pdf.value :value="$student->studentAddress()" />
     </td></tr>
-    <tr><td>Τηλέφωνο / email</td><td><x-agreement.value :value="trim(($student->tel ?? '').' / '.($student->email ?? ''), ' /')" /></td></tr>
-    <tr><td>Τμήμα</td><td><x-agreement.value :value="$department?->tmhma" /></td></tr>
-    <tr><td>Αριθμός Μητρώου Φοιτητή</td><td><x-agreement.value :value="$student->AMF" /></td></tr>
+    <tr><td>Τηλέφωνο / email</td><td><x-pdf.value :value="trim(($student->tel ?? '').' / '.($student->email ?? ''), ' /')" /></td></tr>
+    <tr><td>Τμήμα</td><td><x-pdf.value :value="$department?->tmhma" /></td></tr>
+    <tr><td>Αριθμός Μητρώου Φοιτητή</td><td><x-pdf.value :value="$student->AMF" /></td></tr>
 </table>
 
 
 <p>συμφώνησαν και έγιναν αμοιβαίως αποδεκτά τα ακόλουθα:</p>
 
-<p><strong>1.</strong> Ο Φορέας Υποδοχής αποδέχεται τη διεξαγωγή Πρακτικής Άσκησης του/της φοιτητή/τριας στον τόπο εκτέλεσης <x-agreement.value :value="$provider?->internshipAddress()" />, κατόπιν της εγκριτικής απόφασης <x-agreement.value :value="$phaseDetails['apofash_ELKE'] ?? null" />. Η διάρκεια της παρούσας σύμβασης ορίζεται σε <x-agreement.value :value="$student->numMhnes" /> μήνες, με <x-agreement.value :value="$student->wresPerWeek" /> ώρες εβδομαδιαίως. @include('students.agreements.partials.period') Μετά την πάροδο του προαναφερθέντος χρονικού διαστήματος, η σύμβαση λήγει αυτοδικαίως.</p>
+<p><strong>1.</strong> Ο Φορέας Υποδοχής αποδέχεται τη διεξαγωγή Πρακτικής Άσκησης του/της φοιτητή/τριας στον τόπο εκτέλεσης <x-pdf.value :value="$provider?->internshipAddress()" />, κατόπιν της εγκριτικής απόφασης <x-pdf.value :value="$phase?->details['apofash_ELKE'] ?? null" />. Η διάρκεια της παρούσας σύμβασης ορίζεται σε <x-pdf.value :value="$student->numMhnes" /> μήνες, με <x-pdf.value :value="$student->wresPerWeek" /> ώρες εβδομαδιαίως. @include('students.agreements.partials.period') Μετά την πάροδο του προαναφερθέντος χρονικού διαστήματος, η σύμβαση λήγει αυτοδικαίως.</p>
 
 <p><strong>2.</strong> Η παρούσα δεν συνιστά σε καμία περίπτωση σύμβαση εξηρτημένης εργασίας ή οποιασδήποτε άλλης μορφής μισθωτής
 απασχόλησης της/του φοιτήτριας/τή στον Φορέα Υποδοχής, καθώς δεν αποσκοπεί στην παροχή εργασίας ή παραγωγικού
@@ -66,7 +60,7 @@
 
 <p><strong>3.</strong> Οι φοιτητές/τριες που διεξάγουν Πρακτική Άσκηση υπάγονται υποχρεωτικά στην ασφάλιση του e-Ε.Φ.Κ.Α., σύμφωνα με την παρ. 1 του άρθρου 10 του ν. 2217/1994, μόνο για τον κίνδυνο ατυχήματος. Για την ασφάλιση παροχών ασθενείας σε είδος εφαρμόζεται η παρ. 10 του άρθρου 15 του ν. 3232/2004.</p>
 
-<p><strong>4.</strong> Με βάση την κείμενη νομοθεσία δεν υφίσταται μηνιαία αποζημίωση για την Πρακτική Άσκηση. Το κόστος ασφάλισης βαρύνει τον προϋπολογισμό του έργου <x-agreement.value :value="$details['K_E_ergou'] ?? null" /> που διαχειρίζεται ο Ε.Λ.Κ.Ε. Ε.Κ.Π.Α.</p>
+<p><strong>4.</strong> Με βάση την κείμενη νομοθεσία δεν υφίσταται μηνιαία αποζημίωση για την Πρακτική Άσκηση. Το κόστος ασφάλισης βαρύνει τον προϋπολογισμό του έργου <x-pdf.value :value="$praktiki?->details['K_E_ergou'] ?? null" /> που διαχειρίζεται ο Ε.Λ.Κ.Ε. Ε.Κ.Π.Α.</p>
 
 <p><strong>5.</strong>
     Η υλοποίηση του προγράμματος θα γίνει με την ευθύνη όλων των συμβαλλομένων
@@ -83,12 +77,12 @@
     που ισχύει για το προσωπικό του Φορέα Υποδοχής.
 
     Υπεύθυνος Πρακτικής Άσκησης έχει οριστεί ο/η κ.
-    <x-agreement.value :value="trim(($supervisor?->fName ?? '').' '.($supervisor?->lName ?? ''))" />.
+    <x-pdf.value :value="trim(($supervisor?->fName ?? '').' '.($supervisor?->lName ?? ''))" />.
 
     Επόπτης Πρακτικής Άσκησης από την πλευρά του Φορέα Υποδοχής
     ορίζεται ο/η κ.
-    <x-agreement.value :value="trim(($provider?->f_epopt_foreaFname ?? '').' '.($provider?->f_epopt_foreaLname ?? ''))" />
-    (email: <x-agreement.value :value="$provider?->f_epopt_email" />).
+    <x-pdf.value :value="trim(($provider?->f_epopt_foreaFname ?? '').' '.($provider?->f_epopt_foreaLname ?? ''))" />
+    (email: <x-pdf.value :value="$provider?->f_epopt_email" />).
 
     Ο Φορέας Υποδοχής αναλαμβάνει την υποχρέωση να δηλώσει
     την/τον φοιτήτρια/τή στο Πληροφοριακό Σύστημα ΕΡΓΑΝΗ
@@ -111,13 +105,13 @@
     </tr>
     <tr class="signature-space"><td></td><td></td></tr>
     <tr>
-        <td><x-agreement.value :value="$provider->legalRepresentative()" /></td>
-        <td><x-agreement.value :value="$details['ep_yp_ergou'] ?? null" /></td>
+        <td><x-pdf.value :value="$provider->legalRepresentative()" /></td>
+        <td><x-pdf.value :value="$praktiki?->details['ep_yp_ergou'] ?? null" /></td>
     </tr>
 
      <tr>
         <td></td>
-        <td><x-agreement.value :value="$details['ep_yp_ergou_title'] ?? null" /></td>
+        <td><x-pdf.value :value="$praktiki?->details['ep_yp_ergou_title'] ?? null" /></td>
     </tr>
     <tr>
         <td>(Υπογραφή - Σφραγίδα)</td>
@@ -125,7 +119,6 @@
     </tr>
 
        
-        <!-- <td><x-agreement.value :value="$details['legal_representative'] ?? null" /><br><x-agreement.value :value="$details['legal_representative_title'] ?? null" /></td><td><x-agreement.value :value="trim(($student->fName ?? '').' '.($student->lName ?? ''))" /></td><td><x-agreement.value :value="$details['ep_yp_ergou'] ?? null" /></td> -->
 
 </table>
 
@@ -139,12 +132,12 @@
         <th>ΓΙΑ ΤΟΝ Ε.Λ.Κ.Ε. Ε.Κ.Π.Α.</th></tr>
     <tr class="signature-space"><td></td><td></td></tr>
     <tr>
-        <td><x-agreement.value :value="trim(($student->fName ?? '').' '.($student->lName ?? ''))" /></td>
-        <td><x-agreement.value :value="$details['legal_representative'] ?? null" /></td>
+        <td><x-pdf.value :value="trim(($student->fName ?? '').' '.($student->lName ?? ''))" /></td>
+        <td><x-pdf.value :value="$praktiki?->details['legal_representative'] ?? null" /></td>
     </tr>
      <tr>
         <td></td>
-        <td><x-agreement.value :value="$details['legal_representative_title'] ?? null" /></td>
+        <td><x-pdf.value :value="$praktiki?->details['legal_representative_title'] ?? null" /></td>
     </tr>
      <tr>
         <td>(Υπογραφή)</td>

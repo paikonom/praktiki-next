@@ -21,13 +21,6 @@
         'showUuid' => true,
         ])
 
-    @if (session('status'))
-        <div class="alert alert-{{ session('status_type', 'success') }} alert-dismissible fade show" role="alert">
-            {{ session('status') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Κλείσιμο"></button>
-        </div>
-    @endif
-
     @if ($errors->any())
         <div class="alert alert-danger" role="alert">
             <div class="fw-semibold">Η αποθήκευση δεν έγινε. Διόρθωσε τα παρακάτω:</div>
@@ -148,11 +141,11 @@
                     </div>
                 </div>
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white"><h2 class="h5 mb-0">Ερωτηματολόγια</h2></div>
+                    <div class="card-header bg-white"><h2 class="h5 mb-0">Αξιολογήσεις / Ερωτηματολόγια</h2></div>
                     <div class="list-group list-group-flush">
                         @foreach ([
-                            'student' => ['label' => 'Ερωτηματολόγιο φοιτητή', 'record' => $student->questionnaire],
-                            'provider' => ['label' => 'Ερωτηματολόγιο φορέα', 'record' => $student->providerQuestionnaire],
+                            'student' => ['label' => 'Αξιολόγηση Συνολικής Εμπειρίας Πρακτικής Άσκησης από τον/τη Φοιτητή/τρια', 'record' => $student->questionnaire],
+                            'provider' => ['label' => 'Αξιολόγηση Φοιτητή/τριας Πρακτικής Άσκησης από τον/την αρμόδιο/α Επόπτη/τρια', 'record' => $student->providerQuestionnaire],
                         ] as $type => $item)
                             @php
                                 $questionnaireStatus = $item['record']?->status;
@@ -172,7 +165,6 @@
                                 </div>
                                 <div class="d-flex gap-2">
                                     @if ($item['record'])
-                                        <a class="btn btn-outline-primary" href="{{ route('students.questionnaires.show', [$student, $type]) }}">Προβολή</a>
                                         @if ($item['record']->isSubmitted())
                                             <a class="btn btn-outline-secondary" href="{{ route('students.questionnaires.pdf', [$student, $type]) }}" target="_blank">PDF</a>
                                         @endif
@@ -192,7 +184,6 @@
                                             </form>
                                         @endif
                                     @else
-                                        <button class="btn btn-outline-primary" type="button" disabled>Προβολή</button>
                                         <button class="btn btn-outline-secondary" type="button" disabled>PDF</button>
                                     @endif
                                 </div>

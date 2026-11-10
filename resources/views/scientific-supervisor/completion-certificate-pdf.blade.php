@@ -17,45 +17,45 @@
 <body>
 @include('pdf.partials.espa-footer')
 @php
-    $value = fn ($value, string $label) => filled($value) ? $value : "!!! ΛΕΙΠΕΙ: {$label} !!!";
-    $studentName = mb_strtoupper($value($student->full_name, 'ΟΝΟΜΑ ΦΟΙΤΗΤΗ'));
-    $providerName = mb_strtoupper($value($provider?->f_epwnymia, 'ΦΟΡΕΑΣ ΑΠΑΣΧΟΛΗΣΗΣ'));
-    $supervisorName = mb_strtoupper($value($supervisor?->full_name, 'ΕΠ/ΥΠ'));
-    $departmentName = mb_strtoupper($value($department?->tmhma, 'ΤΜΗΜΑ'));
-    $city = $value($department?->polh, 'ΠΟΛΗ');
+    $studentName = filled($student->full_name) ? mb_strtoupper($student->full_name) : null;
+    $providerName = filled($provider?->f_epwnymia) ? mb_strtoupper($provider->f_epwnymia) : null;
+    $supervisorName = filled($supervisor?->full_name) ? mb_strtoupper($supervisor->full_name) : null;
+    $departmentName = filled($department?->tmhma) ? mb_strtoupper($department->tmhma) : null;
     $amount = filled($student->payTotal)
         ? number_format((float) $student->payTotal, fmod((float) $student->payTotal, 1.0) === 0.0 ? 0 : 2, ',', '.')
-        : '!!! ΛΕΙΠΕΙ: ΣΥΝΟΛΙΚΗ ΑΜΟΙΒΗ !!!';
+        : null;
 @endphp
 
 <p class="document-code">Ε-ΔΠ-07-Ε22.V2.</p>
-<p class="city">{{ $city }},</p>
+<p class="city"><x-pdf.value :value="$department?->polh" />,</p>
 
-<h1>ΒΕΒΑΙΩΣΗ ΟΛΟΚΛΗΡΩΣΗΣ ΠΡΑΚΤΙΚΗΣ ΑΣΚΗΣΗΣ ΦΟΙΤΗΤΗ/ΤΡΙΑΣ ΑΠΟ<br>
-ΤΟΝ/ΤΗΝ ΕΠΙΣΤΗΜΟΝΙΚΟ/Η ΥΠΕΥΘΥΝΟ/Η ΤΟΥ ΤΜΗΜΑΤΟΣ {{ $departmentName }} ΤΟΥ<br>
-ΕΘΝΙΚΟΥ &amp; ΚΑΠΟΔΙΣΤΡΙΑΚΟΥ ΠΑΝΕΠΙΣΤΗΜΙΟΥ ΑΘΗΝΩΝ</h1>
+<h1>Βεβαίωση Ολοκλήρωσης Πρακτικής Άσκησης φοιτητή/τριας από τον/την Υπεύθυνο/η Πρακτικής του Τμήματος
+     <x-pdf.value :value="$departmentName" /> ΤΟΥ<br>
+Εθνικού &amp; Καποδιστριακού Πανεπιστημίου Αθηνών</h1>
 
 <p>
-    Βεβαιώνεται ότι ο/η <strong>{{ $studentName }}</strong> φοιτητής/τρια του Εθνικού και Καποδιστριακού
-    Πανεπιστημίου Αθηνών, με ΑΜ <strong>{{ $value($student->AMF, 'ΑΜ') }}</strong> υλοποίησε την Πρακτική του Άσκηση στο πλαίσιο
-    της Πράξης «{{ $value($details['titlos_praxhs'] ?? null, 'ΤΙΤΛΟΣ ΠΡΑΞΗΣ') }}» με Κωδικό
-    ΟΠΣ <strong>{{ $value($details['kwdikos_OPS'] ?? null, 'ΚΩΔΙΚΟΣ ΟΠΣ') }}</strong> του Προγράμματος
-    «{{ $value($details['titlos_programmatos'] ?? null, 'ΤΙΤΛΟΣ ΠΡΟΓΡΑΜΜΑΤΟΣ') }}» η οποία
+    Βεβαιώνεται ότι ο/η <x-pdf.value :value="$studentName" /> φοιτητής/τρια του Εθνικού και Καποδιστριακού
+    Πανεπιστημίου Αθηνών, με ΑΜ <x-pdf.value :value="$student->AMF" /> υλοποίησε την Πρακτική του Άσκηση στο πλαίσιο
+    της Πράξης «<x-pdf.value :value="$details['titlos_praxhs'] ?? null" />» με Κωδικό
+    ΟΠΣ <x-pdf.value :value="$details['kwdikos_OPS'] ?? null" /> του Προγράμματος
+    «<x-pdf.value :value="$details['titlos_programmatos'] ?? null" />» η οποία
     συγχρηματοδοτείται από την Ευρωπαϊκή Ένωση (ΕΚΤ+) και από εθνικούς πόρους κατά το
-    χρονικό διάστημα από <strong>{{ $value($student->startDate?->format('Y-m-d'), 'ΗΜΕΡΟΜΗΝΙΑ ΕΝΑΡΞΗΣ') }}</strong>
-    έως <strong>{{ $value($student->endDate?->format('Y-m-d'), 'ΗΜΕΡΟΜΗΝΙΑ ΛΗΞΗΣ') }}</strong>, στον φορέα απασχόλησης
-    <strong>{{ $providerName }}</strong> και έχει εκπληρώσει τις σχετικές του/της υποχρεώσεις.
+    χρονικό διάστημα από <x-pdf.value :value="$student->startDate?->format('Y-m-d')" />
+    έως <x-pdf.value :value="$student->endDate?->format('Y-m-d')" />, στον φορέα απασχόλησης
+    <x-pdf.value :value="$providerName" /> και έχει εκπληρώσει τις σχετικές του/της υποχρεώσεις.
 </p>
 <p>
     Η συνολική αμοιβή του/της ασκούμενου/νης για το διάστημα της πρακτικής άσκησης ανέρχεται στο
-    ποσό των <strong>{{ $amount }} ευρώ</strong>.
+    ποσό των <x-pdf.value :value="$amount" /> ευρώ.
 </p>
 
 <div class="signature">
-    <p><strong>Ο/Η Επιστημονικά Υπεύθυνος/η Τμήματος</strong></p>
-    <p><strong>{{ $supervisorName }}</strong></p>
-    <!-- <p>{{ $supervisorName }}</p> -->
-    <!-- <p>{{ now()->format('d.m.Y H:i') }}</p> -->
+    <p><strong>Υπεύθυνο/η Πρακτικής του Τμήματος</strong></p>
+    <p></p>
+    <p></p>
+    <p></p>
+    <p><x-pdf.value :value="$supervisorName" /></p>
+    <p>(Υπογραφή)</p>
 </div>
 </body>
 </html>

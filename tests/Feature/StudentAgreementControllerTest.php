@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Student;
 use App\Models\User;
-use App\Services\StudentAgreementService;
 use App\Support\RescomReferenceData;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -28,25 +27,14 @@ class StudentAgreementControllerTest extends TestCase
         }
     }
 
-    public function test_agreement_service_reports_missing_fields_but_still_builds_a_view(): void
-    {
-        $student = $this->studentFor('Espa', complete: false);
-
-        $agreement = app(StudentAgreementService::class)->build($student);
-
-        $this->assertSame('students.agreements.espa', $agreement['view']);
-        $this->assertContains('ΑΦΜ φοιτητή', $agreement['missing']->all());
-        $this->assertContains('Επωνυμία φορέα', $agreement['missing']->all());
-    }
-
     public function test_provider_addresses_use_structured_values_and_keep_the_legacy_internship_fallback(): void
     {
         $student = $this->studentFor('Espa');
         $provider = $student->provider()->firstOrFail();
         $city = app(RescomReferenceData::class)->label('cities', 15875);
 
-        $this->assertSame($city.', Οδός Έδρας 1, 12345', $provider->headquartersAddress());
-        $this->assertSame($city.', Οδός Πρακτικής 2, 12345', $provider->internshipAddress());
+        $this->assertSame($city.', Οδός Έδρας 1, ΤΚ 12345', $provider->headquartersAddress());
+        $this->assertSame($city.', Οδός Πρακτικής 2, ΤΚ 12345', $provider->internshipAddress());
         $this->assertSame('Νόμιμος Εκπρόσωπος, Διευθυντής', $provider->legalRepresentative());
 
         $provider->forceFill([

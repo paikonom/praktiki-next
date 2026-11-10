@@ -12,8 +12,8 @@ return [
 
     'student_editable_funding_fields' => [
         'Espa' => ['workDaysDescription', 'address_polh_rescom', 'wresPerWeek', 'payPerMonth', 'payTotal'],
-        'InternshipProvider' => ['address_odos_polh', 'wresPerDays', 'payTotal', 'payPerMonth'],
-        'Institution' => ['address_odos_polh', 'wresPerWeek'],
+        'InternshipProvider' => ['address_polh_rescom', 'wresPerDays', 'payTotal', 'payPerMonth'],
+        'Institution' => ['address_polh_rescom', 'wresPerWeek'],
     ],
 
     'student_readonly_fields' => ['AMF', 'tel', 'email', 'epopt_kath'],

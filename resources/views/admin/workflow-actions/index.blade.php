@@ -7,11 +7,10 @@
     <div><h1 class="h3 mb-1">Ενέργειες ροής</h1><p class="text-muted mb-0">Τι εμφανίζεται, ποιος είναι υπεύθυνος και από πού προκύπτει η ολοκλήρωση.</p></div>
     <div class="d-flex gap-2"><a class="btn btn-outline-primary" href="{{ route('admin.workflow-section-rules.index') }}">Κανόνες ενοτήτων</a><a class="btn btn-primary" href="{{ route('admin.workflow-actions.create') }}">Νέα ενέργεια</a></div>
 </div>
-@if (session('status'))<div class="alert alert-success">{{ session('status') }}</div>@endif
 @php
     $sections = ['A' => 'Α · Πριν την έναρξη', 'B' => 'Β · Κατά τη διάρκεια', 'G' => 'Γ · Μετά τη λήξη', 'D' => 'Δ · Ολοκλήρωση πρακτικής'];
     $fundings = ['all' => 'Όλες οι χρηματοδοτήσεις', 'Espa' => 'ΕΣΠΑ', 'Institution' => 'Ίδρυμα', 'InternshipProvider' => 'Φορέας'];
-    $roles = ['student' => 'Φοιτητής/τρια', 'provider' => 'Φορέας', 'scientific_supervisor' => 'ΕΠ/ΥΠ', 'member' => 'Γραφείο Πρακτικής'];
+    $roles = config('praktiki_workflow.role_labels');
 @endphp
 <form method="GET" class="card card-body shadow-sm mb-3">
     <div class="row g-2 align-items-end">

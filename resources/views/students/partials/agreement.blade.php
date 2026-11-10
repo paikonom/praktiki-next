@@ -6,20 +6,6 @@
         </div>
     </div>
     <div class="card-body">
-        @if ($agreementMissing->isNotEmpty())
-            <div class="alert alert-warning">
-                <div class="fw-semibold">Λείπουν {{ $agreementMissing->count() }} στοιχεία.</div>
-                <div class="small mb-2">Η προεπισκόπηση παραμένει διαθέσιμη και τα κενά θα εμφανιστούν κόκκινα ως !!!IS EMPTY!!!.</div>
-                <ul class="mb-0 small">
-                    @foreach ($agreementMissing as $missingField)
-                        <li>{{ $missingField }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @else
-            <div class="alert alert-success">Όλα τα βασικά στοιχεία του συμφωνητικού είναι συμπληρωμένα.</div>
-        @endif
-
         <div class="d-flex flex-wrap gap-2">
             <a class="btn btn-outline-primary" href="{{ route('students.agreement.preview', $student) }}" target="_blank" rel="noopener">
                 Προεπισκόπηση PDF

@@ -42,7 +42,7 @@
                             <input class="form-check-input" type="checkbox" name="active" value="1" id="active" @checked(old('active', $supervisor->active))>
                             <label class="form-check-label" for="active">Ενεργός για τις επόμενες εισαγωγές φοιτητών</label>
                         </div>
-                        <div class="form-text">Η ενεργοποίηση απενεργοποιεί αυτόματα οποιονδήποτε άλλο ενεργό ΕΠ/ΥΠ του ίδιου τμήματος.</div>
+                        <div class="form-text">Η ενεργοποίηση απενεργοποιεί αυτόματα οποιονδήποτε άλλο ενεργό Υπεύθυνο/η Π.Τ. του ίδιου τμήματος.</div>
                     </div>
                 @endif
             </div>

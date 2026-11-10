@@ -27,11 +27,6 @@
 @php
     $supervisor = $student->supervisor;
     $provider = $student->provider;
-    $period = ($student->startDate?->format('d/m/Y') ?? '—').' έως '.($student->endDate?->format('d/m/Y') ?? '—');
-    if ($student->diakoptomeno && $student->endDate_DKPT_A && $student->startDate_DKPT_B) {
-        $period .= ' ('.$student->startDate->format('d/m/Y').'–'.$student->endDate_DKPT_A->format('d/m/Y')
-            .' και '.$student->startDate_DKPT_B->format('d/m/Y').'–'.$student->endDate->format('d/m/Y').')';
-    }
 @endphp
 
 <header>
@@ -39,43 +34,73 @@
 </header>
 
 <footer>
-    Ημερομηνία συμπλήρωσης: {{ $questionnaire->submitted_at->format('d/m/Y H:i') }}
+    Ημερομηνία συμπλήρωσης: <x-pdf.value :value="$questionnaire->submitted_at?->format('d/m/Y H:i')" plain />
     · Σελίδα <span class="page-number"></span>
     @if ($funding === 'Espa')
         <img src="{{ public_path('images/epsa-koinwnikh-synoxh-2021-2027.jpg') }}" alt="ΕΣΠΑ">
     @endif
 </footer>
-
-<h1>ΕΡΩΤΗΜΑΤΟΛΟΓΙΟ ΑΞΙΟΛΟΓΗΣΗΣ ΤΗΣ ΠΡΑΚΤΙΚΗΣ ΑΣΚΗΣΗΣ ΑΠΟ ΤΟΝ/ΤΗ ΦΟΙΤΗΤΗ/ΤΡΙΑ</h1>
+<br>
+<h1>Αξιολόγηση Συνολικής Εμπειρίας Πρακτικής Άσκησης από τον/τη Φοιτητή/τρια</h1>
 
 <div class="details">
-    <div class="detail"><strong>ΟΝΟΜΑΤΕΠΩΝΥΜΟ ΦΟΙΤΗΤΗ/ΤΡΙΑΣ:</strong> {{ trim($student->fName.' '.$student->lName) ?: '—' }}</div>
-    <div class="detail"><strong>Αριθμός Μητρώου Σχολής:</strong> {{ $student->AMF ?: '—' }}</div>
-    <div class="detail"><strong>Τμήμα:</strong> {{ $student->department?->tmhma ?: '—' }}</div>
-    <div class="detail"><strong>Επιστημονικά Υπεύθυνος/η:</strong> {{ $supervisor ? trim($supervisor->fName.' '.$supervisor->lName) : '—' }}</div>
-    <div class="detail"><strong>Φορέας Απασχόλησης:</strong> {{ $provider?->f_epwnymia ?: '—' }}</div>
-    <div class="detail"><strong>Επιβλέπων/ουσα στον χώρο άσκησης:</strong> {{ $provider ? trim($provider->f_epopt_foreaFname.' '.$provider->f_epopt_foreaLname) ?: '—' : '—' }}</div>
-    <div class="detail"><strong>Email Επιβλέποντος/ουσας:</strong> {{ $provider?->f_epopt_email ?: '—' }}</div>
-    <div class="detail"><strong>ΔΙΑΣΤΗΜΑ ΠΟΥ ΠΡΑΓΜΑΤΟΠΟΙΗΘΗΚΕ Η ΠΡΑΚΤΙΚΗ ΑΣΚΗΣΗ:</strong> {{ $period }}</div>
+    <div class="detail"><strong>ΟΝΟΜΑΤΕΠΩΝΥΜΟ ΦΟΙΤΗΤΗ/ΤΡΙΑΣ:</strong> <x-pdf.value :value="$student->full_name" plain /></div>
+    <div class="detail"><strong>Αριθμός Μητρώου Σχολής:</strong> <x-pdf.value :value="$student->AMF" plain /></div>
+    <div class="detail"><strong>Τμήμα:</strong> <x-pdf.value :value="$student->department?->tmhma" plain /></div>
+    <div class="detail"><strong>Επιστημονικά Υπεύθυνος/η:</strong> <x-pdf.value :value="$supervisor?->full_name" plain /></div>
+    <div class="detail"><strong>Φορέας Απασχόλησης:</strong> <x-pdf.value :value="$provider?->f_epwnymia" plain /></div>
+    <div class="detail"><strong>Επιβλέπων/ουσα στον χώρο άσκησης:</strong> <x-pdf.value :value="$provider?->providerSupervisor()" plain /></div>
+    <div class="detail"><strong>Email Επιβλέποντος/ουσας:</strong> <x-pdf.value :value="$provider?->f_epopt_email" plain /></div>
+    <div class="detail"><strong>ΔΙΑΣΤΗΜΑ ΠΟΥ ΠΡΑΓΜΑΤΟΠΟΙΗΘΗΚΕ Η ΠΡΑΚΤΙΚΗ ΑΣΚΗΣΗ:</strong>
+        <x-pdf.value :value="$student->startDate?->format('d/m/Y')" plain /> έως <x-pdf.value :value="$student->endDate?->format('d/m/Y')" plain />
+        @if ($student->diakoptomeno)
+            (<x-pdf.value :value="$student->startDate?->format('d/m/Y')" plain />–<x-pdf.value :value="$student->endDate_DKPT_A?->format('d/m/Y')" plain />
+            και <x-pdf.value :value="$student->startDate_DKPT_B?->format('d/m/Y')" plain />–<x-pdf.value :value="$student->endDate?->format('d/m/Y')" plain />)
+        @endif
+    </div>
 </div>
 
 @foreach ($sections as $section)
-    <h2>{{ $section['title'] }}</h2>
+    <h2><x-pdf.value :value="$section['title'] ?? null" plain /></h2>
     @foreach ($section['questions'] as $question)
         <div class="question">
-            <div class="label">{{ $question->label }}</div>
+            <div class="label"><x-pdf.value :value="$question->label" plain /></div>
             @if ($question->type === 'radio')
-                <div class="options">
-                    @foreach ($question->options as $option)
-                        <span class="@if ((string) $answers->get($question->code) === (string) $option) selected @endif">{{ $option }}</span>@unless($loop->last) &nbsp; @endunless
-                    @endforeach
-                </div>
+                @if (filled($answers->get($question->code)))
+                    <div class="options">
+                        @foreach ($question->options as $option)
+                            <span class="@if ((string) $answers->get($question->code) === (string) $option) selected @endif"><x-pdf.value :value="$option" plain /></span>@unless($loop->last) &nbsp; @endunless
+                        @endforeach
+                    </div>
+                @else
+                    <div class="answer"><x-pdf.value :value="null" plain /></div>
+                @endif
             @else
-                <div class="answer">{{ filled($answers->get($question->code)) ? $answers->get($question->code) : '—' }}</div>
+                <div class="answer"><x-pdf.value :value="$answers->get($question->code)" plain /></div>
             @endif
         </div>
     @endforeach
 @endforeach
+<table class="signatures" style="width:100%; border-collapse:collapse;">
+    <tr>
+        <th style="text-align:center;">
+            Ο/Η ΦΟΙΤΗΤΗΣ/ΤΡΙΑ
+        </th>
+    </tr>
+    <tr>
+        <td style="height:60px;"></td>
+    </tr>
+    <tr>
+        <td style="text-align:center;">
+            <x-pdf.value :value="$student->full_name" />
+        </td>
+    </tr>
+    <tr>
+        <td style="text-align:center;">
+            (Υπογραφή)
+        </td>
+    </tr>
+</table>
 
 </body>
 </html>
