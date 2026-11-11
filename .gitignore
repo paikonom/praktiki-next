@@ -18,6 +18,7 @@
 /praktiki-production.sql
 /mac-push.sh
 /server-deploy.sh
+/refresh-local-from-production.sh
 /node_modules
 /public/fonts-manifest.dev.json
 /public/hot

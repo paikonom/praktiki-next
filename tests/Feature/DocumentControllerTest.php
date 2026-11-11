@@ -239,6 +239,34 @@ class DocumentControllerTest extends TestCase
         $this->assertDatabaseMissing('student_documents', ['id' => $document->id]);
     }
 
+    public function test_handler_can_delete_an_approved_document_for_their_department(): void
+    {
+        Storage::fake('local');
+        $student = $this->student();
+        $departmentId = DB::table('departments')->insertGetId([
+            'atlasId' => 999999,
+            'tmhma' => 'Δοκιμή',
+        ]);
+        DB::table('students')->where('id', $student->id)->update(['department_id' => $departmentId]);
+        $student->refresh();
+
+        $handler = User::factory()->create(['role' => 'member']);
+        DB::table('user_department_access')->insert([
+            'user_id' => $handler->id,
+            'department_id' => $departmentId,
+        ]);
+
+        $document = $this->document($student, DocumentType::where('code', 'ekthesh_Foit')->firstOrFail());
+        $document->update(['status' => 'approved', 'reviewed_at' => now()]);
+
+        $this->actingAs($handler)
+            ->delete(route('students.documents.destroy', $document))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('student_documents', ['id' => $document->id]);
+        Storage::disk('local')->assertMissing($document->path);
+    }
+
     public function test_handler_must_reject_an_approved_version_before_uploading_a_replacement(): void
     {
         Storage::fake('local');

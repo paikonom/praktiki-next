@@ -323,7 +323,6 @@ class StudentsController extends Controller
             + $metadata->help($providerMetadata)
             + $metadata->help($officeMetadata);
 
-        $workflow = StudentWorkflow::for($student, $fundingCode);
         $currentState = StudentWorkflow::currentState($student);
         $canEdit = Gate::allows('update', $student);
         $fieldOptions = config('praktiki_fields.select_options');
@@ -369,7 +368,7 @@ class StudentsController extends Controller
         return view('students.show', compact(
             'student', 'panel', 'department', 'phase', 'praktiki', 'funding', 'provider',
             'studentFields', 'providerFields', 'officeFields',
-            'fieldGroups', 'fieldHelp', 'workflow', 'currentState', 'canEdit', 'fieldOptions', 'cityLabels',
+            'fieldGroups', 'fieldHelp', 'currentState', 'canEdit', 'fieldOptions', 'cityLabels',
             'emailEntries', 'officeWorkflowSections', 'documentTypes', 'handlerStatusActions',
         ));
     }

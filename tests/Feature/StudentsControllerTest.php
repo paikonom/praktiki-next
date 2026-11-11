@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Student;
-use App\Models\StudentAction;
 use App\Models\StudentApografiko;
 use App\Models\User;
 use App\Models\WorkflowAction;
@@ -231,32 +230,6 @@ class StudentsControllerTest extends TestCase
         $this->assertFalse($student->relationLoaded('phase'));
         $this->assertSame('Espa', $student->fundingCode());
         $this->assertNull(app(StudentEmailService::class)->unavailableReason($student, 'input'));
-    }
-
-    public function test_card_workflow_uses_legacy_labels_and_hides_future_steps(): void
-    {
-        $student = (new Student)->forceFill([
-            'startDate' => now()->addMonth(),
-            'endDate' => now()->addMonths(3),
-        ]);
-
-        $workflow = StudentWorkflow::for($student, 'Espa');
-
-        $this->assertNotEmpty($workflow['before']);
-        $this->assertEmpty($workflow['during']);
-        $this->assertEmpty($workflow['after']);
-
-        $student->startDate = now()->subMonths(3);
-        $student->endDate = now()->subMonth();
-        $student->setRelation('actions', collect([
-            new StudentAction(['action' => 'aitima_plhrwmhs', 'status' => 'approved']),
-        ]));
-        $workflow = StudentWorkflow::for($student, 'Espa');
-
-        $this->assertContains(
-            'Το ΓΠΑ δήλωσε οτι έγινε η διαδικασία πληρωμής;',
-            collect($workflow['after'])->pluck('label')->all(),
-        );
     }
 
     public function test_user_can_update_student_and_provider_sections_for_accessible_department(): void

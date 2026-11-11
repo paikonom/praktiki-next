@@ -293,13 +293,12 @@
                                     'scientific_supervisor' => route('scientific_supervisor.documents.destroy', $document),
                                     default => route('students.documents.destroy', $document),
                                 };
-                                $actorId = match ($role) {
-                                    'member' => auth('web')->id(),
-                                    'scientific_supervisor' => auth('scientific_supervisor')->id(),
-                                    default => auth($role)->id(),
+                                $actor = match ($role) {
+                                    'member' => auth('web')->user(),
+                                    'scientific_supervisor' => auth('scientific_supervisor')->user(),
+                                    default => auth($role)->user(),
                                 };
-                                $canDelete = ($role === 'member' && auth('web')->user()?->role === 'admin')
-                                    || ($document->status === 'submitted' && $document->uploaded_by_role === $role && $document->uploaded_by_id === $actorId);
+                                $canDelete = $actor && Gate::forUser($actor)->allows('delete', [$document, $role]);
                             @endphp
                             <tr>
                                 <td>v{{ $document->version }}</td>

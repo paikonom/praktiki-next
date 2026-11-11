@@ -35,6 +35,11 @@ class StudentDocumentPolicy
             return true;
         }
 
+        if ($loggedInUser instanceof User && $loggedInRole === 'member') {
+            return in_array($studentDocument->status, ['submitted', 'approved'], true)
+                && app(StudentPolicy::class)->update($loggedInUser, $studentDocument->student);
+        }
+
         return $studentDocument->status === 'submitted'
             && $studentDocument->uploaded_by_role === $loggedInRole
             && $studentDocument->uploaded_by_id === $loggedInUser->id
