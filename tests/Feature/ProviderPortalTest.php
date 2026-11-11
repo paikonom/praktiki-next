@@ -151,6 +151,15 @@ class ProviderPortalTest extends TestCase
             ->assertSessionHas('error', 'Το ερωτηματολόγιο δεν έχει υποβληθεί οριστικά και το PDF δεν είναι διαθέσιμο.');
     }
 
+    public function test_provider_report_is_required_for_final_questionnaire_submission(): void
+    {
+        $student = $this->eligibleStudent();
+
+        $this->actingAs($student, 'provider')
+            ->post(route('provider.questionnaire.store'), ['submission' => 'final', 'answers' => []])
+            ->assertSessionHasErrors('answers.comm');
+    }
+
     public function test_provider_can_save_an_incomplete_questionnaire_draft(): void
     {
         $student = $this->eligibleStudent();

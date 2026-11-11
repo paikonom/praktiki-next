@@ -15,7 +15,12 @@ class UpdateStudentSectionRequest extends FormRequest
     {
         $student = $this->route('student');
 
-        return $student instanceof Student && Gate::allows('update', $student);
+        if (! $student instanceof Student || ! Gate::allows('update', $student)) {
+            return false;
+        }
+
+        return ! $student->isCancelled()
+            || $this->route('section') === 'office';
     }
 
     /** @return array<string, array<int, string>> */

@@ -32,7 +32,7 @@ class SubmitProviderQuestionnaireRequest extends FormRequest
         foreach ($this->questions() as $question) {
             $rules['answers.'.$question->code] = $question->type === 'radio'
                 ? [$draft ? 'nullable' : 'required', 'string', Rule::in($question->options)]
-                : ['nullable', 'string', 'max:10000'];
+                : [$draft || $question->code !== 'comm' ? 'nullable' : 'required', 'string', 'max:10000'];
         }
 
         return $rules;

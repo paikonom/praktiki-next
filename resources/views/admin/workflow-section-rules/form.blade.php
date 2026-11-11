@@ -4,7 +4,6 @@
 
 @section('content')
 <h1 class="h3 mb-4">{{ $workflowSectionRule->exists ? 'Επεξεργασία κανόνα ενότητας' : 'Νέος κανόνας ενότητας' }}</h1>
-@if ($errors->any())<div class="alert alert-danger">{{ $errors->first() }}</div>@endif
 <form method="POST" action="{{ $workflowSectionRule->exists ? route('admin.workflow-section-rules.update', $workflowSectionRule) : route('admin.workflow-section-rules.store') }}" class="card shadow-sm">
     @csrf @if ($workflowSectionRule->exists) @method('PUT') @endif
     <div class="card-body"><div class="row g-3">

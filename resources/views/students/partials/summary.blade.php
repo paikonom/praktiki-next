@@ -9,7 +9,7 @@
     $summaryStateClasses = ['legacy' => 'text-bg-dark', 'before' => 'text-bg-secondary', 'during' => 'text-bg-primary', 'after' => 'text-bg-warning', 'completed' => 'text-bg-success', 'canceled' => 'text-bg-danger'];
 @endphp
 
-<div class="card border-0 shadow-sm mb-4">
+<div class="card shadow-sm mb-4 {{ $student->isCancelled() ? 'border-danger bg-danger-subtle' : 'border-0' }}">
     <div class="card-body p-3">
         <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
             <div>
@@ -31,6 +31,12 @@
                 <a href="{{ $backUrl }}" class="btn btn-sm btn-outline-secondary">{{ $backLabel ?? 'Επιστροφή στους φοιτητές' }}</a>
             @endif
         </div>
+
+        @if ($student->isCancelled())
+            <div class="alert alert-danger fw-semibold py-2 mb-3">
+                Η πρακτική έχει ακυρωθεί. Δεν επιτρέπονται αλλαγές στα στοιχεία φοιτητή ή φορέα.
+            </div>
+        @endif
 
         <div class="row g-3 small">
             <div class="col-6 col-md-3">

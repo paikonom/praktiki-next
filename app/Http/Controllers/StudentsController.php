@@ -263,17 +263,27 @@ class StudentsController extends Controller
             $section = $nextSection['section'];
             $sectionLabel = ['A' => 'Α', 'B' => 'Β', 'G' => 'Γ', 'D' => 'Δ'][$section];
             $pendingActions = $nextSection['pendingActions'];
-            $emailType = $emails->typeForPendingActions($section, $pendingActions);
-            $email = $emailType ? $emails->entries($student)->firstWhere('type', $emailType) : null;
-            if ($email && $request->user()->view_only) {
-                $email['unavailable_reason'] = 'Δεν έχετε δικαίωμα αποστολής.';
+            $emailTypes = $emails->typesForPendingActions($section, $pendingActions);
+            $emailEntries = $emailTypes === []
+                ? collect()
+                : $emails->entries($student)->whereIn('type', $emailTypes)->values();
+            if ($request->user()->view_only) {
+                $emailEntries = $emailEntries->map(function (array $email): array {
+                    $email['unavailable_reason'] = 'Δεν έχετε δικαίωμα αποστολής.';
+
+                    return $email;
+                });
             }
 
             return [$student->id => [
                 'title' => "Ενότητα {$sectionLabel} ({$pendingActions->count()})",
                 'class' => 'text-bg-secondary',
                 'code' => $pendingActions->first()?->code,
-                'email' => $email,
+                'approval_count' => $pendingActions
+                    ->where('source_type', 'document')
+                    ->filter(fn (WorkflowAction $action): bool => $action->statusFor($student) === 'submitted')
+                    ->count(),
+                'emails' => $emailEntries,
             ]];
         });
     }
@@ -342,6 +352,9 @@ class StudentsController extends Controller
             ->all();
 
         $emailEntries = $panel === 'emails' ? $emails->entries($student) : collect();
+        $agreementEmail = $panel === 'agreement'
+            ? $emails->entries($student)->firstWhere('type', 'stoixeiaFoitEgkrish')
+            : null;
         $officeWorkflowSections = $panel === 'office' ? $workflowDisplay->sections($student, 'member') : [];
         $documentTypes = $panel === 'documents'
             ? DocumentType::visibleForStudentAndRole($student, 'member')
@@ -369,7 +382,7 @@ class StudentsController extends Controller
             'student', 'panel', 'department', 'phase', 'praktiki', 'funding', 'provider',
             'studentFields', 'providerFields', 'officeFields',
             'fieldGroups', 'fieldHelp', 'currentState', 'canEdit', 'fieldOptions', 'cityLabels',
-            'emailEntries', 'officeWorkflowSections', 'documentTypes', 'handlerStatusActions',
+            'emailEntries', 'agreementEmail', 'officeWorkflowSections', 'documentTypes', 'handlerStatusActions',
         ));
     }
 

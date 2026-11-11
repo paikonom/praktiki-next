@@ -87,7 +87,7 @@
         ο οποίος στο εξής θα αποκαλείται Φορέας Υποδοχής,
         εκπροσωπούμενος για την υπογραφή του παρόντος
         από τον/την
-        <x-pdf.value :value="$provider->legalRepresentative()" />.
+        <x-pdf.value :value="$provider?->legalRepresentative()" />.
     @endif
 </p>
 <p>

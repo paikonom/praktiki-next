@@ -205,6 +205,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/students/{student}/emails/{type}/preview', [StudentEmailController::class, 'preview'])->name('students.emails.preview');
     Route::post('/students/{student}/emails/{type}', [StudentEmailController::class, 'store'])->middleware('throttle:10,1')->name('students.emails.store');
     Route::get('/students/{student}/agreement/preview', [StudentAgreementController::class, 'preview'])->name('students.agreement.preview');
+    Route::post('/students/{student}/agreement', [StudentAgreementController::class, 'store'])->name('students.agreement.store');
     Route::get('/students/{student}/completion-certificates/provider', [CompletionCertificateController::class, 'provider'])
         ->name('students.completion-certificates.provider');
     Route::get('/students/{student}/completion-certificates/supervisor', [CompletionCertificateController::class, 'supervisor'])

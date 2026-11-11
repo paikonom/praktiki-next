@@ -532,6 +532,15 @@ class StudentPortalTest extends TestCase
         );
     }
 
+    public function test_student_report_is_required_for_final_questionnaire_submission(): void
+    {
+        $student = $this->eligibleQuestionnaireStudent();
+
+        $this->actingAs($student, 'student')
+            ->post(route('student.questionnaire.store'), ['submission' => 'final', 'answers' => []])
+            ->assertSessionHasErrors('answers.comm');
+    }
+
     public function test_student_can_save_and_clear_an_incomplete_questionnaire_draft(): void
     {
         $student = $this->eligibleQuestionnaireStudent();

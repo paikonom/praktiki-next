@@ -46,7 +46,7 @@
                             $answer = old('answers.'.$question->code, $answers->get($question->code));
                         @endphp
                         <div class="mb-4">
-                            <div class="fw-semibold mb-2">{{ $question->label }}</div>
+                            <div class="fw-semibold mb-2">{{ $question->label }} @if ($question->code === 'comm') <span class="text-danger">*</span> @endif</div>
 
                             @if ($question->type === 'radio')
                                 <div class="d-flex flex-wrap gap-3">
@@ -63,7 +63,7 @@
                                 @error('answers.'.$question->code)<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                             @else
                                 <textarea class="form-control @error('answers.'.$question->code) is-invalid @enderror"
-                                          name="answers[{{ $question->code }}]" rows="6">{{ $answer }}</textarea>
+                                          name="answers[{{ $question->code }}]" rows="6" @required($question->code === 'comm')>{{ $answer }}</textarea>
                                 <div class="form-text">Έως 2 παράγραφοι. Κρατήστε ένα αντίγραφο του κειμένου σας πριν από την οριστική υποβολή.</div>
                                 @error('answers.'.$question->code)<div class="invalid-feedback">{{ $message }}</div>@enderror
                             @endif
@@ -75,7 +75,7 @@
 
         <div class="alert alert-warning">Η υποβολή είναι οριστική και δεν μπορεί να τροποποιηθεί από τον φοιτητή.</div>
         <div class="d-flex flex-wrap justify-content-end gap-2">
-            <button class="btn btn-outline-primary" type="submit" name="submission" value="draft">Προσωρινή αποθήκευση</button>
+            <button class="btn btn-outline-primary" type="submit" name="submission" value="draft" formnovalidate>Προσωρινή αποθήκευση</button>
             <button class="btn btn-success" type="submit" name="submission" value="final">Οριστική υποβολή</button>
         </div>
         </form>

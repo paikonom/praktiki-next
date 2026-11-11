@@ -50,7 +50,7 @@ class ProviderQuestionnaireDefinition
     {
         return match (true) {
             $student->isCancelled() => 'Η πρακτική έχει ακυρωθεί.',
-            ! $student->providerBeforeStartComplete() => 'Πρέπει πρώτα να ολοκληρωθεί η ενότητα Α.',
+            ! $student->providerBeforeStartComplete() => 'Πρέπει πρώτα να ολοκληρωθούν όλες οι ενέργειες της ενότητας Α.',
             ! $student->providerDuringComplete() => 'Δεν έχει φτάσει ακόμη η ημερομηνία έναρξης της πρακτικής.',
             ! $student->endDate => 'Δεν έχει οριστεί ημερομηνία λήξης της πρακτικής.',
             now()->lt($student->endDate) => 'Το ερωτηματολόγιο ανοίγει μετά τη λήξη της πρακτικής.',

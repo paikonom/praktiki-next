@@ -21,7 +21,7 @@ class StudentEmailService
         'input' => ['title' => 'Φοιτητής: Υποβολή Απογραφικού Δελτίου Εισόδου', 'button' => 'Input', 'recipient_role' => 'student'],
         'lhxh' => ['title' => 'Φοιτητής: Εκκρεμότητες λήξης', 'button' => 'ΛΗΞΗ ΦΟΙΤ.', 'recipient_role' => 'student'],
         'lhxh_foreas' => ['title' => 'Φορέας: Εκκρεμότητες λήξης', 'button' => 'ΛΗΞΗ ΦΟΡΕΑΣ', 'recipient_role' => 'provider'],
-        'lhxh_ey' => ['title' => 'ΕΠ.ΥΠ.: Εκκρεμότητες λήξης', 'button' => 'ΛΗΞΗ ΕΠ.ΥΠ.', 'recipient_role' => 'supervisor'],
+        'lhxh_ey' => ['title' => 'ΕΠ.ΥΠ.: Εκκρεμότητες λήξης', 'button' => 'ΛΗΞΗ Υπ.Τμ.', 'recipient_role' => 'supervisor'],
     ];
 
     /** @return Collection<int, array<string, mixed>> */
@@ -82,44 +82,45 @@ class StudentEmailService
         ];
     }
 
-    /** @param Collection<int, WorkflowAction> $pendingActions */
-    public function typeForPendingActions(string $section, Collection $pendingActions): ?string
+    /**
+     * @param Collection<int, WorkflowAction> $pendingActions
+     * @return array<int, string>
+     */
+    public function typesForPendingActions(string $section, Collection $pendingActions): array
     {
         $pendingCodes = $pendingActions->pluck('code');
 
         if ($pendingCodes->intersect(['stoix_student', 'stoix_forea'])->isNotEmpty()) {
-            return 'stoixeiaFoit';
+            return ['stoixeiaFoit'];
         }
 
         if ($pendingCodes->contains('symf_sgn_foit_foreas')) {
-            return 'stoixeiaFoitEgkrish';
+            return ['stoixeiaFoitEgkrish'];
         }
 
         if ($pendingCodes->contains('symf_sgn_foit_foreas_scientific_supervisor')) {
-            return 'symf_SN_f_f_ey';
+            return ['symf_SN_f_f_ey'];
         }
 
         if ($pendingCodes->contains('erganh_enarxh_upload')) {
-            return 'erganh_enarxh';
+            return ['erganh_enarxh'];
         }
 
         if ($pendingCodes->contains('input_sumpl')) {
-            return 'input';
+            return ['input'];
         }
 
-        if ($section === 'G' && $pendingActions->contains('responsible_role', 'student')) {
-            return 'lhxh';
+        if ($section === 'G') {
+            return collect([
+                'student' => 'lhxh',
+                'provider' => 'lhxh_foreas',
+                'scientific_supervisor' => 'lhxh_ey',
+            ])->filter(fn (string $type, string $role): bool => $pendingActions->contains('responsible_role', $role))
+                ->values()
+                ->all();
         }
 
-        if ($section === 'G' && $pendingActions->contains('responsible_role', 'provider')) {
-            return 'lhxh_foreas';
-        }
-
-        if ($section === 'G' && $pendingActions->contains('responsible_role', 'scientific_supervisor')) {
-            return 'lhxh_ey';
-        }
-
-        return null;
+        return [];
     }
 
     public function unavailableReason(Student $student, string $type): ?string
@@ -131,12 +132,15 @@ class StudentEmailService
         return match (true) {
             $student->isCancelled() => 'Η πρακτική έχει ακυρωθεί.',
             $type === 'stoixeiaFoitEgkrish' && (! $student->actionIsComplete('stoix_student') || ! $student->actionIsComplete('stoix_forea')) => 'Απαιτείται πρώτα έγκριση στοιχείων.',
+            $type === 'stoixeiaFoitEgkrish' && ! $student->hasApprovedDocument('symf_initial') => 'Απαιτείται πρώτα η αποθήκευση του αρχικού συμφωνητικού.',
             $type === 'symf_SN_f_f_ey' && ! $student->hasApprovedDocument('symf_SN_f_f') => 'Δεν έχει εγκριθεί το συμφωνητικό με δύο υπογραφές.',
             in_array($type, ['symf_SN_FULL', 'erganh_enarxh'], true) && (! $student->hasApprovedDocument('symf_SN_FULL') || ! $student->hasApprovedDocument('ADA_diaugeia')) => 'Απαιτούνται τελικό συμφωνητικό και ΑΔΑ.',
             $type === 'input' && $student->fundingCode() !== 'Espa' => 'Το απογραφικό εισόδου αφορά μόνο το ΕΣΠΑ.',
             $type === 'input' && (! $student->startDate || $student->startDate->isFuture()) => 'Δεν έχει φτάσει η ημερομηνία έναρξης.',
-            in_array($type, ['lhxh', 'lhxh_foreas'], true) && (! $student->endDate || $student->endDate->isFuture()) => 'Δεν έχει φτάσει η ημερομηνία λήξης.',
-            $type === 'lhxh_ey' && (! $this->endActionsAreCompleteFor($student, 'student') || ! $this->endActionsAreCompleteFor($student, 'provider')) => 'Δεν έχουν ολοκληρωθεί οι ενέργειες λήξης φοιτητή και φορέα.',
+            $type === 'input' && in_array($student->workflowStatus('apografiko', 'input'), ['completed', 'not_required', 'cancelled'], true) => 'Το απογραφικό εισόδου έχει ήδη ολοκληρωθεί.',
+            in_array($type, ['lhxh', 'lhxh_foreas', 'lhxh_ey'], true) && (! $student->endDate || $student->endDate->isFuture()) => 'Δεν έχει φτάσει η ημερομηνία λήξης.',
+            $type === 'lhxh' && $this->endActionsAreCompleteFor($student, 'student') => 'Οι ενέργειες λήξης του φοιτητή έχουν ήδη ολοκληρωθεί.',
+            $type === 'lhxh_foreas' && $this->endActionsAreCompleteFor($student, 'provider') => 'Οι ενέργειες λήξης του φορέα έχουν ήδη ολοκληρωθεί.',
             default => null,
         };
     }

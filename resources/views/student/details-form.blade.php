@@ -14,11 +14,6 @@
         <div class="alert alert-info">Η φόρμα έχει υποβληθεί οριστικά. Για διόρθωση επικοινωνήστε με το Γραφείο Πρακτικής Άσκησης.</div>
     @endif
 
-    @if ($errors->any())
-        <div class="alert alert-danger">Ελέγξτε τα πεδία που είναι σημειωμένα με κόκκινο.</div>
-    @endif
-
-
     <div class="card shadow-sm">
         <div class="card-body p-4">
             @if ($readOnlyFields !== [])

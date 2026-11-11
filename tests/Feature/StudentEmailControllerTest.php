@@ -61,6 +61,24 @@ class StudentEmailControllerTest extends TestCase
         $this->assertDatabaseCount('email_logs', 0);
     }
 
+    public function test_completed_tasks_disable_their_reminder_emails(): void
+    {
+        [, $student] = $this->handlerAndStudent();
+        $emails = app(StudentEmailService::class);
+
+        $this->assertSame('Δεν έχει φτάσει η ημερομηνία λήξης.', $emails->unavailableReason($student, 'lhxh_ey'));
+
+        $student->forceFill(['endDate' => now()->subDay()])->save();
+        $student->apografika()->create(['type' => 'input', 'status' => 'completed', 'answers' => []]);
+
+        $this->assertSame('Το απογραφικό εισόδου έχει ήδη ολοκληρωθεί.', $emails->unavailableReason($student, 'input'));
+        $this->assertNull($emails->unavailableReason($student, 'lhxh_ey'));
+
+        $this->completeWorkflowSection($student, 'G');
+        $this->assertSame('Οι ενέργειες λήξης του φοιτητή έχουν ήδη ολοκληρωθεί.', $emails->unavailableReason($student, 'lhxh'));
+        $this->assertSame('Οι ενέργειες λήξης του φορέα έχουν ήδη ολοκληρωθεί.', $emails->unavailableReason($student, 'lhxh_foreas'));
+    }
+
     public function test_ajax_send_returns_json_with_the_updated_count(): void
     {
         [$user, $student] = $this->handlerAndStudent();
@@ -114,7 +132,7 @@ class StudentEmailControllerTest extends TestCase
         );
     }
 
-    public function test_pending_actions_choose_one_explicit_email(): void
+    public function test_pending_actions_choose_the_relevant_emails(): void
     {
         $emails = app(StudentEmailService::class);
         $action = fn (string $code, string $role): WorkflowAction => (new WorkflowAction)->forceFill([
@@ -122,22 +140,23 @@ class StudentEmailControllerTest extends TestCase
             'responsible_role' => $role,
         ]);
 
-        $this->assertSame('input', $emails->typeForPendingActions('B', collect([
+        $this->assertSame(['input'], $emails->typesForPendingActions('B', collect([
             $action('input_sumpl', 'student'),
             $action('input_upload', 'student'),
         ])));
-        $this->assertSame('lhxh', $emails->typeForPendingActions('G', collect([
+        $this->assertSame(['lhxh', 'lhxh_foreas', 'lhxh_ey'], $emails->typesForPendingActions('G', collect([
             $action('student_task', 'student'),
             $action('provider_task', 'provider'),
+            $action('supervisor_task', 'scientific_supervisor'),
         ])));
-        $this->assertSame('lhxh_foreas', $emails->typeForPendingActions('G', collect([
+        $this->assertSame(['lhxh_foreas', 'lhxh_ey'], $emails->typesForPendingActions('G', collect([
             $action('provider_task', 'provider'),
             $action('supervisor_task', 'scientific_supervisor'),
         ])));
-        $this->assertSame('lhxh_ey', $emails->typeForPendingActions('G', collect([
+        $this->assertSame(['lhxh_ey'], $emails->typesForPendingActions('G', collect([
             $action('supervisor_task', 'scientific_supervisor'),
         ])));
-        $this->assertNull($emails->typeForPendingActions('G', collect([
+        $this->assertSame([], $emails->typesForPendingActions('G', collect([
             $action('handler_task', 'member'),
         ])));
     }

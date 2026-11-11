@@ -12,8 +12,8 @@
     @endphp
 
     <div class="row g-4 align-items-start">
-        <aside class="col-lg-3 col-xl-2">
-            <div class="list-group shadow-sm sticky-lg-top" role="tablist">
+        <aside class="col-lg-3 col-xl-2 sticky-lg-top">
+            <div class="list-group shadow-sm" role="tablist">
                 <button class="list-group-item list-group-item-action {{ $panel === 'actions' ? 'active' : '' }}" data-bs-toggle="list" data-bs-target="#actions" type="button" role="tab">Ενέργειες</button>
                 <button class="list-group-item list-group-item-action" data-bs-toggle="list" data-bs-target="#internship" type="button" role="tab">Στοιχεία πρακτικής</button>
                 <button class="list-group-item list-group-item-action" data-bs-toggle="list" data-bs-target="#student-details" type="button" role="tab">Στοιχεία φοιτητή</button>

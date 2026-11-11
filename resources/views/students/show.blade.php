@@ -21,20 +21,9 @@
         'showUuid' => true,
         ])
 
-    @if ($errors->any())
-        <div class="alert alert-danger" role="alert">
-            <div class="fw-semibold">Η αποθήκευση δεν έγινε. Διόρθωσε τα παρακάτω:</div>
-            <ul class="mb-0 mt-2">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
     <div class="row g-4 align-items-start">
-        <aside class="col-lg-3 col-xl-2">
-            <div class="list-group shadow-sm sticky-lg-top">
+        <aside class="col-lg-3 col-xl-2 sticky-lg-top">
+            <div class="list-group shadow-sm">
                 @foreach ($navigation as $key => $label)
                     <a class="list-group-item list-group-item-action @if ($panel === $key) active @endif"
                        href="{{ route('students.show', ['student' => $student->id, 'panel' => $key]) }}">{{ $label }}</a>
@@ -67,6 +56,7 @@
                     'groups' => $fieldGroups['student'],
                     'fieldHelp' => $fieldHelp,
                     'record' => $student,
+                    'canEdit' => $canEdit && ! $student->isCancelled(),
                 ])
             @elseif ($panel === 'provider')
                 @include('students.partials.fields', [
@@ -77,6 +67,7 @@
                     'groups' => $fieldGroups['provider'],
                     'fieldHelp' => $fieldHelp,
                     'record' => $provider,
+                    'canEdit' => $canEdit && ! $student->isCancelled(),
                 ])
             @elseif ($panel === 'questionnaires')
                 @php

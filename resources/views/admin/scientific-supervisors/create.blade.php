@@ -10,10 +10,6 @@
             : 'Με την αποθήκευση θα γίνει ενεργός και ο προηγούμενος υπεύθυνος του τμήματος θα παραμείνει στο ιστορικό ως ανενεργός.' }}
     </p>
 
-    @if ($errors->any())
-        <div class="alert alert-danger">{{ $errors->first() }}</div>
-    @endif
-
     <form method="POST" action="{{ $supervisor->exists ? route('admin.scientific-supervisors.update', $supervisor) : route('admin.scientific-supervisors.store') }}" class="card border-0 shadow-sm">
         @csrf
         @if ($supervisor->exists) @method('PUT') @endif

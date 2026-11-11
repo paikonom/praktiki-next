@@ -10,6 +10,15 @@
             <a class="btn btn-outline-primary" href="{{ route('students.agreement.preview', $student) }}" target="_blank" rel="noopener">
                 Προεπισκόπηση PDF
             </a>
+            <form method="POST" action="{{ route('students.agreement.store', $student) }}">
+                @csrf
+                <button class="btn btn-success" type="submit" @disabled($student->hasApprovedDocument('symf_initial'))>
+                    {{ $student->hasApprovedDocument('symf_initial') ? 'Εστάλει στον φοιτητή' : 'Στείλτο στα έντυπα του Φοιτητή' }}
+                </button>
+            </form>
+            @if ($agreementEmail)
+                <x-email-send-button :student="$student" :email="$agreementEmail" />
+            @endif
             <a class="btn btn-outline-secondary" href="{{ route('students.show', ['student' => $student, 'panel' => 'documents']) }}">
                 Μετάβαση στα Έντυπα και ιστορικό
             </a>

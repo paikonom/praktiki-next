@@ -102,12 +102,28 @@
     </header>
 
     <main class="container py-5 flex-grow-1">
-        @if (session('status'))
+        @if (session('status') || $errors->any())
             <div class="position-fixed end-0 p-3" style="top: 4.5rem; z-index: 1080; width: min(26rem, 100vw);">
-                <div class="alert alert-{{ session('status_type', 'success') }} alert-dismissible fade show shadow" role="alert">
-                    {{ session('status') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Κλείσιμο"></button>
-                </div>
+                @if ($errors->any())
+                    <div class="alert alert-danger alert-dismissible fade show shadow" role="alert">
+                        @if ($errors->count() === 1)
+                            {{ $errors->first() }}
+                        @else
+                            <ul class="mb-0 ps-3">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        @endif
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Κλείσιμο"></button>
+                    </div>
+                @endif
+                @if (session('status'))
+                    <div class="alert alert-{{ session('status_type', 'success') }} alert-dismissible fade show shadow" role="alert">
+                        {{ session('status') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Κλείσιμο"></button>
+                    </div>
+                @endif
             </div>
         @endif
         @yield('content')

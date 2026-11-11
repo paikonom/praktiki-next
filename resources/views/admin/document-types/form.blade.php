@@ -9,7 +9,6 @@
     $selectedUploads = old('upload_roles', $documentType->roles?->where('can_upload', true)->pluck('role')->all() ?? ['member']);
 @endphp
 <h1 class="h3 mb-4">{{ $documentType->exists ? 'Επεξεργασία τύπου εγγράφου' : 'Νέος τύπος εγγράφου' }}</h1>
-@if ($errors->any())<div class="alert alert-danger">{{ $errors->first() }}</div>@endif
 <form method="POST" action="{{ $documentType->exists ? route('admin.document-types.update', $documentType) : route('admin.document-types.store') }}" class="card shadow-sm">
     @csrf @if ($documentType->exists) @method('PUT') @endif
     <div class="card-body"><div class="row g-3">

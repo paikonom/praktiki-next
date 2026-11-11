@@ -19,6 +19,23 @@ class DocumentControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_handler_stores_the_generated_initial_agreement_as_approved(): void
+    {
+        Storage::fake('local');
+        $student = $this->student();
+        $this->approveStudentDetails($student->id);
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)
+            ->post(route('students.agreement.store', $student))
+            ->assertRedirect(route('students.show', ['student' => $student, 'panel' => 'agreement']));
+
+        $document = StudentDocument::whereHas('type', fn ($query) => $query->where('code', 'symf_initial'))->firstOrFail();
+        $this->assertSame('approved', $document->status);
+        $this->assertSame('member', $document->uploaded_by_role);
+        Storage::disk('local')->assertExists($document->path);
+    }
+
     public function test_student_uploads_multiple_versions_without_replacing_history(): void
     {
         Storage::fake('local');

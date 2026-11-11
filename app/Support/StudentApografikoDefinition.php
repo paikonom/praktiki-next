@@ -19,7 +19,7 @@ class StudentApografikoDefinition
 
         if ($type === 'input') {
             if (! $student->studentBeforeStartComplete()) {
-                return 'Πρέπει πρώτα να ολοκληρωθεί η ενότητα Α.';
+                return 'Πρέπει πρώτα να ολοκληρωθούν όλες οι ενέργειες της ενότητας Α.';
             }
 
             if (! $student->startDate || now()->lt($student->startDate)) {
@@ -30,7 +30,7 @@ class StudentApografikoDefinition
         }
 
         if (! $student->studentDuringComplete()) {
-            return 'Πρέπει πρώτα να ολοκληρωθεί η ενότητα Β.';
+            return 'Πρέπει πρώτα να ολοκληρωθούν όλες οι ενέργειες της ενότητας Β.';
         }
 
         if (! $student->endDate || now()->lt($student->endDate)) {

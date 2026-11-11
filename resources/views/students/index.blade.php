@@ -129,7 +129,9 @@
                                         <span class="{{ $inputClass }} bg-opacity-25 px-2 py-1 fw-semibold text-nowrap">←</span>
                                         <span class="{{ $outputClass }} bg-opacity-25 px-2 py-1 fw-semibold text-nowrap">→</span>
                                         <a class="btn btn-warning btn-sm" href="{{ route('students.show', $student->id) }}" title="Καρτέλα φοιτητή">C</a>
-                                        <!-- <button class="btn btn-success btn-sm" type="button" disabled title="Τα αρχεία θα προστεθούν αργότερα">F</button> -->
+                                        <a class="btn btn-success btn-sm"
+                                        href="{{ route('students.show', ['student' => $student->id, 'panel' => 'documents']) }}"
+                                        title="Καρτέλα φοιτητή">F</a>
                                         <!-- <a class="btn btn-primary btn-sm" href="{{ route('students.show', ['student' => $student->id, 'panel' => 'emails']) }}" title="Emails / Log">e</a> -->
                                         <button class="btn btn-info btn-sm" type="button" disabled title="Το Rescom θα προστεθεί αργότερα">R</button>
                                         <span class="badge rounded-pill text-bg-success ms-2">{{ $student->fashName ?: '—' }}</span>
@@ -147,12 +149,19 @@
                                 <td>
                                     @php($nextAction = $nextActions[$student->id])
                                     <div class="small fw-semibold mb-1">{{ $nextAction['title'] }}</div>
-                                    <div class="d-flex flex-wrap align-items-center gap-1">
-                                        @if (! empty($nextAction['email']))
-                                            <x-email-send-button :student="$student" :email="$nextAction['email']" />
-                                        @elseif (! empty($nextAction['code']))
-                                            <a class="btn btn-sm btn-outline-primary" href="{{ route('students.show', $student) }}">Άνοιγμα</a>
-                                        @endif
+                                    @if (($nextAction['approval_count'] ?? 0) > 0)
+                                        <div class="small fw-semibold text-danger mb-1">
+                                            Έγκριση Εντύπων: <span class="badge text-bg-danger">{{ $nextAction['approval_count'] }}</span>
+                                        </div>
+                                    @endif
+                                    <div class="d-flex flex-column align-items-start gap-1">
+                                        @forelse ($nextAction['emails'] ?? [] as $email)
+                                            <x-email-send-button :student="$student" :email="$email" />
+                                        @empty
+                                            @if (! empty($nextAction['code']))
+                                                <a class="btn btn-sm btn-outline-primary" href="{{ route('students.show', $student) }}">Άνοιγμα</a>
+                                            @endif
+                                        @endforelse
                                     </div>
                                 </td>
                             </tr>

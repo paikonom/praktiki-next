@@ -61,6 +61,12 @@ class StudentsControllerTest extends TestCase
         ]);
         $visibleStudentId = DB::table('students')->where('AMF', '111')->value('id');
         $this->approveStudentDetails($visibleStudentId);
+        DB::table('student_documents')->insert([
+            's_id' => $visibleStudentId,
+            'document_type_id' => DB::table('document_types')->where('code', 'symf_initial')->value('id'),
+            'version' => 1,
+            'status' => 'submitted',
+        ]);
         StudentApografiko::insert([
             ['student_id' => $visibleStudentId, 'type' => 'input', 'status' => StudentApografiko::STATUS_COMPLETED],
             ['student_id' => $visibleStudentId, 'type' => 'output', 'status' => StudentApografiko::STATUS_COMPLETED],
@@ -87,6 +93,7 @@ class StudentsControllerTest extends TestCase
             ->assertSee('Όλες οι χρηματοδοτήσεις')
             ->assertSee('Εκκρεμότητες')
             ->assertSee('Ενότητα Α (6)')
+            ->assertSee('Έγκριση Εντύπων:')
             ->assertDontSee('Κρυφός')
             ->assertDontSee('Κρυφό Τμήμα');
 
@@ -350,6 +357,29 @@ class StudentsControllerTest extends TestCase
 
         $this->assertTrue($student->isCancelled());
         $this->assertSame('cancelled', $student->internshipStatus());
+    }
+
+    public function test_cancelled_student_details_are_clearly_marked_and_cannot_be_changed(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+        $student = Student::forceCreate(['fName' => 'Αρχικό']);
+        $student->actions()->create(['action' => 'katastash_praktikis', 'status' => 'cancelled']);
+
+        $this->actingAs($user)
+            ->get(route('students.show', ['student' => $student, 'panel' => 'student']))
+            ->assertOk()
+            ->assertSee('Η πρακτική έχει ακυρωθεί.')
+            ->assertSee('bg-danger-subtle', false);
+
+        $this->actingAs($user)
+            ->patch(route('students.section.update', [$student, 'student']), ['fName' => 'Νέο'])
+            ->assertForbidden();
+        $this->actingAs($user)
+            ->patch(route('students.section.update', [$student, 'provider']), ['f_epwnymia' => 'Νέος Φορέας'])
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('students', ['id' => $student->id, 'fName' => 'Αρχικό']);
+        $this->assertDatabaseMissing('providers', ['s_id' => $student->id]);
     }
 
     public function test_update_message_lists_changed_fields_and_reports_when_nothing_changed(): void

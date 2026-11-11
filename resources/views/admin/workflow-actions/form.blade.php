@@ -7,7 +7,6 @@
 @php($selectedAllowedStatuses = old('allowed_statuses', $workflowAction->allowed_statuses ?? ['pending', 'approved', 'rejected']))
 @php($selectedCompletedStatuses = old('completed_statuses', $workflowAction->completed_statuses ?? ['approved']))
 <h1 class="h3 mb-4">{{ $workflowAction->exists ? 'Επεξεργασία ενέργειας' : 'Νέα ενέργεια' }}</h1>
-@if ($errors->any())<div class="alert alert-danger">{{ $errors->first() }}</div>@endif
 <form method="POST" action="{{ $workflowAction->exists ? route('admin.workflow-actions.update', $workflowAction) : route('admin.workflow-actions.store') }}" class="card shadow-sm">
     @csrf @if ($workflowAction->exists) @method('PUT') @endif
     <div class="card-body"><div class="row g-3">

@@ -17,14 +17,15 @@
                     <h2 class="h5">Φοιτητής / Φοιτήτρια</h2>
                     <p class="text-body-secondary flex-grow-1">Σύνδεση για τη συμπλήρωση και παρακολούθηση της πρακτικής.</p>
                      <div class="d-grid gap-2">
-                        <a class="btn btn-primary" href="{{ route('student.test_login') }}">Σύνδεση Φοιτητή (test)</a>
-                        <a class="btn btn-outline-primary" href="{{ route('student.login') }}">Σύνδεση φοιτητή</a>
+                        
+                        <a class="btn btn-primary" href="{{ route('student.login') }}">Σύνδεση φοιτητή</a>
+                        <a class="btn btn-outline-primary" href="{{ route('student.test_login') }}">Σύνδεση Φοιτητή (χωρίς λογαριασμό UOA)</a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-6 col-xl-3">
+        <!-- <div class="col-md-6 col-xl-3">
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-body d-flex flex-column p-4">
                     <h2 class="h5">Φοιτητής/τρια ΔΟΑΤΑΠ</h2>
@@ -32,7 +33,7 @@
                     <button class="btn btn-outline-primary" type="button" disabled>Σύνδεση ΔΟΑΤΑΠ</button>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <div class="col-md-6 col-xl-3">
             <div class="card h-100 border-0 shadow-sm">
@@ -45,12 +46,12 @@
         </div>
 
         <div class="col-md-6 col-xl-3">
-            <div class="card h-100 border-primary shadow-sm">
+            <div class="card h-100 border-0 shadow-sm">
                 <div class="card-body d-flex flex-column p-4">
-                    <h2 class="h5">Χειριστές Πρακτικής<br> Υπεύθυνοι Π.Τ.</h2>
-                    <p class="text-body-secondary flex-grow-1">Σύνδεση χειριστών και  Υπευθύνων Πρακτικής Άσκησης Τμημάτων.</p>
+                    <h2 class="h5">Υπεύθυνοι Π.Τ</h2>
+                    <p class="text-body-secondary flex-grow-1">Σύνδεση Υπευθύνων Πρακτικής Άσκησης Τμημάτων.</p>
                     <div class="d-grid gap-2">
-                        <a class="btn btn-primary" href="{{ route('login') }}">Σύνδεση χειριστή</a>
+                        <!-- <a class="btn btn-primary" href="{{ route('login') }}">Σύνδεση χειριστή</a> -->
                         <a class="btn btn-outline-primary" href="{{ route('scientific_supervisor.login') }}">Σύνδεση Υπευθύνων Π.Τ</a>
                     </div>
                 </div>

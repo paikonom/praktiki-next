@@ -15,6 +15,7 @@ class UpdateOwnStudentRequest extends FormRequest
     public function authorize(): bool
     {
         return $this->user('student') !== null
+            && ! $this->user('student')->isCancelled()
             && ! $this->user('student')->actionHasStatus('stoix_student', [StudentAction::STATUS_SUBMITTED, StudentAction::STATUS_APPROVED]);
     }
 

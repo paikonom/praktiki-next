@@ -28,8 +28,8 @@
     ])
 
     <div class="row g-4 align-items-start">
-        <aside class="col-lg-3 col-xl-2">
-            <div class="list-group shadow-sm sticky-lg-top">
+        <aside class="col-lg-3 col-xl-2 sticky-lg-top">
+            <div class="list-group shadow-sm">
                 @foreach ($portalNavigation as $key => $item)
                     <a class="list-group-item list-group-item-action {{ $activePortalPage === $key ? 'active' : '' }}"
                        href="{{ route($item['route'], $item['parameters'] ?? []) }}">{{ $item['label'] }}</a>

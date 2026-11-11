@@ -41,10 +41,10 @@ document.addEventListener('submit', async (event) => {
         counter.classList.remove('text-bg-danger');
         counter.classList.add('text-bg-success');
         status.className = 'small text-success js-email-status';
-        status.textContent = result.message;
-    } catch (error) {
+        status.textContent = 'OK!';
+    } catch {
         status.className = 'small text-danger js-email-status';
-        status.textContent = error.message;
+        status.textContent = 'NOK!';
     } finally {
         button.disabled = false;
         button.textContent = originalText;
