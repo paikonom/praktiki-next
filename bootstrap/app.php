@@ -13,6 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: '*');
+
         // Το auth middleware καλεί αυτόν τον κανόνα όταν ένας guest ανοίξει προστατευμένη σελίδα.
         $middleware->redirectGuestsTo(
             fn (Request $request): string => match (true) {
