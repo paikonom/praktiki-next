@@ -153,7 +153,14 @@
             <span class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
                 <span class="badge border-0 {{ $statusClass }}">{{ $statusLabel }}</span>
                 @if ($documents->isNotEmpty())
-                    <span class="badge border-0 text-bg-secondary">{{ $documents->count() }} {{ $documents->count() === 1 ? 'έκδοση' : 'εκδόσεις' }}</span>
+                    <span class="badge border-0 text-bg-secondary">
+                        {{ $documents->count() }}
+                        @if ($type->code === 'extra_docs')
+                            {{ $documents->count() === 1 ? 'αρχείο' : 'αρχεία' }}
+                        @else
+                            {{ $documents->count() === 1 ? 'έκδοση' : 'εκδόσεις' }}
+                        @endif
+                    </span>
                 @endif
                 <span aria-hidden="true">⌄</span>
             </span>
@@ -237,7 +244,9 @@
                     <div class="input-group">
                         <span class="input-group-text">PDF έως {{ $type->max_size_mb }} MB</span>
                         <input class="form-control" type="file" name="file" accept="application/pdf" required>
-                        <button class="btn btn-outline-primary">Ανέβασμα νέας έκδοσης</button>
+                        <button class="btn btn-outline-primary">
+                            {{ $type->code === 'extra_docs' ? 'Ανέβασμα αρχείου' : 'Ανέβασμα νέας έκδοσης' }}
+                        </button>
                     </div>
                 </form>
             @elseif (! $available)
@@ -254,7 +263,7 @@
                 </div>
             @endif
 
-            @if ($canMarkNotRequired)
+            @if ($canMarkNotRequired && $type->code !== 'extra_docs')
                 <form method="POST" action="{{ route('students.documents.not-required', [$student, $type]) }}" class="d-flex gap-2 mb-3">
                     @csrf
                     <input class="form-control" name="review_notes" maxlength="2000" placeholder="Αιτιολογία" required>
@@ -322,7 +331,7 @@
                                     @if ($document->path)
                                         <a class="btn btn-sm btn-outline-primary" href="{{ $downloadRoute }}">Λήψη</a>
                                     @endif
-                                    @if ($document->path && $role === 'member' && $allowMemberActions && ! auth('web')->user()->view_only)
+                                    @if ($type->code !== 'extra_docs' && $document->path && $role === 'member' && $allowMemberActions && ! auth('web')->user()->view_only)
                                         <form method="POST" action="{{ route('students.documents.update', $document) }}" class="d-inline-flex gap-1">
                                             @csrf @method('PATCH')
                                             @if ($document->status !== 'approved')

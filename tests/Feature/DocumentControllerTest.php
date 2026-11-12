@@ -81,6 +81,34 @@ class DocumentControllerTest extends TestCase
         $this->assertSame(1, StudentDocument::where('document_type_id', $type->id)->count());
     }
 
+    public function test_handler_can_upload_multiple_approved_extra_documents(): void
+    {
+        Storage::fake('local');
+        $student = $this->student();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $type = DocumentType::factory()->create([
+            'code' => 'extra_docs',
+            'title' => 'Πρόσθετα έγγραφα',
+            'active' => true,
+        ]);
+        $type->fundings()->create(['funding_code' => $student->fundingCode()]);
+        $type->roles()->create([
+            'role' => 'member',
+            'can_view' => true,
+            'can_upload' => true,
+        ]);
+
+        foreach (['first.pdf', 'second.pdf'] as $fileName) {
+            $this->actingAs($admin)->post(route('students.documents.store', [$student, $type]), [
+                'file' => UploadedFile::fake()->create($fileName, 100, 'application/pdf'),
+            ])->assertRedirect();
+        }
+
+        $documents = StudentDocument::where('document_type_id', $type->id)->orderBy('version')->get();
+        $this->assertSame(['first.pdf', 'second.pdf'], $documents->pluck('original_name')->all());
+        $this->assertSame(['approved', 'approved'], $documents->pluck('status')->all());
+    }
+
     public function test_each_portal_sees_only_document_types_allowed_for_its_role(): void
     {
         $student = $this->student();

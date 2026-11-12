@@ -132,6 +132,10 @@ class DocumentType extends Model
 
     public function period(string $funding = ''): string
     {
+        if ($this->code === 'extra_docs') {
+            return 'extra';
+        }
+
         $section = $this->workflowActionFor($funding)?->section;
 
         if ($section) {
@@ -151,6 +155,7 @@ class DocumentType extends Model
             'before' => 'Πριν την έναρξη',
             'during' => 'Κατά τη διάρκεια',
             'after' => 'Μετά τη λήξη',
+            'extra' => 'Πρόσθετα έγγραφα',
         };
     }
 
@@ -177,6 +182,10 @@ class DocumentType extends Model
 
     public function acceptsNewVersionFor(Student $student): bool
     {
+        if ($this->code === 'extra_docs') {
+            return true;
+        }
+
         $latestStatus = $this->documents()
             ->where('s_id', $student->id)
             ->latest('version')
