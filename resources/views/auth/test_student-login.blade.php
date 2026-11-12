@@ -6,7 +6,7 @@
     <div class="row justify-content-center">
         <div class="col-md-7 col-lg-5">
             <div class="alert alert-warning">
-                Προσωρινή σύνδεση με αριθμό μητρώου και UUID μέχρι να ενεργοποιηθεί το CAS.
+                Για σύνδεση χωρίς λογαριασμό UOA, το UUID μπορείτε να το λάβετε από το Γραφείο Πρακτικής Άσκησης.
             </div>
 
             <div class="card border-0 shadow-sm">

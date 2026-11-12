@@ -18,7 +18,7 @@
                     <p class="text-body-secondary flex-grow-1">Σύνδεση για τη συμπλήρωση και παρακολούθηση της πρακτικής.</p>
                      <div class="d-grid gap-2">
                         
-                        <a class="btn btn-primary disabled" href="{{ route('student.login') }}">Σύνδεση φοιτητή (soon)</a>
+                        <a class="btn btn-primary" href="{{ route('student.login') }}">Σύνδεση φοιτητή μέσω UOA</a>
                         <a class="btn btn-outline-primary" href="{{ route('student.test_login') }}">Σύνδεση Φοιτητή (χωρίς λογαριασμό UOA)</a>
                     </div>
                 </div>

@@ -309,6 +309,7 @@ class Student extends Authenticatable
             'wresPerDays' => 'integer',
             'wresPerWeek' => 'integer',
             'questionnaire_version' => 'integer',
+            'data_CAS' => 'array',
         ];
     }
 }

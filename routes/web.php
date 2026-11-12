@@ -6,7 +6,6 @@ use App\Http\Controllers\Admin\ScientificSupervisorController;
 use App\Http\Controllers\Admin\StudentCardFieldController;
 use App\Http\Controllers\Admin\WorkflowActionController;
 use App\Http\Controllers\Admin\WorkflowSectionRuleController;
-use App\Http\Controllers\Admin\CasInspectorController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ProviderAuthenticatedSessionController;
 use App\Http\Controllers\Auth\StudentAuthenticatedSessionController;
@@ -46,7 +45,6 @@ Route::middleware('auth:web')->group(function () {
 });
 
 Route::middleware(['auth', 'can:view-admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/cas-test', CasInspectorController::class)->name('cas-test');
     Route::get('/department-access', DepartmentAccessController::class)
         ->name('department-access');
     Route::get('/departments/{department}/access', [DepartmentAccessController::class, 'edit'])
@@ -87,8 +85,6 @@ Route::prefix('student')->name('student.')->group(function () {
     Route::get('/login', [StudentAuthenticatedSessionController::class, 'create'])
         ->middleware('guest:web,student,provider,scientific_supervisor')
         ->name('login');
-    Route::post('/login', [StudentAuthenticatedSessionController::class, 'store'])
-        ->middleware(['guest:web,student,provider,scientific_supervisor', 'throttle:5,1']);
     Route::get('/internships', [StudentAuthenticatedSessionController::class, 'internships'])
         ->middleware('guest:web,student,provider,scientific_supervisor')
         ->name('internships');

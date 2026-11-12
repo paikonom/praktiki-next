@@ -27,7 +27,8 @@ class StudentAuthenticatedSessionControllerTest extends TestCase
             'AMF' => '1234567890123',
             'uuid' => '9b4998d2-2937-4f69-86d7-681edabf586f',
         ])->assertRedirect(route('student.internships'))
-            ->assertSessionHas('student_login_amf', '1234567890123');
+            ->assertSessionHas('student_login_amf', '1234567890123')
+            ->assertSessionHas('student_login_source', 'temporary');
     }
 
     public function test_student_selects_one_of_the_internships_found_by_amf(): void
@@ -45,8 +46,10 @@ class StudentAuthenticatedSessionControllerTest extends TestCase
             'fash_id' => $this->internshipPhase('Institution', '2024-2025'),
         ]);
 
-        $this->post(route('student.login'), ['AMF' => '1234567890123'])
-            ->assertRedirect(route('student.internships'));
+        $this->withSession([
+            'student_login_amf' => '1234567890123',
+            'student_login_source' => 'temporary',
+        ]);
         $this->assertGuest('student');
 
         $this->get(route('student.internships'))
@@ -62,11 +65,11 @@ class StudentAuthenticatedSessionControllerTest extends TestCase
         $this->assertNotSame($firstId, $secondId);
     }
 
-    public function test_unknown_amf_is_rejected(): void
+    public function test_unknown_amf_in_session_is_rejected(): void
     {
-        $this->from(route('student.login'))
-            ->post(route('student.login'), ['AMF' => '9999999999999'])
-            ->assertRedirect(route('student.login'))
+        $this->withSession(['student_login_amf' => '9999999999999'])
+            ->get(route('student.internships'))
+            ->assertRedirect(route('student.test_login'))
             ->assertSessionHasErrors('AMF');
 
         $this->assertGuest('student');
@@ -81,8 +84,10 @@ class StudentAuthenticatedSessionControllerTest extends TestCase
         ]);
         DB::table('student_actions')->insert(['student_id' => $studentId, 'action' => 'katastash_praktikis', 'status' => 'cancelled']);
 
-        $this->post(route('student.login'), ['AMF' => '1234567890123']);
-        $this->post(route('student.internships.select'), ['student_id' => $studentId])
+        $this->withSession([
+            'student_login_amf' => '1234567890123',
+            'student_login_source' => 'temporary',
+        ])->post(route('student.internships.select'), ['student_id' => $studentId])
             ->assertRedirect(route('student.test_login'))
             ->assertSessionHasErrors('AMF');
 
@@ -113,11 +118,34 @@ class StudentAuthenticatedSessionControllerTest extends TestCase
             'fash_id' => $this->internshipPhase(),
         ]);
 
-        $response = $this->actingAs(Student::findOrFail($studentId), 'student')
+        $response = $this->withSession(['student_login_source' => 'temporary'])
+            ->actingAs(Student::findOrFail($studentId), 'student')
             ->post(route('student.logout'));
 
         $response->assertRedirect(route('home'));
         $this->assertGuest('student');
+    }
+
+    public function test_cas_response_is_saved_on_the_selected_internship(): void
+    {
+        $studentId = DB::table('students')->insertGetId([
+            'fName' => 'Δήμητρα',
+            'AMF' => '1452202300142',
+            'fash_id' => $this->internshipPhase(),
+        ]);
+        $casResponse = [
+            'user' => 'spm2300142',
+            'attributes' => ['uid' => 'spm2300142', 'uoastudentid' => '1452202300142'],
+        ];
+
+        $this->withSession([
+            'student_login_amf' => '1452202300142',
+            'student_login_source' => 'cas',
+            'student_cas_response' => $casResponse,
+        ])->post(route('student.internships.select'), ['student_id' => $studentId])
+            ->assertRedirect(route('student.dashboard'));
+
+        $this->assertSame($casResponse, Student::findOrFail($studentId)->data_CAS);
     }
 
     public function test_logged_in_student_is_redirected_from_member_login_to_own_dashboard(): void
