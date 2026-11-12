@@ -57,7 +57,8 @@ class StudentAuthenticatedSessionControllerTest extends TestCase
             ->assertSee('Μαρία')
             ->assertSee('Espa')
             ->assertSee('Institution')
-            ->assertSee('Πριν την έναρξη');
+            ->assertSee('Πριν την έναρξη')
+            ->assertDontSee('Σύνδεση χειριστή');
 
         $this->post(route('student.internships.select'), ['student_id' => $secondId])
             ->assertRedirect(route('student.dashboard'));

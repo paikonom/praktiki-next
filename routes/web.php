@@ -85,6 +85,9 @@ Route::prefix('student')->name('student.')->group(function () {
     Route::get('/login', [StudentAuthenticatedSessionController::class, 'create'])
         ->middleware('guest:web,student,provider,scientific_supervisor')
         ->name('login');
+    Route::get('/cas-logout', [StudentAuthenticatedSessionController::class, 'casLogout'])
+        ->middleware('guest:web,student,provider,scientific_supervisor')
+        ->name('cas_logout');
     Route::get('/internships', [StudentAuthenticatedSessionController::class, 'internships'])
         ->middleware('guest:web,student,provider,scientific_supervisor')
         ->name('internships');

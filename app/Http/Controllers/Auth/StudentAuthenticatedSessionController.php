@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 
 class StudentAuthenticatedSessionController extends Controller
 {
-    public function create(Request $request): RedirectResponse
+    public function create(Request $request): View|RedirectResponse
     {
         $casResponse = $this->authenticateWithCas();
         $studentRegistrationNumber = $casResponse['attributes']['uoastudentid'] ?? null;
@@ -169,6 +169,20 @@ class StudentAuthenticatedSessionController extends Controller
         return redirect()->route('home');
     }
 
+    public function casLogout(Request $request): RedirectResponse
+    {
+        $request->session()->forget([
+            'student_login_amf',
+            'student_login_source',
+            'student_cas_response',
+        ]);
+
+        $this->initializeCas();
+        \phpCAS::logoutWithRedirectService(route('home'));
+
+        return redirect()->route('home');
+    }
+
     /** @return array{user: string, attributes: array<string, mixed>} */
     private function authenticateWithCas(): array
     {
@@ -214,13 +228,11 @@ class StudentAuthenticatedSessionController extends Controller
         \phpCAS::setCasServerCACert(config('services.cas.ca_cert'));
     }
 
-    private function logoutCasWithError(string $message): RedirectResponse
+    private function logoutCasWithError(string $message): View
     {
-        $redirect = redirect()->route('home')->withErrors(['login' => $message]);
+        session()->put('student_login_source', 'cas');
 
-        \phpCAS::logoutWithRedirectService($redirect->getTargetUrl());
-
-        return $redirect;
+        return view('auth.cas-login-error', compact('message'));
     }
 
 }

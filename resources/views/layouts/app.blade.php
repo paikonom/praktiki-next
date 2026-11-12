@@ -92,7 +92,9 @@
                                 </nav>
                                 <div class="d-flex align-items-center gap-3 text-white"><span class="small">{{ auth('scientific_supervisor')->user()->full_name }}</span><form method="POST" action="{{ route('scientific_supervisor.logout') }}">@csrf<button class="btn btn-outline-light btn-sm">Αποσύνδεση</button></form></div>
                             @else
-                                <div class="ms-auto"><a class="btn btn-outline-light btn-sm" href="{{ route('login') }}">Σύνδεση χειριστή</a></div>
+                                @if (! session()->has('student_login_source'))
+                                    <div class="ms-auto"><a class="btn btn-outline-light btn-sm" href="{{ route('login') }}">Σύνδεση χειριστή</a></div>
+                                @endif
                             @endauth
                         @endauth
                     @endauth
