@@ -20,11 +20,31 @@ class CasInspectorController extends Controller
             false,
         );
         \phpCAS::setCasServerCACert(config('services.cas.ca_cert'));
-        \phpCAS::forceAuthentication();
 
-        return response()->json([
-            'user' => \phpCAS::getUser(),
-            'attributes' => \phpCAS::getAttributes(),
-        ], headers: ['Cache-Control' => 'no-store, private']);
+        $laravelErrorHandler = null;
+        $laravelErrorHandler = set_error_handler(
+            function (int $severity, string $message, string $file, int $line) use (&$laravelErrorHandler): bool {
+                if ($severity === E_WARNING
+                    && str_contains($file, '/apereo/phpcas/')
+                    && $message === 'Undefined array key 0') {
+                    return true;
+                }
+
+                return is_callable($laravelErrorHandler)
+                    ? (bool) $laravelErrorHandler($severity, $message, $file, $line)
+                    : false;
+            },
+        );
+
+        try {
+            \phpCAS::forceAuthentication();
+
+            return response()->json([
+                'user' => \phpCAS::getUser(),
+                'attributes' => \phpCAS::getAttributes(),
+            ], headers: ['Cache-Control' => 'no-store, private']);
+        } finally {
+            restore_error_handler();
+        }
     }
 }
