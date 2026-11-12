@@ -52,6 +52,26 @@ class StudentsController extends Controller
         $phase = $phaseNames->contains($phase) ? $phase : '';
         $search = trim($request->string('search')->toString());
 
+        $documentTypes = DocumentType::query()
+            ->where('active', true)
+            ->orderBy('sort_order')
+            ->get(['code', 'title']);
+        $emailTypes = $emails->typeOptions();
+        $filters = [
+            'student_status' => $this->selectedFilter($request, 'student_status', ['active', 'completed', 'cancelled']),
+            'date_stage' => $this->selectedFilter($request, 'date_stage', ['before_start', 'in_progress', 'after_end']),
+            'weekly_hours' => $this->selectedFilter($request, 'weekly_hours', ['20', '40']),
+            'details_status' => $this->selectedFilter($request, 'details_status', ['completed', 'pending']),
+            'input_status' => $this->selectedFilter($request, 'input_status', ['completed', 'pending', 'not_required']),
+            'output_status' => $this->selectedFilter($request, 'output_status', ['completed', 'pending', 'not_required']),
+            'questionnaires_status' => $this->selectedFilter($request, 'questionnaires_status', ['completed', 'student_pending', 'provider_pending', 'pending']),
+            'document_type' => $this->selectedFilter($request, 'document_type', $documentTypes->pluck('code')->all()),
+            'document_status' => $this->selectedFilter($request, 'document_status', ['missing', 'submitted', 'approved', 'rejected', 'not_required']),
+            'email_type' => $this->selectedFilter($request, 'email_type', array_keys($emailTypes)),
+            'email_status' => $this->selectedFilter($request, 'email_status', ['sent', 'not_sent']),
+        ];
+        $hasAdvancedFilters = collect($filters)->contains(fn (string $value): bool => $value !== '');
+
         $students = $this->filteredStudents(
             $departmentIds,
             $year,
@@ -59,6 +79,7 @@ class StudentsController extends Controller
             $departmentId,
             $phase,
             $search,
+            $filters,
         );
         $nextActions = $this->nextActions($students, $emails, $request);
         $studentGroups = $students->groupBy('department_id');
@@ -67,7 +88,16 @@ class StudentsController extends Controller
         return view('students.index', compact(
             'studentGroups', 'studentCount', 'departments', 'years', 'fundings', 'phaseNames',
             'year', 'funding', 'departmentId', 'phase', 'search', 'nextActions',
+            'documentTypes', 'emailTypes', 'filters', 'hasAdvancedFilters',
         ));
+    }
+
+    /** @param array<int, string> $allowed */
+    private function selectedFilter(Request $request, string $name, array $allowed): string
+    {
+        $value = $request->string($name)->toString();
+
+        return in_array($value, $allowed, true) ? $value : '';
     }
 
     private function availableDepartments(Request $request): Collection
@@ -146,8 +176,9 @@ class StudentsController extends Controller
         ?int $departmentId,
         string $phase,
         string $search,
+        array $filters,
     ): Collection {
-        $students = Student::query()
+        $query = Student::query()
             ->join('departments', 'departments.id', '=', 'students.department_id')
             ->leftJoin('praktiki_phases', 'praktiki_phases.id', '=', 'students.fash_id')
             ->leftJoin('praktiki_cycles', 'praktiki_cycles.id', '=', 'praktiki_phases.praktiki_cycle_id')
@@ -163,7 +194,11 @@ class StudentsController extends Controller
                     ->orWhere('students.lName', 'like', "%{$search}%")
                     ->orWhere('students.afm', 'like', "%{$search}%")
                     ->orWhere('students.adt', 'like', "%{$search}%");
-            }))
+            }));
+
+        $this->applyFilters($query, $filters);
+
+        $students = $query
             ->select([
                 'students.id', 'students.department_id', 'students.fName', 'students.lName', 'students.AMF',
                 'students.startDate', 'students.endDate', 'students.diakoptomeno',
@@ -183,6 +218,148 @@ class StudentsController extends Controller
         $this->preloadListStatuses($students);
 
         return $students;
+    }
+
+    /** @param array<string, string> $filters */
+    private function applyFilters(Builder $query, array $filters): void
+    {
+        if ($filters['student_status'] !== '') {
+            $method = $filters['student_status'] === 'active' ? 'whereNotExists' : 'whereExists';
+            $query->{$method}(fn ($status) => $status
+                ->selectRaw('1')
+                ->from('student_actions as internship_status')
+                ->whereColumn('internship_status.student_id', 'students.id')
+                ->where('internship_status.action', 'katastash_praktikis')
+                ->whereIn(
+                    'internship_status.status',
+                    $filters['student_status'] === 'active' ? ['completed', 'cancelled'] : [$filters['student_status']],
+                ));
+        }
+
+        if ($filters['date_stage'] === 'before_start') {
+            $query->where(fn (Builder $dates) => $dates
+                ->whereNull('students.startDate')
+                ->orWhere('students.startDate', '>', today()));
+        } elseif ($filters['date_stage'] === 'in_progress') {
+            $query->where('students.startDate', '<=', today())
+                ->where('students.endDate', '>=', today());
+        } elseif ($filters['date_stage'] === 'after_end') {
+            $query->where('students.endDate', '<', today());
+        }
+
+        if ($filters['weekly_hours'] !== '') {
+            $query->where('students.wresPerWeek', (int) $filters['weekly_hours']);
+        }
+
+        if ($filters['details_status'] !== '') {
+            $completed = function ($details, string $action): void {
+                $details->selectRaw('1')
+                    ->from('student_actions as detail_status')
+                    ->whereColumn('detail_status.student_id', 'students.id')
+                    ->where('detail_status.action', $action)
+                    ->whereIn('detail_status.status', ['approved', 'not_required']);
+            };
+
+            if ($filters['details_status'] === 'completed') {
+                foreach (['stoix_student', 'stoix_forea'] as $action) {
+                    $query->whereExists(fn ($details) => $completed($details, $action));
+                }
+            } else {
+                $query->where(fn (Builder $details) => $details
+                    ->whereNotExists(fn ($action) => $completed($action, 'stoix_student'))
+                    ->orWhereNotExists(fn ($action) => $completed($action, 'stoix_forea')));
+            }
+        }
+
+        foreach (['input', 'output'] as $type) {
+            $status = $filters[$type.'_status'];
+            if ($status === '') {
+                continue;
+            }
+
+            $method = $status === 'pending' ? 'whereNotExists' : 'whereExists';
+            $query->{$method}(fn ($apografiko) => $apografiko
+                ->selectRaw('1')
+                ->from('student_apografika as filter_apografiko')
+                ->whereColumn('filter_apografiko.student_id', 'students.id')
+                ->where('filter_apografiko.type', $type)
+                ->when(
+                    $status === 'pending',
+                    fn ($query) => $query->whereIn('filter_apografiko.status', ['completed', 'not_required']),
+                    fn ($query) => $query->where('filter_apografiko.status', $status),
+                ));
+        }
+
+        $this->applyQuestionnaireFilter($query, $filters['questionnaires_status']);
+        $this->applyDocumentFilter($query, $filters['document_type'], $filters['document_status']);
+        $this->applyEmailFilter($query, $filters['email_type'], $filters['email_status']);
+    }
+
+    private function applyQuestionnaireFilter(Builder $query, string $status): void
+    {
+        $studentCompleted = fn ($questionnaire) => $questionnaire
+            ->selectRaw('1')
+            ->from('student_questionnaires as filter_student_questionnaire')
+            ->whereColumn('filter_student_questionnaire.s_id', 'students.id')
+            ->where('filter_student_questionnaire.status', 'submitted');
+        $providerCompleted = fn ($questionnaire) => $questionnaire
+            ->selectRaw('1')
+            ->from('provider_questionnaires as filter_provider_questionnaire')
+            ->whereColumn('filter_provider_questionnaire.s_id', 'students.id')
+            ->where('filter_provider_questionnaire.status', 'submitted');
+
+        if ($status === 'completed') {
+            $query->whereExists($studentCompleted)->whereExists($providerCompleted);
+        } elseif ($status === 'student_pending') {
+            $query->whereNotExists($studentCompleted);
+        } elseif ($status === 'provider_pending') {
+            $query->whereNotExists($providerCompleted);
+        } elseif ($status === 'pending') {
+            $query->where(fn (Builder $questionnaires) => $questionnaires
+                ->whereNotExists($studentCompleted)
+                ->orWhereNotExists($providerCompleted));
+        }
+    }
+
+    private function applyDocumentFilter(Builder $query, string $type, string $status): void
+    {
+        if ($status === '' || ($status === 'missing' && $type === '')) {
+            return;
+        }
+
+        $method = $status === 'missing' ? 'whereNotExists' : 'whereExists';
+        $query->{$method}(function ($documents) use ($type, $status): void {
+            $documents->selectRaw('1')
+                ->from('student_documents as filter_document')
+                ->join('document_types as filter_document_type', 'filter_document_type.id', '=', 'filter_document.document_type_id')
+                ->whereColumn('filter_document.s_id', 'students.id')
+                ->when($type !== '', fn ($query) => $query->where('filter_document_type.code', $type));
+
+            if ($status !== 'missing') {
+                $documents->where('filter_document.status', $status)
+                    ->whereNotExists(fn ($newer) => $newer
+                        ->selectRaw('1')
+                        ->from('student_documents as newer_filter_document')
+                        ->whereColumn('newer_filter_document.s_id', 'filter_document.s_id')
+                        ->whereColumn('newer_filter_document.document_type_id', 'filter_document.document_type_id')
+                        ->whereColumn('newer_filter_document.version', '>', 'filter_document.version'));
+            }
+        });
+    }
+
+    private function applyEmailFilter(Builder $query, string $type, string $status): void
+    {
+        if ($type === '' || $status === '') {
+            return;
+        }
+
+        $method = $status === 'sent' ? 'whereExists' : 'whereNotExists';
+        $query->{$method}(fn ($emails) => $emails
+            ->selectRaw('1')
+            ->from('email_logs as filter_email')
+            ->whereColumn('filter_email.student_id', 'students.id')
+            ->where('filter_email.type', $type)
+            ->where('filter_email.status', 'sent'));
     }
 
     private function preloadListStatuses(Collection $students): void

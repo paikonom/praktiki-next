@@ -109,6 +109,74 @@ class StudentsControllerTest extends TestCase
         $this->get(route('students.index'))->assertRedirect(route('login'));
     }
 
+    public function test_student_list_filters_by_latest_document_and_sent_email(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+        $departmentId = DB::table('departments')->insertGetId(['atlasId' => 330, 'tmhma' => 'Πληροφορική']);
+        $phaseId = $this->internshipPhase('Espa', '2025-2026', $departmentId);
+        $approvedStudent = DB::table('students')->insertGetId([
+            'department_id' => $departmentId,
+            'fash_id' => $phaseId,
+            'fName' => 'ΕΓΚΕΚΡΙΜΕΝΟΣ',
+        ]);
+        $submittedStudent = DB::table('students')->insertGetId([
+            'department_id' => $departmentId,
+            'fash_id' => $phaseId,
+            'fName' => 'ΠΡΟΣ ΕΓΚΡΙΣΗ',
+        ]);
+        $documentTypeId = DB::table('document_types')->where('code', 'symf_SN_FULL')->value('id');
+
+        DB::table('student_documents')->insert([
+            ['s_id' => $approvedStudent, 'document_type_id' => $documentTypeId, 'version' => 1, 'status' => 'submitted'],
+            ['s_id' => $approvedStudent, 'document_type_id' => $documentTypeId, 'version' => 2, 'status' => 'approved'],
+            ['s_id' => $submittedStudent, 'document_type_id' => $documentTypeId, 'version' => 1, 'status' => 'submitted'],
+        ]);
+        DB::table('email_logs')->insert([
+            'student_id' => $approvedStudent,
+            'type' => 'input',
+            'to' => json_encode(['student@example.test']),
+            'subject' => 'Test',
+            'body' => 'Test',
+            'status' => 'sent',
+        ]);
+        DB::table('student_actions')->insert([
+            ['student_id' => $approvedStudent, 'action' => 'stoix_student', 'status' => 'approved'],
+            ['student_id' => $approvedStudent, 'action' => 'stoix_forea', 'status' => 'approved'],
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('students.index', [
+                'year' => 'all',
+                'funding' => 'all',
+                'document_type' => 'symf_SN_FULL',
+                'document_status' => 'submitted',
+            ]))
+            ->assertOk()
+            ->assertSee('ΠΡΟΣ ΕΓΚΡΙΣΗ')
+            ->assertDontSee('ΕΓΚΕΚΡΙΜΕΝΟΣ');
+
+        $this->actingAs($user)
+            ->get(route('students.index', [
+                'year' => 'all',
+                'funding' => 'all',
+                'email_type' => 'input',
+                'email_status' => 'sent',
+            ]))
+            ->assertOk()
+            ->assertSee('ΕΓΚΕΚΡΙΜΕΝΟΣ')
+            ->assertDontSee('ΠΡΟΣ ΕΓΚΡΙΣΗ');
+
+        $this->actingAs($user)
+            ->get(route('students.index', [
+                'year' => 'all',
+                'funding' => 'all',
+                'details_status' => 'completed',
+            ]))
+            ->assertOk()
+            ->assertSee('ΕΓΚΕΚΡΙΜΕΝΟΣ')
+            ->assertDontSee('ΠΡΟΣ ΕΓΚΡΙΣΗ');
+    }
+
     public function test_student_card_returns_to_the_last_filtered_students_list(): void
     {
         $user = User::factory()->create();

@@ -5,8 +5,9 @@
 @section('content')
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
-            <h1 class="h3 mb-1">Φοιτητές</h1>
-            <p class="text-muted mb-0">Οι φοιτητές των τμημάτων στα οποία έχεις πρόσβαση.</p>
+            <!-- <span class="h4 mb-1">Φοιτητές</span> -->
+            <span class="badge text-bg-secondary">Σύνολο εγγραφών: {{ $studentCount }}</span>
+            <!-- <p class="text-muted mb-0">Οι φοιτητές των τμημάτων στα οποία έχεις πρόσβαση.</p> -->
         </div>
         <div class="d-flex gap-2">
             @if (! auth()->user()->view_only)
@@ -15,67 +16,13 @@
             <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">Επιστροφή</a>
         </div>
     </div>
-
-    <form method="GET" class="card border-0 shadow-sm mb-4">
-        <div class="card-body">
-            <div class="row g-3 align-items-end">
-                <div class="col-md-2">
-                    <label for="year" class="form-label">Έτος πράξης</label>
-                    <select id="year" name="year" class="form-select">
-                        <option value="all" @selected($year === 'all')>Όλα τα έτη</option>
-                        @foreach ($years as $availableYear)
-                            <option value="{{ $availableYear }}" @selected($availableYear === $year)>{{ $availableYear }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="funding" class="form-label">Χρηματοδότηση</label>
-                    <select id="funding" name="funding" class="form-select">
-                        <option value="all" @selected($funding === 'all')>Όλες οι χρηματοδοτήσεις</option>
-                        @foreach ($fundings as $availableFunding)
-                            <option value="{{ $availableFunding->code }}" @selected($availableFunding->code === $funding)>
-                                {{ $availableFunding->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="department_id" class="form-label">Τμήμα</label>
-                    <select id="department_id" name="department_id" class="form-select">
-                        <option value="">Όλα τα τμήματα</option>
-                        @foreach ($departments as $department)
-                            <option value="{{ $department->id }}" @selected($department->id === $departmentId)>
-                                {{ $department->atlasId }} - {{ $department->tmhma }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="phase" class="form-label">Φάση</label>
-                    <select id="phase" name="phase" class="form-select">
-                        <option value="">Όλες</option>
-                        @foreach ($phaseNames as $availablePhase)
-                            <option value="{{ $availablePhase }}" @selected($availablePhase === $phase)>{{ $availablePhase }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button class="btn btn-primary w-100" type="submit">Προβολή</button>
-                </div>
-                <div class="col-md-10">
-                    <label for="search" class="form-label">Αναζήτηση</label>
-                    <input id="search" name="search" class="form-control" value="{{ $search }}" placeholder="Ονοματεπώνυμο, ΑΜ, ΑΦΜ ή ΑΔΤ">
-                </div>
-                <div class="col-md-2">
-                    <a href="{{ route('students.index') }}" class="btn btn-outline-secondary w-100">Καθαρισμός</a>
-                </div>
-            </div>
-        </div>
-    </form>
-
-    <div class="d-flex justify-content-end mb-3">
-        <span class="badge text-bg-secondary">Σύνολο εγγραφών: {{ $studentCount }}</span>
+     <div class="d-flex justify-content-end mb-3">
+        
     </div>
+
+    @include('students.partials.filters')
+
+   
 
     @forelse ($studentGroups as $departmentStudents)
         @php
@@ -120,6 +67,14 @@
                                 };
                             @endphp
                             <tr class="{{ $rowClass }}">
+@php
+//dd($doc);
+ //$downloadRoute = route('scientific_supervisor.documents.download', $document); 
+ //$downloadRoute = route('scientific_supervisor.documents.download', $document);
+ //<a class="btn btn-sm btn-outline-primary" href="{{ $downloadRoute }}">Λήψη</a>
+@endphp
+                            
+
                                 <td>{{ $student->id }}</td>
                                 <td>
                                     <div class="d-flex flex-wrap align-items-center gap-1">

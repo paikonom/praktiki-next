@@ -24,6 +24,14 @@ class StudentEmailService
         'lhxh_ey' => ['title' => 'ΕΠ.ΥΠ.: Εκκρεμότητες λήξης', 'button' => 'ΛΗΞΗ Υπ.Τμ.', 'recipient_role' => 'supervisor'],
     ];
 
+    /** @return array<string, string> */
+    public function typeOptions(): array
+    {
+        return collect(self::EMAILS)->mapWithKeys(
+            fn (array $email, string $type): array => [$type => $email['title']],
+        )->all();
+    }
+
     /** @return Collection<int, array<string, mixed>> */
     public function entries(Student $student): Collection
     {

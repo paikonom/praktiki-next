@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'cas' => [
+        'host' => env('CAS_HOST', 'sso.uoa.gr'),
+        'port' => (int) env('CAS_PORT', 443),
+        'ca_cert' => env('CAS_CA_CERT', '/etc/ssl/certs/ca-certificates.crt'),
+        'inspect_enabled' => env('CAS_INSPECT_ENABLED', false),
+    ],
+
 ];
