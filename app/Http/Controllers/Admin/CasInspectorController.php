@@ -12,7 +12,7 @@ class CasInspectorController extends Controller
         abort_unless(config('services.cas.inspect_enabled'), 404);
 
         \phpCAS::client(
-            CAS_VERSION_2_0,
+            SAML_VERSION_1_1,
             config('services.cas.host'),
             config('services.cas.port'),
             '',
