@@ -41,4 +41,10 @@ return [
         'ca_cert' => env('CAS_CA_CERT', '/etc/ssl/certs/ca-certificates.crt'),
     ],
 
+    'atlas' => [
+        'url' => env('ATLAS_URL', 'https://submit-atlas.grnet.gr/Api/Offices/v1'),
+        'username' => env('ATLAS_USERNAME'),
+        'password' => env('ATLAS_PASSWORD'),
+    ],
+
 ];

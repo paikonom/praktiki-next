@@ -203,6 +203,12 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:60,1')
         ->name('rescom.cities');
     Route::get('/students/{student}', [StudentsController::class, 'show'])->name('students.show');
+    Route::get('/students/{student}/atlas-data', [StudentsController::class, 'showAtlasData'])
+        ->name('students.atlas-data');
+    Route::get('/students/{student}/rescom-data', [StudentsController::class, 'showRescomData'])
+        ->name('students.rescom-data');
+    Route::post('/students/{student}/atlas-position', [StudentsController::class, 'fetchAtlasPosition'])
+        ->name('students.atlas-position');
     Route::get('/students/{student}/emails/{type}/preview', [StudentEmailController::class, 'preview'])->name('students.emails.preview');
     Route::post('/students/{student}/emails/{type}', [StudentEmailController::class, 'store'])->middleware('throttle:10,1')->name('students.emails.store');
     Route::get('/students/{student}/agreement/preview', [StudentAgreementController::class, 'preview'])->name('students.agreement.preview');

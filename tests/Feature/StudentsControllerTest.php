@@ -10,11 +10,56 @@ use App\Services\StudentEmailService;
 use App\Support\StudentWorkflow;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class StudentsControllerTest extends TestCase
 {
     use LazilyRefreshDatabase;
+
+    public function test_handler_fetches_the_single_matching_atlas_position_and_provider(): void
+    {
+        config([
+            'services.atlas.username' => 'atlas-user',
+            'services.atlas.password' => 'atlas-password',
+        ]);
+
+        $user = User::factory()->create(['role' => 'admin']);
+        $departmentId = DB::table('departments')->insertGetId(['atlasId' => 330, 'tmhma' => 'Πληροφορική']);
+        $phaseId = $this->internshipPhase('Espa', '2025-2026', $departmentId);
+        $studentId = DB::table('students')->insertGetId([
+            'department_id' => $departmentId,
+            'fash_id' => $phaseId,
+            'AMF' => '12345',
+            'id_group' => 987,
+        ]);
+        $position = [
+            'ID' => 456,
+            'GroupID' => 987,
+            'FundingType' => 'Espa',
+            'GroupDetails' => ['ProviderID' => 321],
+            'AssignedStudent' => ['StudentNumber' => '12345'],
+        ];
+        $provider = ['ID' => 321, 'Name' => 'Δοκιμαστικός Φορέας'];
+
+        Http::fake([
+            '*/Login' => Http::response(['Result' => ['AuthToken' => 'token']]),
+            '*/GetAssignedPositions' => Http::response(['Result' => [$position]]),
+            '*/GetProviderDetails*' => Http::response(['Result' => $provider]),
+        ]);
+
+        $this->actingAs($user)
+            ->from(route('students.show', $studentId))
+            ->post(route('students.atlas-position', $studentId))
+            ->assertRedirect(route('students.show', $studentId))
+            ->assertSessionHas('status', fn (string $message): bool => str_contains($message, '456'));
+
+        $student = Student::findOrFail($studentId);
+        $this->assertSame(456, $student->id_thesh);
+        $this->assertSame($position, $student->atlas_Antistoixish);
+        $this->assertSame($provider, $student->atlas_Provider);
+        Http::assertSentCount(3);
+    }
 
     public function test_user_sees_only_students_from_accessible_departments(): void
     {

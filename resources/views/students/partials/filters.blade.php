@@ -58,6 +58,7 @@
                 'student_status' => ['active' => 'Ενεργή πρακτική', 'completed' => 'Ολοκληρωμένη πρακτική', 'cancelled' => 'Ακυρωμένη πρακτική'],
                 'date_stage' => ['before_start' => 'Πριν την έναρξη', 'in_progress' => 'Σε εξέλιξη', 'after_end' => 'Μετά τη λήξη'],
                 'weekly_hours' => ['20' => '20 ώρες/εβδομάδα', '40' => '40 ώρες/εβδομάδα'],
+                'atlas_position' => ['with' => 'Με θέση ΑΤΛΑΣ', 'without' => 'Χωρίς θέση ΑΤΛΑΣ'],
                 'details_status' => ['completed' => 'Στοιχεία ολοκληρωμένα', 'pending' => 'Στοιχεία σε εκκρεμότητα'],
                 'input_status' => ['completed' => 'Είσοδος: ολοκληρώθηκε', 'pending' => 'Είσοδος: εκκρεμεί', 'not_required' => 'Είσοδος: δεν απαιτείται'],
                 'output_status' => ['completed' => 'Έξοδος: ολοκληρώθηκε', 'pending' => 'Έξοδος: εκκρεμεί', 'not_required' => 'Έξοδος: δεν απαιτείται'],
@@ -116,6 +117,14 @@
                             <option value="">Όλες</option>
                             <option value="20" @selected($filters['weekly_hours'] === '20')>20 ώρες</option>
                             <option value="40" @selected($filters['weekly_hours'] === '40')>40 ώρες</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 col-xl-3">
+                        <label for="atlas_position" class="form-label">Θέση ΑΤΛΑΣ</label>
+                        <select id="atlas_position" name="atlas_position" class="form-select">
+                            <option value="">Όλες</option>
+                            <option value="with" @selected($filters['atlas_position'] === 'with')>Με θέση</option>
+                            <option value="without" @selected($filters['atlas_position'] === 'without')>Χωρίς θέση</option>
                         </select>
                     </div>
                 </div>

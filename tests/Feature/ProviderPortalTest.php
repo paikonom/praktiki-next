@@ -230,7 +230,7 @@ class ProviderPortalTest extends TestCase
         $this->actingAs($student, 'provider')
             ->get(route('provider.questionnaire'))
             ->assertRedirect(route('provider.dashboard'))
-            ->assertSessionHas('error', 'Πρέπει πρώτα να ολοκληρωθεί η ενότητα Α.');
+            ->assertSessionHas('error', 'Πρέπει πρώτα να ολοκληρωθούν όλες οι ενέργειες της ενότητας Α.');
 
         $typeId = DB::table('document_types')->where('code', 'ekthesh_Forea')->value('id');
         $this->actingAs($student, 'provider')

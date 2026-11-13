@@ -310,6 +310,11 @@ class Student extends Authenticatable
             'wresPerWeek' => 'integer',
             'questionnaire_version' => 'integer',
             'data_CAS' => 'array',
+            'atlas_Antistoixish' => 'array',
+            'atlas_Provider' => 'array',
+            'rescom_resp' => 'array',
+            'id_thesh' => 'integer',
+            'id_group' => 'integer',
         ];
     }
 }

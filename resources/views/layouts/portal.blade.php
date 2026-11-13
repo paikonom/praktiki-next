@@ -25,6 +25,7 @@
     @include('students.partials.summary', [
         'backUrl' => null,
         'showNotes' => false,
+        'showPrivateCodes' => false,
     ])
 
     <div class="row g-4 align-items-start">

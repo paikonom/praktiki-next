@@ -38,11 +38,11 @@ class StudentApografikoTest extends TestCase
 
     public function test_student_submits_input_and_completes_it_after_ops_processing(): void
     {
-        config()->set('apografika.enabled', true);
-        config()->set('apografika.endpoint', 'https://ops.example.test/participants');
-        config()->set('apografika.username', 'test-user');
-        config()->set('apografika.password', 'test-password');
-        config()->set('apografika.mis_override', '6020906');
+        config()->set('praktiki_apografika.enabled', true);
+        config()->set('praktiki_apografika.endpoint', 'https://ops.example.test/participants');
+        config()->set('praktiki_apografika.username', 'test-user');
+        config()->set('praktiki_apografika.password', 'test-password');
+        config()->set('praktiki_apografika.mis_override', '6020906');
         $student = $this->eligibleStudent();
 
         Http::fake(fn ($request) => str_contains($request->body(), 'RequestProgressID')

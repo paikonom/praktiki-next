@@ -18,7 +18,7 @@
 
     @include('students.partials.summary', [
         'backUrl' => session('students.index_url', route('students.index')),
-        'showUuid' => true,
+        'showPrivateCodes' => true,
         ])
 
     <div class="row g-4 align-items-start">
@@ -31,6 +31,21 @@
                 @foreach (['ResCom', 'Έλεγχοι / Προειδοποιήσεις'] as $label)
                     <button class="list-group-item list-group-item-action" type="button" disabled>{{ $label }}</button>
                 @endforeach
+                @if ($canEdit)
+                    <form method="POST" action="{{ route('students.atlas-position', $student) }}"
+                          onsubmit="return confirm('Να αναζητηθεί ξανά η ενεργή θέση του φοιτητή στον ΑΤΛΑ;')">
+                        @csrf
+                        <button class="list-group-item list-group-item-action text-primary" type="submit">
+                            <i class="bi bi-cloud-download me-1"></i> Φέρε Θέση ΑΤΛΑ
+                        </button>
+                    </form>
+                @endif
+                <a class="list-group-item list-group-item-action" href="{{ route('students.atlas-data', $student) }}" target="_blank">
+                    <i class="bi bi-braces me-1"></i> Δες ΑΤΛΑ
+                </a>
+                <a class="list-group-item list-group-item-action" href="{{ route('students.rescom-data', $student) }}" target="_blank">
+                    <i class="bi bi-braces me-1"></i> Δες ResCom
+                </a>
             </div>
         </aside>
 

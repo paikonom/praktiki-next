@@ -14,11 +14,14 @@ use App\Support\StudentWorkflow;
 use App\Support\WorkflowDisplay;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Http;
 
 class StudentsController extends Controller
 {
@@ -61,6 +64,7 @@ class StudentsController extends Controller
             'student_status' => $this->selectedFilter($request, 'student_status', ['active', 'completed', 'cancelled']),
             'date_stage' => $this->selectedFilter($request, 'date_stage', ['before_start', 'in_progress', 'after_end']),
             'weekly_hours' => $this->selectedFilter($request, 'weekly_hours', ['20', '40']),
+            'atlas_position' => $this->selectedFilter($request, 'atlas_position', ['with', 'without']),
             'details_status' => $this->selectedFilter($request, 'details_status', ['completed', 'pending']),
             'input_status' => $this->selectedFilter($request, 'input_status', ['completed', 'pending', 'not_required']),
             'output_status' => $this->selectedFilter($request, 'output_status', ['completed', 'pending', 'not_required']),
@@ -249,6 +253,12 @@ class StudentsController extends Controller
 
         if ($filters['weekly_hours'] !== '') {
             $query->where('students.wresPerWeek', (int) $filters['weekly_hours']);
+        }
+
+        if ($filters['atlas_position'] === 'with') {
+            $query->whereNotNull('students.id_thesh');
+        } elseif ($filters['atlas_position'] === 'without') {
+            $query->whereNull('students.id_thesh');
         }
 
         if ($filters['details_status'] !== '') {
@@ -561,6 +571,136 @@ class StudentsController extends Controller
             'fieldGroups', 'fieldHelp', 'currentState', 'canEdit', 'fieldOptions', 'cityLabels',
             'emailEntries', 'agreementEmail', 'officeWorkflowSections', 'documentTypes', 'handlerStatusActions',
         ));
+    }
+
+    public function fetchAtlasPosition(Student $student): RedirectResponse
+    {
+        abort_unless(Gate::allows('update', $student), 403);
+
+        $student->loadMissing('phase.praktiki.funding');
+        $amf = trim((string) $student->AMF);
+        $groupId = (int) $student->id_group;
+        $funding = $student->fundingCode();
+
+        if ($amf === '' || $groupId === 0 || $funding === '') {
+            return back()
+                ->with('status_type', 'danger')
+                ->with('status', 'Δεν μπορεί να γίνει αναζήτηση στον ΑΤΛΑ: λείπει ΑΜΦ, Group ΑΤΛΑΣ ή χρηματοδότηση.');
+        }
+
+        $baseUrl = rtrim((string) config('services.atlas.url'), '/');
+        $username = config('services.atlas.username');
+        $password = config('services.atlas.password');
+
+        if (! $username || ! $password) {
+            return back()
+                ->with('status_type', 'danger')
+                ->with('status', 'Δεν έχουν οριστεί οι κωδικοί σύνδεσης του ΑΤΛΑ.');
+        }
+
+        try {
+            $loginResponse = Http::timeout(30)->post($baseUrl.'/Login', [
+                'Username' => $username,
+                'Password' => $password,
+            ]);
+            $token = $loginResponse->json('Result.AuthToken');
+
+            if (! $loginResponse->successful() || ! $token) {
+                return back()
+                    ->with('status_type', 'danger')
+                    ->with('status', 'Η σύνδεση με τον ΑΤΛΑΣ απέτυχε.');
+            }
+
+            $positionsResponse = Http::timeout(60)
+                ->withHeaders(['access_token' => $token])
+                ->post($baseUrl.'/GetAssignedPositions', ['Skip' => 0, 'Take' => 2000]);
+            $positions = $positionsResponse->json('Result');
+
+            if (! $positionsResponse->successful() || ! is_array($positions)) {
+                return back()
+                    ->with('status_type', 'danger')
+                    ->with('status', 'Ο ΑΤΛΑΣ δεν επέστρεψε τις ενεργές θέσεις.');
+            }
+
+            $matchingPositions = [];
+
+            foreach ($positions as $position) {
+                $positionAmf = trim((string) ($position['AssignedStudent']['StudentNumber'] ?? ''));
+                $positionGroupId = (int) ($position['GroupID'] ?? 0);
+                $positionFunding = (string) ($position['FundingType'] ?? '');
+
+                if ($positionAmf === $amf && $positionGroupId === $groupId && $positionFunding === $funding) {
+                    $matchingPositions[] = $position;
+                }
+            }
+
+            if (count($matchingPositions) !== 1) {
+                $message = $matchingPositions === []
+                    ? 'Δεν βρέθηκε ενεργή θέση στον ΑΤΛΑ με τον ίδιο ΑΜΦ, Group και χρηματοδότηση.'
+                    : 'Βρέθηκαν περισσότερες από μία ενεργές θέσεις στον ΑΤΛΑ με τον ίδιο ΑΜΦ, Group και χρηματοδότηση. Δεν έγινε ενημέρωση.';
+
+                return back()->with('status_type', 'danger')->with('status', $message);
+            }
+
+            $position = $matchingPositions[0];
+            $positionId = (int) ($position['ID'] ?? 0);
+            $providerId = (int) ($position['GroupDetails']['ProviderID'] ?? 0);
+
+            if ($positionId === 0 || $providerId === 0) {
+                return back()
+                    ->with('status_type', 'danger')
+                    ->with('status', 'Η θέση βρέθηκε, αλλά λείπει το ID θέσης ή φορέα από την απάντηση του ΑΤΛΑ.');
+            }
+
+            $providerResponse = Http::timeout(30)
+                ->withHeaders(['access_token' => $token])
+                ->get($baseUrl.'/GetProviderDetails', ['ID' => $providerId]);
+            $provider = $providerResponse->json('Result');
+
+            if (! $providerResponse->successful() || ! is_array($provider)) {
+                return back()
+                    ->with('status_type', 'danger')
+                    ->with('status', 'Η θέση βρέθηκε, αλλά ο ΑΤΛΑΣ δεν επέστρεψε τα στοιχεία του φορέα. Δεν έγινε ενημέρωση.');
+            }
+        } catch (ConnectionException) {
+            return back()
+                ->with('status_type', 'danger')
+                ->with('status', 'Δεν ήταν δυνατή η επικοινωνία με τον ΑΤΛΑΣ. Δοκιμάστε ξανά.');
+        }
+
+        $student->forceFill([
+            'id_thesh' => $positionId,
+            'atlas_Antistoixish' => $position,
+            'atlas_Provider' => $provider,
+        ])->save();
+
+        $providerName = $provider['Name'] ?? 'χωρίς επωνυμία';
+
+        return back()->with(
+            'status',
+            "Βρέθηκε και αποθηκεύτηκε η θέση ΑΤΛΑ {$positionId} στον φορέα {$providerName}, με Group {$groupId}.",
+        );
+    }
+
+    public function showAtlasData(Student $student): JsonResponse
+    {
+        abort_unless(Gate::allows('view', $student), 404);
+
+        return response()->json([
+            'atlas_Antistoixish' => $student->atlas_Antistoixish,
+            'atlas_Provider' => $student->atlas_Provider,
+        ], options: JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+            ->header('Content-Type', 'application/json; charset=UTF-8');
+    }
+
+    public function showRescomData(Student $student): JsonResponse
+    {
+        abort_unless(Gate::allows('view', $student), 404);
+
+        return response()->json(
+            ['rescom_resp' => $student->rescom_resp],
+            options: JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
+        )->header('Content-Type', 'application/json; charset=UTF-8');
     }
 
     public function updateSection(

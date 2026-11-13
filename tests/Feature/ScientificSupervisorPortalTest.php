@@ -157,7 +157,7 @@ class ScientificSupervisorPortalTest extends TestCase
         $this->actingAs($supervisor, 'scientific_supervisor')
             ->get(route('scientific_supervisor.students.show', ['student' => $student, 'panel' => 'documents']))
             ->assertOk()
-            ->assertSee('Πρέπει πρώτα να ολοκληρωθούν οι ενότητες Α και Β.');
+            ->assertSee('Πρέπει πρώτα να ολοκληρωθούν οι ενέργειες Α και Β.');
 
         $this->post(route('scientific_supervisor.documents.store', [$student, $documentType]), [
             'file' => UploadedFile::fake()->create('certificate.pdf', 100, 'application/pdf'),

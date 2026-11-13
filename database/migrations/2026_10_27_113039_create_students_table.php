@@ -23,9 +23,9 @@ return new class extends Migration
             $table->text('cancellation_reason')->nullable();
             $table->string('uuid', 100)->nullable();
             $table->text('data_CAS')->nullable();
-            $table->longText('atlas_Antistoixish')->nullable();
-            $table->text('atlas_Provider')->nullable();
-            $table->text('rescom_resp')->nullable();
+            $table->json('atlas_Antistoixish')->nullable();
+            $table->json('atlas_Provider')->nullable();
+            $table->json('rescom_resp')->nullable();
             $table->integer('id_thesh')->nullable();
             $table->integer('id_group')->nullable();
             $table->string('fName', 100)->nullable();
