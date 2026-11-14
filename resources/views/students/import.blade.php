@@ -7,6 +7,7 @@
         <div>
             <h1 class="h3 mb-1">Έλεγχος νέων φοιτητών</h1>
             <p class="text-muted mb-0">Η επικόλληση αφορά ένα τμήμα και μία φάση. Ο έλεγχος δεν αποθηκεύει τίποτα.</p>
+            <p class="small text-muted mb-0">Εκδόσεις Εκθέσεων Αξιολόγησης: φοιτητή {{ $studentQuestionnaireVersion }} · φορέα {{ $providerQuestionnaireVersion }}</p>
         </div>
         <a href="{{ route('students.index') }}" class="btn btn-outline-secondary">Επιστροφή</a>
     </div>

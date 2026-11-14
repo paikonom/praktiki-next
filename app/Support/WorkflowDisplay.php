@@ -12,11 +12,11 @@ class WorkflowDisplay
     /** @var Collection<int, WorkflowAction> */
     private Collection $currentActions;
 
-    public function __construct(
-        private StudentQuestionnaireDefinition $studentQuestionnaire,
-        private ProviderQuestionnaireDefinition $providerQuestionnaire,
-        private StudentApografikoDefinition $apografiko,
-    ) {}
+    /** @var array<string, Collection<int, WorkflowAction>> */
+    private array $actionsByFunding = [];
+
+    /** @var array<string, Collection<string, WorkflowSectionRule>> */
+    private array $rulesByContext = [];
 
     /** @return array<int, array<string, mixed>> */
     public function sections(Student $student, string $currentRole): array
@@ -27,7 +27,7 @@ class WorkflowDisplay
         $this->currentActions = $actions;
         $rules = $this->rulesFor($funding, $currentRole);
         $rows = $actions->mapWithKeys(fn (WorkflowAction $action): array => [
-            $action->code => $this->row($student, $action, $currentRole, $rules->get($action->section)),
+            $action->code => $this->row($student, $action, $currentRole),
         ]);
         $previousDone = true;
 
@@ -95,29 +95,96 @@ class WorkflowDisplay
         $student->loadMissing(['actions', 'documents.type', 'apografika', 'questionnaire', 'providerQuestionnaire']);
         $this->currentActions = $this->actionsFor($student->fundingCode());
         $action = $this->currentActions->firstWhere('code', $code);
-        $sectionRule = $action
-            ? WorkflowSectionRule::forContext($student->fundingCode(), $action->section, $role)
-            : null;
-        $dateReached = $this->dateReached($sectionRule?->available_after ?? 'always', $student);
+        $canChangeImmediately = $action && $this->isImmediateInternshipStatus($action, $newStatus);
 
         return $action
             && $action->responsible_role === $role
-            && ($dateReached || $this->isImmediateInternshipStatus($action, $newStatus))
-            && collect($action->prerequisites)->every(fn (string $prerequisite): bool => $this->actionComplete($student, $prerequisite))
-            && ($this->isImmediateInternshipStatus($action, $newStatus) || $this->previousSectionIsComplete($student, $action))
+            && ($canChangeImmediately || $this->unavailableReason($student, $code, $role) === null)
             && $this->paymentRequestAllowsInternshipStatus($student, $action, $newStatus);
+    }
+
+    public function unavailableReason(Student $student, string $code, string $role): ?string
+    {
+        $actions = $this->actionsFor($student->fundingCode());
+        $action = $actions->firstWhere('code', $code);
+
+        if (! $action || $action->responsible_role !== $role) {
+            return in_array($code, ['input_sumpl', 'output_sumpl'], true)
+                ? 'Απογραφικά δελτία απαιτούνται μόνο για πρακτική ΕΣΠΑ.'
+                : 'Η ενέργεια δεν είναι διαθέσιμη για αυτή την πρακτική.';
+        }
+
+        $issue = $this->unavailableIssue($student, $action, $role);
+
+        if ($issue === null) {
+            return null;
+        }
+
+        if (str_starts_with($issue, 'previous_section:')) {
+            $section = substr($issue, strlen('previous_section:'));
+
+            return "Πρέπει πρώτα να ολοκληρωθούν όλες οι ενέργειες της ενότητας {$section}.";
+        }
+
+        return match ($issue) {
+            'cancelled' => 'Η πρακτική έχει ακυρωθεί.',
+            'missing_rule' => 'Δεν έχει οριστεί κανόνας διαθεσιμότητας για την ενέργεια.',
+            'previous_step' => 'Πρέπει πρώτα να ολοκληρωθούν οι προηγούμενες απαιτούμενες ενέργειες.',
+            default => $this->dateUnavailableReason($student, $action, $issue),
+        };
+    }
+
+    public function unavailableIssue(
+        Student $student,
+        WorkflowAction $action,
+        string $role,
+        bool $ignorePreviousSections = false,
+        bool $dateFirst = false,
+    ): ?string {
+        if ($student->isCancelled()) {
+            return 'cancelled';
+        }
+
+        $actions = $this->actionsFor($student->fundingCode());
+        $rule = $this->rulesFor($student->fundingCode(), $role)->get($action->section);
+        if (! $rule) {
+            return 'missing_rule';
+        }
+
+        $dateIssue = $this->dateIssue($student, $rule->available_after);
+        if ($dateFirst && $dateIssue) {
+            return $dateIssue;
+        }
+
+        if ($rule->requires_previous_section && ! $ignorePreviousSections) {
+            foreach (array_slice(['A', 'B', 'G', 'D'], 0, array_search($action->section, ['A', 'B', 'G', 'D'], true)) as $section) {
+                if (! $this->sectionIsComplete($student, $section, $role)) {
+                    $sectionLabel = ['A' => 'Α', 'B' => 'Β', 'G' => 'Γ', 'D' => 'Δ'][$section];
+
+                    return "previous_section:{$sectionLabel}";
+                }
+            }
+        }
+
+        if (! $action->prerequisitesAreCompleteFor($student, $actions)) {
+            return 'previous_step';
+        }
+
+        return $dateFirst ? null : $dateIssue;
     }
 
     /** @return Collection<int, WorkflowAction> */
     private function actionsFor(string $funding): Collection
     {
-        return WorkflowAction::activeForFunding($funding);
+        return $this->actionsByFunding[$funding] ??= WorkflowAction::activeForFunding($funding);
     }
 
     /** @return Collection<string, WorkflowSectionRule> */
     private function rulesFor(string $funding, string $role): Collection
     {
-        return WorkflowSectionRule::query()
+        $context = $funding.'|'.$role;
+
+        return $this->rulesByContext[$context] ??= WorkflowSectionRule::query()
             ->where('role', $role)
             ->whereIn('funding_code', ['all', $funding])
             ->orderByRaw('funding_code = ? desc', [$funding])
@@ -127,13 +194,10 @@ class WorkflowDisplay
     }
 
     /** @return array<string, mixed> */
-    private function row(Student $student, WorkflowAction $action, string $currentRole, ?WorkflowSectionRule $sectionRule): array
+    private function row(Student $student, WorkflowAction $action, string $currentRole): array
     {
         $status = $action->statusFor($student);
         $done = $action->isCompleteFor($student);
-        $availableAfter = $sectionRule?->available_after ?? 'always';
-        $dateReached = $this->dateReached($availableAfter, $student);
-        $prerequisitesDone = $action->prerequisitesAreCompleteFor($student, $this->currentActions);
 
         return [
             'code' => $action->code,
@@ -147,7 +211,7 @@ class WorkflowDisplay
             'status' => $status,
             'statusLabel' => StatusBadge::label($status),
             'statusClass' => StatusBadge::className($status),
-            'blockedMessage' => $this->blockedMessage($student, $action, $availableAfter, $dateReached, $prerequisitesDone, $status),
+            'blockedMessage' => $this->blockedMessage($student, $action, $currentRole, $status),
         ];
     }
 
@@ -167,28 +231,10 @@ class WorkflowDisplay
         };
     }
 
-    private function blockedMessage(Student $student, WorkflowAction $action, string $availableAfter, bool $dateReached, bool $prerequisitesDone, ?string $status): ?string
+    private function blockedMessage(Student $student, WorkflowAction $action, string $role, ?string $status): ?string
     {
-        if ($action->source_type === 'student_questionnaire') {
-            return $this->studentQuestionnaire->unavailableReason($student);
-        }
-
-        if ($action->source_type === 'provider_questionnaire') {
-            return $this->providerQuestionnaire->unavailableReason($student);
-        }
-
-        if ($action->source_type === 'apografiko') {
-            return $this->apografiko->unavailableReason($student, $action->source_key);
-        }
-
-        if (! $dateReached) {
-            return $availableAfter === 'internship_start'
-                ? 'Δεν έχει φτάσει ακόμη η ημερομηνία έναρξης της πρακτικής.'
-                : 'Δεν έχει φτάσει ακόμη η ημερομηνία λήξης της πρακτικής.';
-        }
-
-        if (! $prerequisitesDone) {
-            return 'Πρέπει πρώτα να ολοκληρωθούν οι προηγούμενες απαιτούμενες ενέργειες.';
+        if ($reason = $this->unavailableReason($student, $action->code, $role)) {
+            return $reason;
         }
 
         if ($action->code === 'katastash_praktikis' && ! $this->actionComplete($student, 'aitima_plhrwmhs')) {
@@ -202,16 +248,44 @@ class WorkflowDisplay
         return null;
     }
 
-    private function previousSectionIsComplete(Student $student, WorkflowAction $action): bool
+    private function dateUnavailableReason(Student $student, WorkflowAction $action, string $availableAfter): ?string
     {
-        $previousSection = ['B' => 'A', 'G' => 'B', 'D' => 'G'][$action->section] ?? null;
-        if (! $previousSection) {
-            return true;
+        if ($availableAfter === 'always') {
+            return null;
         }
 
-        $rule = $this->rulesFor($student->fundingCode(), $action->responsible_role)->get($action->section);
+        if (str_starts_with($availableAfter, 'missing_')) {
+            return $availableAfter === 'missing_start_date'
+                ? 'Δεν έχει οριστεί ημερομηνία έναρξης της πρακτικής.'
+                : 'Δεν έχει οριστεί ημερομηνία λήξης της πρακτικής.';
+        }
 
-        return ! $rule?->requires_previous_section || $this->sectionIsComplete($student, $previousSection, $action->responsible_role);
+        if (in_array($action->source_type, ['student_questionnaire', 'provider_questionnaire'], true)) {
+            return 'Το ερωτηματολόγιο ανοίγει μετά τη λήξη της πρακτικής.';
+        }
+
+        return $availableAfter === 'internship_not_started'
+            ? 'Δεν έχει φτάσει ακόμη η ημερομηνία έναρξης της πρακτικής σας.'
+            : 'Δεν έχει φτάσει ακόμη η ημερομηνία λήξης της πρακτικής σας.';
+    }
+
+    private function dateIssue(Student $student, string $availableAfter): ?string
+    {
+        if ($availableAfter === 'always') {
+            return null;
+        }
+
+        $date = $availableAfter === 'internship_start' ? $student->startDate : $student->endDate;
+
+        if (! $date) {
+            return $availableAfter === 'internship_start' ? 'missing_start_date' : 'missing_end_date';
+        }
+
+        if (now()->gte($date)) {
+            return null;
+        }
+
+        return $availableAfter === 'internship_start' ? 'internship_not_started' : 'internship_active';
     }
 
     private function isImmediateInternshipStatus(WorkflowAction $action, ?string $newStatus): bool

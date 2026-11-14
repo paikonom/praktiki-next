@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Student;
 use App\Models\StudentApografiko;
+use App\Models\StudentProvider;
 use App\Models\User;
 use App\Models\WorkflowAction;
 use App\Services\StudentEmailService;
@@ -361,6 +362,7 @@ class StudentsControllerTest extends TestCase
             'department_id' => $departmentId,
             'fName' => 'Παλιό',
             'address_odos_polh' => 'ΠΑΛΙΑ ΠΟΛΗ',
+            'questionnaire_version' => 2,
         ]);
         DB::table('providers')->insert([
             's_id' => $studentId,
@@ -379,7 +381,7 @@ class StudentsControllerTest extends TestCase
             ->get(route('students.show', ['student' => $studentId, 'panel' => 'student']))
             ->assertOk()
             ->assertSee('ΕΚΔΟΣΗ ΕΡΩΤΗΜΑΤΟΛΟΓΙΟΥ')
-            ->assertSee('>2</div>', false);
+            ->assertSee('>2</span>', false);
 
         $this->actingAs($user)
             ->patch(route('students.section.update', [$studentId, 'provider']), ['f_epwnymia' => 'Νέος Φορέας'])
@@ -413,6 +415,58 @@ class StudentsControllerTest extends TestCase
             'student_id' => $studentId,
             'action' => 'stoix_student',
             'status' => 'approved',
+        ]);
+    }
+
+    public function test_approved_student_details_are_locked_but_notes_remain_separate(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+        $student = Student::forceCreate(['fName' => 'Αρχικό']);
+        $student->actions()->create(['action' => 'stoix_student', 'status' => 'approved']);
+
+        $this->actingAs($user)
+            ->get(route('students.show', ['student' => $student, 'panel' => 'student']))
+            ->assertOk()
+            ->assertSee('Τα στοιχεία έχουν εγκριθεί.')
+            ->assertDontSee('name="notes"', false);
+
+        $this->actingAs($user)
+            ->patch(route('students.section.update', [$student, 'student']), ['fName' => 'Νέο'])
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->patch(route('students.section.update', [$student, 'notes']), ['notes' => 'Εσωτερική σημείωση'])
+            ->assertRedirect(route('students.show', ['student' => $student, 'panel' => 'notes']));
+
+        $this->assertDatabaseHas('students', [
+            'id' => $student->id,
+            'fName' => 'Αρχικό',
+            'notes' => 'Εσωτερική σημείωση',
+        ]);
+    }
+
+    public function test_approved_provider_details_are_locked(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+        $student = Student::forceCreate(['fName' => 'Δοκιμή']);
+        $student->provider()->save(StudentProvider::forceCreate([
+            's_id' => $student->id,
+            'f_epwnymia' => 'Αρχικός Φορέας',
+        ]));
+        $student->actions()->create(['action' => 'stoix_forea', 'status' => 'approved']);
+
+        $this->actingAs($user)
+            ->get(route('students.show', ['student' => $student, 'panel' => 'provider']))
+            ->assertOk()
+            ->assertSee('Τα στοιχεία έχουν εγκριθεί.');
+
+        $this->actingAs($user)
+            ->patch(route('students.section.update', [$student, 'provider']), ['f_epwnymia' => 'Νέος Φορέας'])
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('providers', [
+            's_id' => $student->id,
+            'f_epwnymia' => 'Αρχικός Φορέας',
         ]);
     }
 

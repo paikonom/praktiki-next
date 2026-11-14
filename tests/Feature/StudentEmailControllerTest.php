@@ -61,6 +61,20 @@ class StudentEmailControllerTest extends TestCase
         $this->assertDatabaseCount('email_logs', 0);
     }
 
+    public function test_action_completion_uses_the_workflow_completed_statuses(): void
+    {
+        [, $student] = $this->handlerAndStudent();
+        $student->actions()->create(['action' => 'stoix_student', 'status' => 'submitted']);
+
+        $this->assertFalse($student->actionIsComplete('stoix_student'));
+
+        WorkflowAction::where('code', 'stoix_student')->update([
+            'completed_statuses' => ['submitted'],
+        ]);
+
+        $this->assertTrue($student->actionIsComplete('stoix_student'));
+    }
+
     public function test_completed_tasks_disable_their_reminder_emails(): void
     {
         [, $student] = $this->handlerAndStudent();

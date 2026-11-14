@@ -10,7 +10,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('students', function (Blueprint $table) {
-            $table->unsignedTinyInteger('questionnaire_version')->default(2)->after('fash_id');
+            $table->unsignedTinyInteger('questionnaire_version')->nullable()->after('fash_id');
         });
 
         DB::table('students')->update([

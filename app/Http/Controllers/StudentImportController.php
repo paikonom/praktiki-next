@@ -20,6 +20,10 @@ use Illuminate\Validation\ValidationException;
 
 class StudentImportController extends Controller
 {
+    private const STUDENT_QUESTIONNAIRE_VERSION = 2;
+
+    private const PROVIDER_QUESTIONNAIRE_VERSION = 1;
+
     public function create(Request $request): View
     {
         return $this->form($request->user());
@@ -65,6 +69,7 @@ class StudentImportController extends Controller
                     'department_id' => $phase->department_id,
                     'fash_id' => $phase->id,
                     'supervisor_id' => $supervisorId,
+                    'questionnaire_version' => self::STUDENT_QUESTIONNAIRE_VERSION,
                     'uuid' => (string) Str::uuid(),
                     'AMF' => $row['amf'],
                     'tel' => $row['telephone'],
@@ -75,7 +80,9 @@ class StudentImportController extends Controller
                     'doseis_count' => $phase->funding_code === 'Espa' ? 1 : null,
                 ]);
                 $student->save();
-                $student->provider()->save(new StudentProvider);
+                $provider = new StudentProvider;
+                $provider->questionnaire_version = self::PROVIDER_QUESTIONNAIRE_VERSION;
+                $student->provider()->save($provider);
             }
 
             return $rows->count();
@@ -123,9 +130,12 @@ class StudentImportController extends Controller
             ->unique('id')
             ->sortBy('tmhma')
             ->values();
+        $studentQuestionnaireVersion = self::STUDENT_QUESTIONNAIRE_VERSION;
+        $providerQuestionnaireVersion = self::PROVIDER_QUESTIONNAIRE_VERSION;
 
         return view('students.import', compact(
             'departments', 'phases', 'rows', 'selectedDepartmentId', 'selectedPhaseId', 'studentsText',
+            'studentQuestionnaireVersion', 'providerQuestionnaireVersion',
         ));
     }
 

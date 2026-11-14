@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('foreas', function (Blueprint $table) {
             $table->id('fid');
             $table->foreignId('sid')->unique()->constrained('students')->cascadeOnDelete();
+            $table->unsignedTinyInteger('questionnaire_version')->nullable();
             $table->string('f_epwnymia', 150)->nullable();
             $table->integer('f_nomikhMorfh_rescom')->nullable();
             $table->string('f_afm', 20)->nullable();

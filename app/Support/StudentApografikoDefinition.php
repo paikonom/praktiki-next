@@ -11,33 +11,9 @@ class StudentApografikoDefinition
 {
     public function unavailableReason(Student $student, string $type): ?string
     {
-        $student->loadMissing(['phase.praktiki.funding', 'documents.type']);
+        $action = $type === 'input' ? 'input_sumpl' : 'output_sumpl';
 
-        if ($student->fundingCode() !== 'Espa') {
-            return 'Απογραφικά δελτία απαιτούνται μόνο για πρακτική ΕΣΠΑ.';
-        }
-
-        if ($type === 'input') {
-            if (! $student->studentBeforeStartComplete()) {
-                return 'Πρέπει πρώτα να ολοκληρωθούν όλες οι ενέργειες της ενότητας Α.';
-            }
-
-            if (! $student->startDate || now()->lt($student->startDate)) {
-                return 'Δεν έχει φτάσει ακόμη η ημερομηνία έναρξης της πρακτικής σας.';
-            }
-
-            return null;
-        }
-
-        if (! $student->studentDuringComplete()) {
-            return 'Πρέπει πρώτα να ολοκληρωθούν όλες οι ενέργειες της ενότητας Β.';
-        }
-
-        if (! $student->endDate || now()->lt($student->endDate)) {
-            return 'Δεν έχει φτάσει ακόμη η ημερομηνία λήξης της πρακτικής σας.';
-        }
-
-        return null;
+        return app(WorkflowDisplay::class)->unavailableReason($student, $action, 'student');
     }
 
     /** @return array<string, string|null> */

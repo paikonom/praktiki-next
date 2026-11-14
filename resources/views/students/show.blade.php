@@ -13,6 +13,7 @@
             'questionnaires' => 'Ερωτηματολόγια',
             'documents' => 'Έντυπα και ιστορικό',
             'emails' => 'Emails / Log',
+            'notes' => 'Σημειώσεις',
         ];
     @endphp
 
@@ -71,7 +72,8 @@
                     'groups' => $fieldGroups['student'],
                     'fieldHelp' => $fieldHelp,
                     'record' => $student,
-                    'canEdit' => $canEdit && ! $student->isCancelled(),
+                    'canEdit' => $canEdit && ! $student->isCancelled() && ! $studentDetailsApproved,
+                    'locked' => $studentDetailsApproved,
                 ])
             @elseif ($panel === 'provider')
                 @include('students.partials.fields', [
@@ -82,7 +84,8 @@
                     'groups' => $fieldGroups['provider'],
                     'fieldHelp' => $fieldHelp,
                     'record' => $provider,
-                    'canEdit' => $canEdit && ! $student->isCancelled(),
+                    'canEdit' => $canEdit && ! $student->isCancelled() && ! $providerDetailsApproved,
+                    'locked' => $providerDetailsApproved,
                 ])
             @elseif ($panel === 'questionnaires')
                 @php
@@ -204,8 +207,18 @@
                     'embedded' => true,
                     'allowMemberActions' => true,
                 ])
-            @else
+            @elseif ($panel === 'emails')
                 @include('students.partials.emails')
+            @else
+                @include('students.partials.fields', [
+                    'title' => 'Σημειώσεις',
+                    'section' => 'notes',
+                    'fields' => ['notes' => $notesLabel],
+                    'groups' => [null => ['notes']],
+                    'fieldHelp' => [],
+                    'record' => $student,
+                    'canEdit' => $canEdit && ! $student->isCancelled(),
+                ])
             @endif
         </div>
     </div>

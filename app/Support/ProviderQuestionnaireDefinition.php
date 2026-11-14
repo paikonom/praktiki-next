@@ -41,20 +41,8 @@ class ProviderQuestionnaireDefinition
         ])->all();
     }
 
-    public function available(Student $student): bool
-    {
-        return $this->unavailableReason($student) === null;
-    }
-
     public function unavailableReason(Student $student): ?string
     {
-        return match (true) {
-            $student->isCancelled() => 'Η πρακτική έχει ακυρωθεί.',
-            ! $student->providerBeforeStartComplete() => 'Πρέπει πρώτα να ολοκληρωθούν όλες οι ενέργειες της ενότητας Α.',
-            ! $student->providerDuringComplete() => 'Δεν έχει φτάσει ακόμη η ημερομηνία έναρξης της πρακτικής.',
-            ! $student->endDate => 'Δεν έχει οριστεί ημερομηνία λήξης της πρακτικής.',
-            now()->lt($student->endDate) => 'Το ερωτηματολόγιο ανοίγει μετά τη λήξη της πρακτικής.',
-            default => null,
-        };
+        return app(WorkflowDisplay::class)->unavailableReason($student, 'ekthesh_forea_sumpl', 'provider');
     }
 }

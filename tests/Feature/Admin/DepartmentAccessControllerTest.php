@@ -30,20 +30,24 @@ class DepartmentAccessControllerTest extends TestCase
     {
         $admin = User::factory()->create(['role' => 'admin']);
         $user = User::factory()->create(['name' => 'Test User', 'username' => 'test-user']);
+        $secondUser = User::factory()->create(['name' => 'Second User']);
         $departmentId = DB::table('departments')->insertGetId([
             'atlasId' => 123,
             'tmhma' => 'Test Department',
         ]);
         DB::table('user_department_access')->insert([
-            'user_id' => $user->id,
-            'department_id' => $departmentId,
+            ['user_id' => $user->id, 'department_id' => $departmentId, 'can_manage_espa' => true],
+            ['user_id' => $secondUser->id, 'department_id' => $departmentId, 'can_manage_espa' => true],
         ]);
 
         $this->actingAs($admin)
             ->get(route('admin.department-access'))
             ->assertOk()
             ->assertSee('Test Department')
-            ->assertSee('Test User');
+            ->assertSee('Test User')
+            ->assertSee('test-user')
+            ->assertSee('ΕΣΠΑ')
+            ->assertSee('Προσοχή: περισσότεροι από έναν χειριστές για ΕΣΠΑ.');
     }
 
     public function test_admin_can_replace_department_access(): void

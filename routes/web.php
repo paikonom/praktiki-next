@@ -237,7 +237,7 @@ Route::middleware('auth')->group(function () {
         ->whereIn('type', ['input', 'output'])
         ->name('students.apografika.update');
     Route::patch('/students/{student}/{section}', [StudentsController::class, 'updateSection'])
-        ->whereIn('section', ['student', 'provider', 'office'])
+        ->whereIn('section', ['student', 'provider', 'office', 'notes'])
         ->name('students.section.update');
     Route::post('/students/{student}/workflow-actions/{action}', [StudentWorkflowActionController::class, 'store'])
         ->name('students.workflow-actions.store');

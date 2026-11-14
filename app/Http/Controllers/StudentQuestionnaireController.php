@@ -23,7 +23,7 @@ class StudentQuestionnaireController extends Controller
         $completed = $questionnaire?->isSubmitted() ?? false;
         $legacyCompleted = false;
 
-        abort_unless($completed || $legacyCompleted || $definition->available($student), 403);
+        abort_unless($completed || $legacyCompleted || $definition->unavailableReason($student) === null, 403);
 
         $sections = $legacyCompleted ? [] : $definition->sections($student, $questionnaire?->version);
         $version = $questionnaire?->version ?? $definition->version($student);

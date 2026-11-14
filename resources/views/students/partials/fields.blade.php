@@ -12,7 +12,12 @@
             </div>
             <button class="btn btn-primary" type="submit" @disabled(! $canEdit)>Αποθήκευση</button>
         </div>
-        <div class="card-body p-3 p-lg-4">
+        <div class="card-body p-3 p-lg-4 {{ ($locked ?? false) ? 'bg-body-tertiary' : '' }}">
+            @if ($locked ?? false)
+                <div class="alert alert-secondary py-2">Τα στοιχεία έχουν εγκριθεί.
+                    <!-- Για αλλαγή, θέστε πρώτα τα στοιχεία σε «Πρόχειρο». -->
+                    </div>
+            @endif
             @foreach (($groups ?? [null => array_keys($fields)]) as $groupTitle => $groupFields)
                 <section class="border rounded-3 p-3 mb-3">
                     @if ($groupTitle)
@@ -32,7 +37,7 @@
                         $item = $field === 'diakoptomeno' && is_bool($item) ? (int) $item : $item;
                         $item = $field === 'numMhnes' && is_numeric($item) ? (string) (float) $item : $item;
                         $isReadOnly = in_array($field, [
-                            'praxh_year', 'questionnaire_version', 'address_odos_polh',
+                            'praxh_year', 'questionnaire_version', 'id_thesh', 'address_odos_polh',
                             'f_perioxh', 'f_topos_ekt_prakt',
                         ], true);
                         $displayItem = $type === 'date' && $item instanceof \Carbon\CarbonInterface ? $item->format('Y-m-d') : $item;
@@ -45,14 +50,16 @@
                         $help = $fieldHelp[$field] ?? null;
                     @endphp
                     <div class="{{ $columnClass }} position-relative">
-                        <label for="{{ $section }}-{{ $field }}" class="form-label small fw-semibold text-body-secondary mb-1">
+                        <label for="{{ $section }}-{{ $field }}" class="form-label small fw-semibold {{ blank($currentItem) ? 'text-warning' : 'text-body-secondary' }} mb-1">
                             {{ $label }}
                             @if ($help)
                                 <button class="btn btn-sm border-0 p-0 text-primary" type="button" data-bs-toggle="tooltip" data-bs-title="{{ $help }}" aria-label="Πληροφορίες για {{ $label }}">ⓘ</button>
                             @endif
                         </label>
 
-                        @if ($isReadOnly)
+                        @if ($field === 'questionnaire_version')
+                            <span id="{{ $section }}-{{ $field }}" class="fw-semibold ms-2">{{ filled($displayItem) ? $displayItem : '—' }}</span>
+                        @elseif ($isReadOnly)
                             <div id="{{ $section }}-{{ $field }}" class="form-control-plaintext border-bottom fw-semibold">{{ filled($displayItem) ? $displayItem : '—' }}</div>
                         @elseif ($type === 'textarea')
                             <textarea id="{{ $section }}-{{ $field }}" name="{{ $field }}" class="form-control @error($field) is-invalid @enderror" rows="3" @disabled(! $canEdit)>{{ $displayItem }}</textarea>

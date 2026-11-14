@@ -27,14 +27,20 @@
         }
 
         .user-chip {
-            align-items: center;
+            align-items: flex-start;
             background: #eff6ff;
             border: 1px solid #dbeafe;
             border-radius: .75rem;
-            display: inline-flex;
+            display: flex;
+            flex: 0 1 16rem;
             gap: .65rem;
-            margin: .2rem .25rem .2rem 0;
             padding: .45rem .7rem;
+        }
+
+        .department-users {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
         }
 
         .user-avatar {
@@ -83,47 +89,85 @@
             </div>
         </section>
 
+        <div class="alert alert-info border-0 shadow-sm">
+            <strong>Πώς διαβάζεται:</strong> κάθε χρήστης που εμφανίζεται βλέπει το τμήμα.
+            Τα σήματα ΕΣΠΑ, Ίδρυμα και Φορέας δείχνουν ποιες πρακτικές μπορεί να διαχειρίζεται.
+            Οι διαχειριστές έχουν καθολική πρόσβαση χωρίς να χρειάζεται να προστεθούν εδώ.
+        </div>
+
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
             <div class="table-responsive">
             <table class="table access-table table-hover align-middle mb-0">
                 <thead>
                     <tr>
-                        <th class="px-4 py-3">atlasId</th>
+                        <th class="px-2 py-3">atlasId</th>
                         <th class="py-3">Τμήμα</th>
-                        <th class="py-3">Πόλη</th>
-                        <th class="py-3">Κατάσταση</th>
-                        <th class="pe-4 py-3">Χρήστες</th>
-                        <th class="pe-4 py-3 text-end">Ενέργεια</th>
+                        <th class="pe-4 py-3">Στοιχεία</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($departments as $departmentRows)
                         @php($department = $departmentRows->first())
+                        @php($departmentUsers = $departmentRows->whereNotNull('user_id'))
+                        @php($duplicateManagers = collect([
+                            'ΕΣΠΑ' => $departmentUsers->where('can_manage_espa', true)->count(),
+                            'Ίδρυμα' => $departmentUsers->where('can_manage_institution', true)->count(),
+                            'Φορέας' => $departmentUsers->where('can_manage_internship_provider', true)->count(),
+                        ])->filter(fn ($count) => $count > 1))
                         <tr>
                             <td class="px-4 py-3"><code>{{ $department->atlasId }}</code></td>
-                            <td class="py-3 fw-semibold text-dark">{{ $department->tmhma }}</td>
-                            <td class="py-3 text-muted">{{ $department->polh ?: '—' }}</td>
-                            <td class="py-3">
-                                @if ($department->active)
-                                    <span class="badge rounded-pill text-bg-success">Ενεργό</span>
-                                @else
-                                    <span class="badge rounded-pill text-bg-secondary">Ανενεργό</span>
-                                @endif
-                            </td>
-                            <td class="pe-4 py-3">
-                                @forelse ($departmentRows->whereNotNull('user_id') as $user)
-                                    <div class="user-chip">
-                                        <span class="user-avatar">{{ mb_strtoupper(mb_substr($user->user_name, 0, 1)) }}</span>
-                                        <span>
-                                            <span class="d-block small fw-semibold text-dark">{{ $user->user_name }}</span>
-                                            <!-- <span class="d-block text-muted" style="font-size: .75rem;">{{ $user->username }} · {{ $user->role }}</span> -->
-                                        </span>
+                            <td class="py-3 text-dark" style="min-width: 38rem;">
+                                <div class="fw-semibold mb-2">{{ $department->tmhma }}</div>
+                                @if ($departmentUsers->isNotEmpty())
+                                    <div class="small fw-semibold text-muted mb-1">
+                                        {{ $departmentUsers->count() }} {{ $departmentUsers->count() === 1 ? 'χρήστης' : 'χρήστες' }}
                                     </div>
-                                @empty
-                                    <span class="badge rounded-pill text-bg-light border text-muted">Χωρίς χρήστη</span>
-                                @endforelse
+                                @endif
+                                @if ($duplicateManagers->isNotEmpty())
+                                    <div class="alert alert-warning small py-1 px-2 mb-2">
+                                        Προσοχή: περισσότεροι από έναν χειριστές για {{ $duplicateManagers->keys()->join(', ') }}.
+                                    </div>
+                                @endif
+                                <div class="department-users">
+                                    @forelse ($departmentUsers as $user)
+                                        <div class="user-chip">
+                                            <span class="user-avatar">{{ mb_strtoupper(mb_substr($user->user_name, 0, 1)) }}</span>
+                                            <span class="flex-grow-1">
+                                                <span class="d-block small fw-semibold text-dark">{{ $user->user_name }}</span>
+                                                <span class="d-block text-muted mb-1" style="font-size: .75rem;">
+                                                    {{ $user->username }} · {{ $user->role === 'admin' ? 'Διαχειριστής' : 'Χειριστής' }}
+                                                </span>
+                                                <span class="d-flex flex-wrap gap-1">
+                                                    @if ($user->view_only)
+                                                        <span class="badge text-bg-secondary">Μόνο προβολή</span>
+                                                    @endif
+                                                    @if ($user->can_manage_espa)
+                                                        <span class="badge text-bg-primary">ΕΣΠΑ</span>
+                                                    @endif
+                                                    @if ($user->can_manage_institution)
+                                                        <span class="badge text-bg-success">Ίδρυμα</span>
+                                                    @endif
+                                                    @if ($user->can_manage_internship_provider)
+                                                        <span class="badge text-bg-warning">Φορέας</span>
+                                                    @endif
+                                                    @if (! $user->view_only && ! $user->can_manage_espa && ! $user->can_manage_institution && ! $user->can_manage_internship_provider)
+                                                        <span class="badge text-bg-light border text-muted">Προβολή τμήματος</span>
+                                                    @endif
+                                                </span>
+                                            </span>
+                                        </div>
+                                    @empty
+                                        <span class="badge rounded-pill text-bg-light border text-muted">Χωρίς χρήστη</span>
+                                    @endforelse
+                                </div>
                             </td>
-                            <td class="pe-4 py-3 text-end">
+                            <td class="pe-4 py-3" style="width: 1%; white-space: nowrap;">
+                                <div class="small text-muted mb-1">{{ $department->polh ?: '—' }}</div>
+                                @if ($department->active)
+                                    <div class="mb-2"><span class="badge rounded-pill text-bg-success">Ενεργό</span></div>
+                                @else
+                                    <div class="mb-2"><span class="badge rounded-pill text-bg-secondary">Ανενεργό</span></div>
+                                @endif
                                 <a class="btn btn-sm btn-outline-primary"
                                    href="{{ route('admin.department-access.edit', $department->department_id) }}">
                                     Διαχείριση

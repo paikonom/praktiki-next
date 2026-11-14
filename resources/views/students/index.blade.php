@@ -68,7 +68,6 @@
                             @endphp
                             <tr class="{{ $rowClass }}">
 @php
-//dd($doc);
  //$downloadRoute = route('scientific_supervisor.documents.download', $document); 
  //$downloadRoute = route('scientific_supervisor.documents.download', $document);
  //<a class="btn btn-sm btn-outline-primary" href="{{ $downloadRoute }}">Λήψη</a>

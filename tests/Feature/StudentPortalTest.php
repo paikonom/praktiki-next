@@ -683,6 +683,7 @@ class StudentPortalTest extends TestCase
         $id = DB::table('students')->insertGetId($attributes + [
             'department_id' => $departmentId,
             'fash_id' => $fashId,
+            'questionnaire_version' => 2,
             'fName' => 'Δοκιμή',
             'lName' => 'Φοιτητής',
         ]);

@@ -19,6 +19,14 @@ class UpdateStudentSectionRequest extends FormRequest
             return false;
         }
 
+        if ($this->route('section') === 'student' && $student->actionHasStatus('stoix_student', 'approved')) {
+            return false;
+        }
+
+        if ($this->route('section') === 'provider' && $student->actionHasStatus('stoix_forea', 'approved')) {
+            return false;
+        }
+
         return ! $student->isCancelled()
             || $this->route('section') === 'office';
     }
@@ -39,7 +47,7 @@ class UpdateStudentSectionRequest extends FormRequest
         if ($section === 'student') {
             return array_values(array_diff(
                 $this->activeFields('student'),
-                ['praxh_year', 'questionnaire_version', 'address_odos_polh'],
+                ['praxh_year', 'questionnaire_version', 'id_thesh', 'address_odos_polh'],
             ));
         }
 
@@ -48,6 +56,10 @@ class UpdateStudentSectionRequest extends FormRequest
                 $this->activeFields('provider'),
                 ['f_perioxh', 'f_topos_ekt_prakt'],
             ));
+        }
+
+        if ($section === 'notes') {
+            return array_values(array_intersect($this->activeFields('student'), ['notes']));
         }
 
         return $this->activeFields('office');
@@ -192,7 +204,7 @@ class UpdateStudentSectionRequest extends FormRequest
         $student = $this->route('student');
 
         return match ($this->route('section')) {
-            'student' => $student->{$field},
+            'student', 'notes' => $student->{$field},
             'provider' => $student->loadMissing('provider')->provider?->{$field},
             'office' => $student->action($field)?->status,
         };

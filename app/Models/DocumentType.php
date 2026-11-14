@@ -66,28 +66,19 @@ class DocumentType extends Model
         $workflowAction = $this->workflowActionFor($funding);
 
         if ($workflowAction && $loggedInRole) {
-            $sectionRule = WorkflowSectionRule::forContext($funding, $workflowAction->section, $loggedInRole);
+            $issue = app(WorkflowDisplay::class)->unavailableIssue(
+                $internshipStudent,
+                $workflowAction,
+                $loggedInRole,
+                ignorePreviousSections: $loggedInRole === 'member',
+                dateFirst: true,
+            );
 
-            if ($sectionRule?->available_after === 'internship_start'
-                && (! $internshipStudent->startDate || $internshipStudent->startDate->isFuture())) {
-                return 'internship_not_started';
-            }
-
-            if ($sectionRule?->available_after === 'internship_end' && ! $internshipStudent->endDate) {
-                return 'missing_end_date';
-            }
-
-            if ($sectionRule?->available_after === 'internship_end' && $internshipStudent->endDate->isFuture()) {
-                return 'internship_active';
-            }
-
-            $previousSection = ['B' => 'A', 'G' => 'B', 'D' => 'G'][$workflowAction->section] ?? null;
-            if ($loggedInRole !== 'member'
-                && $sectionRule?->requires_previous_section
-                && $previousSection
-                && ! app(WorkflowDisplay::class)->sectionIsComplete($internshipStudent, $previousSection, $loggedInRole)) {
+            if (str_starts_with((string) $issue, 'previous_section:')) {
                 return 'previous_sections';
             }
+
+            return $issue;
         }
 
         if ($workflowAction

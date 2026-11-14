@@ -53,27 +53,8 @@ class StudentQuestionnaireDefinition
         ])->all();
     }
 
-    public function available(Student $student): bool
-    {
-        return $this->unavailableReason($student) === null;
-    }
-
     public function unavailableReason(Student $student): ?string
     {
-        $funding = $student->fundingCode();
-
-        return match (true) {
-            $student->isCancelled() => 'Η πρακτική έχει ακυρωθεί.',
-            ! $student->actionIsComplete('stoix_student') => 'Πρέπει πρώτα να εγκριθούν τα στοιχεία φοιτητή.',
-            ! $student->actionIsComplete('stoix_forea') => 'Πρέπει πρώτα να εγκριθούν τα στοιχεία φορέα.',
-            ! $student->hasCompletedDocument('symf_initial') => 'Δεν έχει ακόμη ολοκληρωθεί το αρχικό συμφωνητικό.',
-            ! $student->hasCompletedDocument('symf_SN_f_f') => 'Δεν έχει ακόμη ολοκληρωθεί το συμφωνητικό με τις υπογραφές φοιτητή και φορέα.',
-            ! $student->hasCompletedDocument('symf_SN_FULL') => 'Δεν έχει ακόμη ολοκληρωθεί το τελικό συμφωνητικό με όλες τις υπογραφές.',
-            ! $student->startDate || now()->lt($student->startDate) => 'Δεν έχει φτάσει ακόμη η ημερομηνία έναρξης της πρακτικής.',
-            $funding === 'Espa' && ! $student->hasCompletedApografiko('input') => 'Πρέπει πρώτα να ολοκληρωθεί το απογραφικό δελτίο εισόδου.',
-            ! $student->endDate => 'Δεν έχει οριστεί ημερομηνία λήξης της πρακτικής.',
-            now()->lt($student->endDate) => 'Το ερωτηματολόγιο ανοίγει μετά τη λήξη της πρακτικής.',
-            default => null,
-        };
+        return app(WorkflowDisplay::class)->unavailableReason($student, 'ekthesh_foit_sumpl', 'student');
     }
 }

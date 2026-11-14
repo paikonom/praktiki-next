@@ -25,6 +25,10 @@ class DepartmentAccessController extends Controller
                 'users.username',
                 'users.name as user_name',
                 'users.role',
+                'users.view_only',
+                'user_department_access.can_manage_espa',
+                'user_department_access.can_manage_institution',
+                'user_department_access.can_manage_internship_provider',
             ])
             ->orderBy('departments.tmhma')
             ->orderBy('users.name')

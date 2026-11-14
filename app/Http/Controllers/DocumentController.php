@@ -98,7 +98,6 @@ class DocumentController extends Controller
     {
         $context = $this->documentContext($request, $studentDocument);
 
-        // dd($context['user']->toArray(), $context['role'], $context['student']->toArray());
         return $this->fileResponse($context['user'], $context['role'], $studentDocument, false);
     }
 

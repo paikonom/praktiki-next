@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Support\WorkflowDisplay;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -97,7 +96,11 @@ class Student extends Authenticatable
 
     public function actionIsComplete(string $code): bool
     {
-        return in_array($this->workflowStatus('action', $code), ['approved', 'not_required'], true);
+        $action = WorkflowAction::activeForFunding($this->fundingCode())
+            ->first(fn (WorkflowAction $action): bool => $action->source_type === 'action'
+                && $action->source_key === $code);
+
+        return $action?->isCompleteFor($this) ?? false;
     }
 
     /** @param array<string, string|null> $statuses */
@@ -217,26 +220,6 @@ class Student extends Authenticatable
         $this->loadMissing('apografika');
 
         return $this->apografika->firstWhere('type', $type)?->isFinal() ?? false;
-    }
-
-    public function providerBeforeStartComplete(): bool
-    {
-        return app(WorkflowDisplay::class)->sectionIsComplete($this, 'A', 'provider');
-    }
-
-    public function studentBeforeStartComplete(): bool
-    {
-        return app(WorkflowDisplay::class)->sectionIsComplete($this, 'A', 'student');
-    }
-
-    public function studentDuringComplete(): bool
-    {
-        return app(WorkflowDisplay::class)->sectionIsComplete($this, 'B', 'student');
-    }
-
-    public function providerDuringComplete(): bool
-    {
-        return $this->studentDuringComplete();
     }
 
     public function latestDocumentStatus(string $code): ?string

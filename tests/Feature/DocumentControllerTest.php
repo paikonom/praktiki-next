@@ -190,6 +190,23 @@ class DocumentControllerTest extends TestCase
         ])->assertForbidden();
     }
 
+    public function test_document_availability_uses_the_section_rule_from_the_database(): void
+    {
+        $student = $this->student();
+        $student->forceFill(['endDate' => now()->addDay()])->save();
+        $type = DocumentType::where('code', 'hmer_programma')->firstOrFail();
+
+        $this->assertSame('internship_active', $type->availabilityIssueFor($student, 'member'));
+
+        DB::table('workflow_section_rules')
+            ->where('funding_code', 'all')
+            ->where('section', 'G')
+            ->where('role', 'member')
+            ->update(['available_after' => 'always']);
+
+        $this->assertNull($type->availabilityIssueFor($student, 'member'));
+    }
+
     public function test_student_can_delete_own_unreviewed_upload_but_not_a_reviewed_one(): void
     {
         Storage::fake('local');

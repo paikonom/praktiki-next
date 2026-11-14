@@ -27,7 +27,11 @@
                 @method('PUT')
 
                 <div class="card-body p-4">
-                    <p class="text-muted">Επίλεξε τους χρήστες που θα έχουν πρόσβαση στο τμήμα.</p>
+                    <p class="text-muted mb-2">Επίλεξε ποιοι χρήστες βλέπουν το τμήμα και ποιες χρηματοδοτήσεις διαχειρίζονται.</p>
+                    <div class="alert alert-light border small">
+                        Η επιλογή σε ΕΣΠΑ, Ίδρυμα ή Φορέας δίνει αυτόματα και πρόσβαση προβολής στο τμήμα.
+                        Οι χρήστες «μόνο προβολή» δεν μπορούν να κάνουν αλλαγές, ακόμη και αν έχουν επιλεγμένη χρηματοδότηση.
+                    </div>
 
                     @error('user_ids.*')
                         <div class="alert alert-danger">{{ $message }}</div>
@@ -38,10 +42,10 @@
                             <thead>
                                 <tr>
                                     <th>Χρήστης</th>
-                                    <th class="text-center">Βλέπει</th>
-                                    <th class="text-center">ΕΣΠΑ</th>
-                                    <th class="text-center">Ίδρυμα</th>
-                                    <th class="text-center">Φορέας</th>
+                                    <th class="text-center">Πρόσβαση<br><span class="fw-normal text-muted">βλέπει το τμήμα</span></th>
+                                    <th class="text-center">Χειριστής<br><span class="fw-normal text-muted">ΕΣΠΑ</span></th>
+                                    <th class="text-center">Χειριστής<br><span class="fw-normal text-muted">Ιδρύματος</span></th>
+                                    <th class="text-center">Χειριστής<br><span class="fw-normal text-muted">Φορέα</span></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -50,6 +54,11 @@
                                 <td>
                                     <span class="d-block fw-semibold">{{ $user->name }}</span>
                                     <span class="small text-muted">{{ $user->username }} · {{ $user->role }}</span>
+                                    @if ($user->role === 'admin')
+                                        <span class="badge text-bg-primary ms-1">Καθολική πρόσβαση</span>
+                                    @elseif ($user->view_only)
+                                        <span class="badge text-bg-secondary ms-1">Μόνο προβολή</span>
+                                    @endif
                                 </td>
                                 <td class="text-center"><input class="form-check-input" type="checkbox" name="user_ids[]" value="{{ $user->id }}" @checked(in_array($user->id, $selectedUserIds, true))></td>
                                 <td class="text-center"><input class="form-check-input" type="checkbox" name="manage_espa[]" value="{{ $user->id }}" @checked(in_array($user->id, $espaUserIds, true))></td>

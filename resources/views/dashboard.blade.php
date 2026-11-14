@@ -1,4 +1,3 @@
-{{--@dd($departments)--}}
 
 @extends('layouts.app')
 

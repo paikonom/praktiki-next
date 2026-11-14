@@ -19,28 +19,24 @@ class StatusBadge
         return self::classes($status)['border'];
     }
 
-    // public static function label(?string $status): string
-    // {
-    //     return $status ?? 'pending';
-    // }
-
     public static function label(?string $status): string
-{
-    return match ($status ?? 'pending') {
-        'pending' => 'Εκκρεμεί',
-        'draft' => 'Πρόχειρο',
-        'submitted' => 'Αναμονή ελέγχου',
-        'processing' => 'Σε επεξεργασία',
-        'approved' => 'Εγκρίθηκε',
-        'completed' => 'Ολοκληρώθηκε',
-        'active' => 'Ενεργό',
-        'rejected' => 'Απορρίφθηκε',
-        'failed' => 'Απέτυχε',
-        'cancelled' => 'Ακυρώθηκε',
-        'not_required' => 'Δεν απαιτείται',
-        default => $status,
-    };
-}
+    {
+        return match ($status ?? 'pending') {
+            'pending' => 'Εκκρεμεί',
+            'draft' => 'Πρόχειρο',
+            'submitted' => 'Αναμονή ελέγχου',
+            'processing' => 'Σε επεξεργασία',
+            'approved' => 'Εγκρίθηκε',
+            'completed' => 'Ολοκληρώθηκε',
+            'active' => 'Ενεργό',
+            'rejected' => 'Απορρίφθηκε',
+            'failed' => 'Απέτυχε',
+            'cancelled' => 'Ακυρώθηκε',
+            'not_required' => 'Δεν απαιτείται',
+            default => $status,
+        };
+    }
+
     private static function classes(?string $status): array
     {
         return match ($status ?? 'pending') {
@@ -56,11 +52,11 @@ class StatusBadge
             ],
             'processing' => ['badge' => 'text-bg-info', 'background' => 'bg-info-subtle', 'border' => 'border-info'],
             'rejected', 'failed', 'cancelled' => ['badge' => 'text-bg-danger', 'background' => 'bg-danger-subtle', 'border' => 'border-danger'],
-            // 'not_required' => ['badge' => 'text-bg-dark', 'background' => 'bg-secondary-subtle', 'border' => 'border-secondary'],
             'not_required' => [
-                'badge' => 'text-bg-info', 
-                'background' => 'bg-info-subtle', 
-                'border' => 'border-info'],
+                'badge' => 'text-bg-info',
+                'background' => 'bg-info-subtle',
+                'border' => 'border-info',
+            ],
 
             default => ['badge' => 'text-bg-dark', 'background' => 'bg-secondary-subtle', 'border' => 'border-secondary'],
 

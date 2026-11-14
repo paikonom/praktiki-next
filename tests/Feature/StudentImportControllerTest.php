@@ -128,8 +128,10 @@ class StudentImportControllerTest extends TestCase
         $this->assertCount(2, $students);
         $this->assertSame([$supervisorId], $students->pluck('supervisor_id')->unique()->values()->all());
         $this->assertSame([1], $students->pluck('doseis_count')->unique()->values()->all());
+        $this->assertSame([2], $students->pluck('questionnaire_version')->unique()->values()->all());
         $this->assertSame(0, DB::table('student_actions')->whereIn('student_id', $students->pluck('id'))->count());
         $this->assertSame(2, DB::table('providers')->whereIn('s_id', $students->pluck('id'))->count());
+        $this->assertSame([1], DB::table('providers')->whereIn('s_id', $students->pluck('id'))->pluck('questionnaire_version')->unique()->values()->all());
         $this->assertSame(2, $students->pluck('provider_access_token_hash')->unique()->count());
     }
 

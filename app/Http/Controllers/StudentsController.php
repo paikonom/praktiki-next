@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Http;
 
 class StudentsController extends Controller
 {
-    private const PANELS = ['office', 'agreement', 'student', 'provider', 'questionnaires', 'documents', 'emails'];
+    private const PANELS = ['office', 'agreement', 'student', 'provider', 'questionnaires', 'documents', 'emails', 'notes'];
 
     public function index(Request $request, StudentEmailService $emails): View
     {
@@ -496,6 +496,8 @@ class StudentsController extends Controller
         $provider = $student->provider;
         $fundingCode = $funding?->code ?? '';
         $studentMetadata = $metadata->fields('student', $fundingCode, 'member');
+        $notesLabel = $studentMetadata->firstWhere('field', 'notes')?->label ?? 'ΣΗΜΕΙΩΣΕΙΣ';
+        $studentMetadata = $studentMetadata->where('field', '!=', 'notes')->values();
         if (! $student->diakoptomeno) {
             $studentMetadata = $studentMetadata->whereNotIn('field', ['endDate_DKPT_A', 'startDate_DKPT_B'])->values();
         }
@@ -522,6 +524,8 @@ class StudentsController extends Controller
 
         $currentState = StudentWorkflow::currentState($student);
         $canEdit = Gate::allows('update', $student);
+        $studentDetailsApproved = $student->actionHasStatus('stoix_student', 'approved');
+        $providerDetailsApproved = $student->actionHasStatus('stoix_forea', 'approved');
         $fieldOptions = config('praktiki_fields.select_options');
 
         foreach (config('praktiki_fields.catalog_fields') as $field => $catalogName) {
@@ -570,6 +574,7 @@ class StudentsController extends Controller
             'studentFields', 'providerFields', 'officeFields',
             'fieldGroups', 'fieldHelp', 'currentState', 'canEdit', 'fieldOptions', 'cityLabels',
             'emailEntries', 'agreementEmail', 'officeWorkflowSections', 'documentTypes', 'handlerStatusActions',
+            'notesLabel', 'studentDetailsApproved', 'providerDetailsApproved',
         ));
     }
 
@@ -758,7 +763,8 @@ class StudentsController extends Controller
         $student->loadMissing('phase.praktiki.funding');
         $fundingCode = $student->fundingCode();
 
-        $labels = $metadata->labels($metadata->fields($section, $fundingCode, 'member'));
+        $metadataSection = $section === 'notes' ? 'student' : $section;
+        $labels = $metadata->labels($metadata->fields($metadataSection, $fundingCode, 'member'));
 
         $changedLabels = collect($changedFields)
             ->map(fn (string $field): string => $labels[$field] ?? $field)

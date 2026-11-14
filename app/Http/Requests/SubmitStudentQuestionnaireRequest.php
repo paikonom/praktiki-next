@@ -20,7 +20,7 @@ class SubmitStudentQuestionnaireRequest extends FormRequest
 
         return $student instanceof Student
             && ! $this->student()->questionnaire?->isSubmitted()
-            && app(StudentQuestionnaireDefinition::class)->available($this->student());
+            && app(StudentQuestionnaireDefinition::class)->unavailableReason($this->student()) === null;
     }
 
     public function rules(): array
