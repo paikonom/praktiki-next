@@ -147,6 +147,18 @@ class OpsApografikoService
         ) ?? $payload;
     }
 
+    /** @param array{status: string, error_code?: string} $result */
+    public function isTemporaryFailure(array $result): bool
+    {
+        return $result['status'] === StudentApografiko::STATUS_FAILED
+            && in_array($result['error_code'] ?? null, [
+                'invalid_xml',
+                'soap_fault',
+                'missing_progress_id',
+                'unknown_response',
+            ], true);
+    }
+
     /** @return array{status: string, response: string, request_progress_id?: string, deltio_id?: int, error_code?: string, error_message?: string} */
     private function parseResponse(string $xml): array
     {

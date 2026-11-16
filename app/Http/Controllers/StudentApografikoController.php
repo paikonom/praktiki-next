@@ -49,6 +49,17 @@ class StudentApografikoController extends Controller
         $student = $request->user('student');
         $newStatus = $request->isDraft() ? StudentApografiko::STATUS_DRAFT : StudentApografiko::STATUS_SUBMITTED;
         $this->assertStatusAllowed($student, $type, $newStatus);
+        $existingApografiko = $student->apografika()->where('type', $type)->first();
+
+        if ($existingApografiko?->status === StudentApografiko::STATUS_PROCESSING
+            && filled($existingApografiko->request_progress_id)) {
+            return $this->back(
+                $type,
+                'Το απογραφικό έχει ήδη σταλεί και αναμένει επεξεργασία. Πατήστε «Έλεγχος αποτελέσματος».',
+                'warning',
+            );
+        }
+
         $answers = $definition->normalizedAnswers($type, $request->submittedAnswers());
         $apografiko = StudentApografiko::query()->updateOrCreate(
             ['student_id' => $student->id, 'type' => $type],
@@ -102,6 +113,10 @@ class StudentApografikoController extends Controller
         try {
             $payload = $ops->buildProgressRequest($apografiko->request_progress_id);
             $result = $ops->send($payload, 'getResponse');
+
+            if ($ops->isTemporaryFailure($result)) {
+                return $this->back($type, 'Δεν ήταν δυνατός ο έλεγχος αυτή τη στιγμή. Δοκιμάστε ξανά αργότερα.', 'danger');
+            }
         } catch (Throwable $exception) {
             report($exception);
 

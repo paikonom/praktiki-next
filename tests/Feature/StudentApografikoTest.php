@@ -88,6 +88,58 @@ class StudentApografikoTest extends TestCase
         $response->assertSessionHas('status_type', 'success');
     }
 
+    public function test_pending_ops_request_cannot_be_submitted_again(): void
+    {
+        $student = $this->eligibleStudent();
+        $apografiko = StudentApografiko::create([
+            'student_id' => $student->id,
+            'type' => 'input',
+            'status' => StudentApografiko::STATUS_PROCESSING,
+            'answers' => [57 => '5321'],
+            'request_progress_id' => 'REQ-KEEP-123',
+            'response_payload' => '<original-response/>',
+        ]);
+        Http::fake();
+
+        $this->actingAs($student, 'student')
+            ->post(route('student.apografika.store', 'input'), $this->inputAnswers())
+            ->assertRedirect(route('student.apografika.show', 'input'))
+            ->assertSessionHas('status_type', 'warning');
+
+        $apografiko->refresh();
+        $this->assertSame('REQ-KEEP-123', $apografiko->request_progress_id);
+        $this->assertSame('<original-response/>', $apografiko->response_payload);
+        $this->assertSame([57 => '5321'], $apografiko->answers);
+        Http::assertNothingSent();
+    }
+
+    public function test_temporary_check_failure_keeps_the_pending_request(): void
+    {
+        config()->set('praktiki_apografika.enabled', true);
+        config()->set('praktiki_apografika.endpoint', 'https://ops.example.test/participants');
+        config()->set('praktiki_apografika.username', 'test-user');
+        config()->set('praktiki_apografika.password', 'test-password');
+        $student = $this->eligibleStudent();
+        $apografiko = StudentApografiko::create([
+            'student_id' => $student->id,
+            'type' => 'input',
+            'status' => StudentApografiko::STATUS_PROCESSING,
+            'request_progress_id' => 'REQ-KEEP-456',
+            'response_payload' => '<original-response/>',
+        ]);
+        Http::fake([config('praktiki_apografika.endpoint') => Http::response('temporarily unavailable', 200)]);
+
+        $this->actingAs($student, 'student')
+            ->post(route('student.apografika.check', 'input'))
+            ->assertRedirect(route('student.apografika.show', 'input'))
+            ->assertSessionHas('status_type', 'danger');
+
+        $apografiko->refresh();
+        $this->assertSame(StudentApografiko::STATUS_PROCESSING, $apografiko->status);
+        $this->assertSame('REQ-KEEP-456', $apografiko->request_progress_id);
+        $this->assertSame('<original-response/>', $apografiko->response_payload);
+    }
+
     public function test_student_can_save_and_clear_an_input_draft(): void
     {
         $student = $this->eligibleStudent();
