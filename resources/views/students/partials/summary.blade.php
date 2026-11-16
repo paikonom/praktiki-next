@@ -36,7 +36,7 @@
             <div class="flex-grow-1" style="min-width: 0;">
 
                 <h1 class="h4 mb-2">
-                    {{ $summaryName ?: 'Φοιτητής '.$student->id }}
+                    {{$student->id}}) {{ $summaryName ?: '- ' }}
                 </h1>
 
                 {{-- ΑΜ, UUID, ΑΔΤ --}}

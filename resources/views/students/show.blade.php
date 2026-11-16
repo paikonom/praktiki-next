@@ -10,7 +10,7 @@
             'agreement' => 'Αρχικό συμφωνητικό',
             'student' => 'Στοιχεία φοιτητή',
             'provider' => 'Στοιχεία φορέα',
-            'questionnaires' => 'Ερωτηματολόγια',
+            'questionnaires' => 'Δελτία / Αξιολογήσεις',
             'documents' => 'Έντυπα και ιστορικό',
             'emails' => 'Emails / Log',
             'notes' => 'Σημειώσεις',
