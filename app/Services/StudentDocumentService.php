@@ -20,7 +20,7 @@ class StudentDocumentService
         UploadedFile $uploadedFile,
         Authenticatable $loggedInUser,
         string $loggedInRole,
-    ): StudentDocument {
+        ): StudentDocument {
         $storedPath = null;
 
         try {

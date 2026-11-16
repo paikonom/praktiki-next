@@ -9,6 +9,7 @@ use App\Models\Student;
 use App\Models\WorkflowAction;
 use App\Services\StudentEmailService;
 use App\Support\RescomReferenceData;
+use App\Support\StatusBadge;
 use App\Support\StudentCardMetadata;
 use App\Support\StudentWorkflow;
 use App\Support\WorkflowDisplay;
@@ -22,6 +23,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\ValidationException;
 
 class StudentsController extends Controller
 {
@@ -505,8 +507,7 @@ class StudentsController extends Controller
             $studentMetadata = $studentMetadata->where('field', '!=', 'address_odos_polh')->values();
         }
         $providerMetadata = $metadata->fields('provider', $fundingCode, 'member');
-        $providerMetadata = $providerMetadata->reject(fn ($field): bool =>
-            in_array($field->field, ['f_perioxh', 'f_topos_ekt_prakt'], true)
+        $providerMetadata = $providerMetadata->reject(fn ($field): bool => in_array($field->field, ['f_perioxh', 'f_topos_ekt_prakt'], true)
             && blank($provider?->{$field->field})
         )->values();
         $officeMetadata = $metadata->fields('office', $fundingCode, 'member');
@@ -527,6 +528,14 @@ class StudentsController extends Controller
         $studentDetailsApproved = $student->actionHasStatus('stoix_student', 'approved');
         $providerDetailsApproved = $student->actionHasStatus('stoix_forea', 'approved');
         $fieldOptions = config('praktiki_fields.select_options');
+
+        foreach (WorkflowAction::activeForFunding($fundingCode) as $workflowAction) {
+            if (in_array($workflowAction->code, config('praktiki_workflow.member_manual_actions'), true)) {
+                $fieldOptions[$workflowAction->code] = collect($workflowAction->allowed_statuses)
+                    ->mapWithKeys(fn (string $status): array => [$status => StatusBadge::label($status)])
+                    ->all();
+            }
+        }
 
         foreach (config('praktiki_fields.catalog_fields') as $field => $catalogName) {
             if ($catalogName !== 'cities') {
@@ -713,11 +722,12 @@ class StudentsController extends Controller
         Student $student,
         string $section,
         StudentCardMetadata $metadata,
+        WorkflowDisplay $workflowDisplay,
     ): RedirectResponse {
         $data = $request->validated();
         $changedFields = [];
 
-        DB::transaction(function () use ($request, $student, $section, $data, &$changedFields): void {
+        DB::transaction(function () use ($request, $student, $section, $data, $workflowDisplay, &$changedFields): void {
             $actionFields = $section === 'office'
                 ? array_keys($data)
                 : [];
@@ -735,6 +745,15 @@ class StudentsController extends Controller
                     continue;
                 }
 
+                if (in_array($action, config('praktiki_workflow.member_manual_actions'), true)
+                    && ! $workflowDisplay->canPerform($student, $action, 'member', $actionStatus)) {
+                    $message = $action === 'katastash_praktikis' && $actionStatus === 'completed'
+                        ? 'Για να ολοκληρωθεί η πρακτική πρέπει πρώτα να ολοκληρωθεί η κατάσταση αιτήματος πληρωμής.'
+                        : 'Η ενέργεια δεν επιτρέπεται ακόμη. Ελέγξτε τις προηγούμενες απαιτούμενες ενέργειες.';
+
+                    throw ValidationException::withMessages([$action => $message]);
+                }
+
                 $reviewed = in_array($actionStatus, ['approved', 'rejected', 'not_required'], true);
                 $student->actions()->updateOrCreate(['action' => $action], [
                     'status' => $actionStatus,
@@ -742,6 +761,7 @@ class StudentsController extends Controller
                     'reviewed_at' => $reviewed ? now() : null,
                     'reviewed_by' => $reviewed ? $request->user()->id : null,
                 ]);
+                $student->unsetRelation('actions');
                 $changedFields[] = $action;
             }
 

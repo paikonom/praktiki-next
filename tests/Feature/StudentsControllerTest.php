@@ -499,6 +499,43 @@ class StudentsControllerTest extends TestCase
         $this->assertDatabaseMissing('student_actions', ['student_id' => $studentId, 'action' => 'aitima_plhrwmhs']);
     }
 
+    public function test_office_form_saves_payment_and_internship_statuses(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+        $student = Student::forceCreate([
+            'fash_id' => $this->internshipPhase('Espa'),
+            'startDate' => now()->subMonths(2),
+            'endDate' => now()->subDay(),
+        ]);
+        $this->completeWorkflowSection($student, 'A');
+        $this->completeWorkflowSection($student, 'B');
+        $this->completeWorkflowSection($student, 'G');
+
+        $this->actingAs($user)
+            ->get(route('students.show', ['student' => $student, 'panel' => 'office']))
+            ->assertOk()
+            ->assertSee('name="aitima_plhrwmhs"', false)
+            ->assertSee('name="katastash_praktikis"', false);
+
+        $this->actingAs($user)
+            ->patch(route('students.section.update', [$student, 'office']), [
+                'aitima_plhrwmhs' => 'approved',
+                'katastash_praktikis' => 'completed',
+            ])
+            ->assertSessionDoesntHaveErrors();
+
+        $this->assertDatabaseHas('student_actions', [
+            'student_id' => $student->id,
+            'action' => 'aitima_plhrwmhs',
+            'status' => 'approved',
+        ]);
+        $this->assertDatabaseHas('student_actions', [
+            'student_id' => $student->id,
+            'action' => 'katastash_praktikis',
+            'status' => 'completed',
+        ]);
+    }
+
     public function test_office_section_ignores_unselected_action_statuses(): void
     {
         $user = User::factory()->create(['role' => 'admin']);

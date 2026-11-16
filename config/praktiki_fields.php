@@ -81,6 +81,8 @@ return [
         'f_perifereia' => 'select',
         'stoix_student' => 'select',
         'stoix_forea' => 'select',
+        'aitima_plhrwmhs' => 'select',
+        'katastash_praktikis' => 'select',
     ],
 
     'office_status_values' => [

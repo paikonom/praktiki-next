@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Student;
 use App\Models\StudentCardField;
+use App\Models\WorkflowAction;
 use App\Support\RescomReferenceData;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
@@ -71,10 +72,15 @@ class UpdateStudentSectionRequest extends FormRequest
         $type = config('praktiki_fields.field_types.'.$field, 'text');
 
         if ($this->route('section') === 'office') {
+            /** @var Student $student */
+            $student = $this->route('student');
+            $workflowAction = WorkflowAction::activeForFunding($student->fundingCode())
+                ->firstWhere('source_key', $field);
+
             return [
                 'sometimes',
                 'nullable',
-                Rule::in(config('praktiki_fields.office_status_values.'.$field, [0, 1])),
+                Rule::in($workflowAction?->allowed_statuses ?? config('praktiki_fields.office_status_values.'.$field, [])),
             ];
         }
 
