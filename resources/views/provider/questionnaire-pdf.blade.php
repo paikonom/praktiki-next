@@ -60,7 +60,7 @@
                     <div class="answer"><x-pdf.value :value="null" plain /></div>
                 @endif
             @else
-                <div class="answer"><x-pdf.value :value="$answers->get($question->code)" plain /></div>
+                <div class="answer"><x-pdf.value :value="$answers->get($question->code)" :empty-marker="! str_contains($question->code, 'comm')" plain /></div>
             @endif
         </div>
     @endforeach

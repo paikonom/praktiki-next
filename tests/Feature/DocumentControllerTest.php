@@ -115,6 +115,9 @@ class DocumentControllerTest extends TestCase
         DocumentType::where('code', 'ekthesh_Foit')->update([
             'instructions' => "Κατεβάστε το <a href='https://example.test/form.pdf'>έντυπο</a>.",
         ]);
+        $providerType = DocumentType::where('code', 'ekthesh_Forea')->firstOrFail();
+        $providerType->update(['instructions' => 'Οδηγίες που αφορούν μόνο όποιον ανεβάζει το αρχείο.']);
+        $providerType->roles()->where('role', 'provider')->update(['can_upload' => false]);
 
         $admin = User::factory()->create(['role' => 'admin']);
         $this->actingAs($admin)->get(route('students.show', ['student' => $student, 'panel' => 'documents']))
@@ -138,6 +141,7 @@ class DocumentControllerTest extends TestCase
         $this->actingAs($student, 'provider')->get(route('provider.documents'))
             ->assertOk()
             ->assertSee('Έκθεση επίδοσης από επόπτη φορέα')
+            ->assertDontSee('Οδηγίες που αφορούν μόνο όποιον ανεβάζει το αρχείο.')
             ->assertDontSee('Αναλυτική έκθεση πεπραγμένων φοιτητή');
     }
 

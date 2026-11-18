@@ -21,14 +21,20 @@
     </div>
 </div>
 
-@if ($student->emailLogs->isNotEmpty())
+@php
+    $visibleEmailLogs = $student->emailLogs
+        ->filter(fn ($log) => $log->sent_at || $log->created_at)
+        ->sortByDesc(fn ($log) => $log->sent_at ?? $log->created_at);
+@endphp
+
+@if ($visibleEmailLogs->isNotEmpty())
     <div class="card border-0 shadow-sm mt-4">
         <div class="card-header bg-white"><h2 class="h6 mb-0">Ιστορικό αποστολών</h2></div>
         <div class="table-responsive">
             <table class="table table-sm align-middle mb-0">
                 <thead><tr><th>Ημερομηνία</th><th>Τύπος</th><th>Παραλήπτες</th><th>Χειριστής</th><th>Κατάσταση</th></tr></thead>
                 <tbody>
-                    @foreach ($student->emailLogs->sortByDesc('created_at') as $log)
+                    @foreach ($visibleEmailLogs as $log)
                         <tr>
                             <td class="text-nowrap">{{ ($log->sent_at ?? $log->created_at)?->format('d/m/Y H:i') ?? 'Άγνωστη ημερομηνία' }}</td>
                             <td>{{ $log->subject }}</td>

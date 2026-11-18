@@ -10,6 +10,13 @@
     </div>
 @endif
 
+@php
+    $showsUploadInstructions = $types->contains(fn ($type) => $type->roles->contains(
+        fn ($typeRole) => $typeRole->role === $role && $typeRole->can_upload
+    ));
+@endphp
+
+@if ($showsUploadInstructions)
 <div class="card shadow-sm mb-4">
     <div class="card-body">
 
@@ -80,6 +87,7 @@
 
     </div>
 </div>
+@endif
 
 @php
     $lastPeriod = null;
@@ -94,10 +102,13 @@
         $documents = $type->documents;
         $latestDocument = $documents->first();
         $status = $latestDocument?->status;
+        $roleCanUpload = $type->roles->contains(
+            fn ($typeRole) => $typeRole->role === $role && $typeRole->can_upload
+        );
 
         $canUpload = $available
             && $acceptsNewVersion
-            && $type->roleCan($role, 'can_upload')
+            && $roleCanUpload
             && ($role !== 'member' || $allowMemberActions);
 
         $statusLabel = \App\Support\StatusBadge::label($status);
@@ -181,7 +192,7 @@
                     @endif
                 </div>
             @else
-                @if ($type->instructions)
+                @if ($type->instructions && $roleCanUpload)
                 <div class="alert alert-danger border-0 rounded-2 py-2 px-3 mb-3" role="alert">
                     <div class="d-flex align-items-center flex-wrap gap-2">
                         <i class="bi bi-exclamation-triangle-fill"></i>

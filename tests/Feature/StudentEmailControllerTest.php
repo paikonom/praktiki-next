@@ -48,6 +48,40 @@ class StudentEmailControllerTest extends TestCase
             ->assertSee('(1)');
     }
 
+    public function test_email_history_hides_legacy_entries_without_a_date(): void
+    {
+        [$user, $student] = $this->handlerAndStudent();
+
+        DB::table('email_logs')->insert([
+            [
+                'student_id' => $student->id,
+                'type' => 'legacy',
+                'to' => json_encode(['student@example.test']),
+                'subject' => 'Παλιό email χωρίς ημερομηνία',
+                'body' => 'Legacy',
+                'status' => 'sent',
+            ],
+            [
+                'student_id' => $student->id,
+                'type' => 'recent',
+                'to' => json_encode(['student@example.test']),
+                'subject' => 'Νεότερο email με ημερομηνία',
+                'body' => 'Recent',
+                'status' => 'sent',
+                'sent_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('students.show', ['student' => $student, 'panel' => 'emails']))
+            ->assertOk()
+            ->assertSee('Νεότερο email με ημερομηνία')
+            ->assertDontSee('Παλιό email χωρίς ημερομηνία')
+            ->assertDontSee('Άγνωστη ημερομηνία');
+    }
+
     public function test_server_rejects_an_email_when_its_workflow_requirement_is_missing(): void
     {
         [$user, $student] = $this->handlerAndStudent();
