@@ -546,6 +546,7 @@ class StudentsController extends Controller
         $cityValues = [
             'address_polh_rescom' => $request->old('address_polh_rescom', $student->address_polh_rescom),
             'f_polh_rescom' => $request->old('f_polh_rescom', $provider?->f_polh_rescom),
+            'f_ektPrakt_polh_rescom' => $request->old('f_ektPrakt_polh_rescom', $provider?->f_ektPrakt_polh_rescom),
         ];
         $cityLabels = collect($cityValues)
             ->map(fn ($code) => $rescomReferenceData->label('cities', $code) ?? (filled($code) ? "Άγνωστος κωδικός: {$code}" : ''))

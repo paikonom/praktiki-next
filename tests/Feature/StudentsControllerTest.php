@@ -743,6 +743,10 @@ class StudentsControllerTest extends TestCase
             'doy_rescom' => 93759,
             'address_polh_rescom' => 8,
         ]);
+        StudentProvider::forceCreate([
+            's_id' => $studentId,
+            'f_ektPrakt_polh_rescom' => 15894,
+        ]);
 
         $this->actingAs($user)
             ->get(route('students.show', ['student' => $studentId, 'panel' => 'student']))
@@ -750,6 +754,11 @@ class StudentsControllerTest extends TestCase
             ->assertSee('name="doy_rescom"', false)
             ->assertSee('Α&#039; ΠΑΤΡΩΝ', false)
             ->assertSee('ΡΟΔΟΠΗΣ - Κομοτηνή');
+
+        $this->actingAs($user)
+            ->get(route('students.show', ['student' => $studentId, 'panel' => 'provider']))
+            ->assertOk()
+            ->assertSee('ΑΤΤΙΚΗΣ - Ζωγράφος');
 
         $this->actingAs($user)
             ->patch(route('students.section.update', [$studentId, 'student']), ['doy_rescom' => 99999999])

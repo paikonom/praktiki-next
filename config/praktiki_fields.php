@@ -20,7 +20,7 @@ return [
 
     'provider_editable_common_fields' => [
         'f_epwnymia', 'f_afm', 'f_xwra_rescom', 'f_polh_rescom', 'f_odos', 'f_tk',
-        'f_thl', 'f_email', 'f_ekprFname', 'f_ekprLname', 'f_ekprIdiothta',
+        'f_perifereia', 'f_thl', 'f_email', 'f_ekprFname', 'f_ekprLname', 'f_ekprIdiothta',
         'f_ektPrakt_polh_rescom', 'f_ektPrakt_odos', 'f_ektPrakt_tk',
         'f_epopt_foreaFname', 'f_epopt_foreaLname', 'f_epopt_email',
     ],

@@ -341,6 +341,10 @@ class StudentPortalTest extends TestCase
 
     public function test_provider_form_fields_follow_forea2_for_each_funding(): void
     {
+        DB::table('fields')->where('field', 'f_perifereia')->update([
+            'visible_to_roles' => json_encode(['all']),
+        ]);
+
         foreach (['Espa', 'InternshipProvider', 'Institution'] as $funding) {
             $student = $this->student(['funding' => $funding]);
             $this->actingAs($student, 'student')->get(route('student.details.provider.edit'))
@@ -349,6 +353,7 @@ class StudentPortalTest extends TestCase
                 ->assertSee('name="f_polh_rescom"', false)
                 ->assertSee('name="f_odos"', false)
                 ->assertSee('name="f_tk"', false)
+                ->assertSee('name="f_perifereia"', false)
                 ->assertSee('name="f_ektPrakt_polh_rescom"', false)
                 ->assertSee('name="f_ektPrakt_odos"', false)
                 ->assertSee('name="f_ektPrakt_tk"', false)
