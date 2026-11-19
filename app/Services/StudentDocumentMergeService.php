@@ -8,7 +8,7 @@ use App\Models\StudentDocument;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
-use setasign\Fpdi\Fpdi;
+use Symfony\Component\Process\Process;
 use Throwable;
 
 class StudentDocumentMergeService
@@ -63,9 +63,13 @@ class StudentDocumentMergeService
                 }
 
                 try {
-                    $pages = $this->pdf()->setSourceFile(Storage::disk($document->disk)->path($document->path));
+                    $process = new Process([
+                        'qpdf', '--warning-exit-0', '--show-npages',
+                        Storage::disk($document->disk)->path($document->path),
+                    ]);
+                    $process->setTimeout(30)->mustRun();
 
-                    return $this->result($type->title, $document, null, $pages);
+                    return $this->result($type->title, $document, null, (int) trim($process->getOutput()));
                 } catch (Throwable) {
                     return $this->result($type->title, $document, 'Το PDF δεν μπορεί να διαβαστεί.');
                 }
@@ -81,28 +85,26 @@ class StudentDocumentMergeService
             throw new RuntimeException('Δεν υπάρχει εγκεκριμένο PDF που μπορεί να συγχωνευτεί.');
         }
 
-        $pdf = $this->pdf();
-
-        foreach ($documents as $item) {
-            $document = $item['document'];
-            $path = Storage::disk($document->disk)->path($document->path);
-            $pageCount = $pdf->setSourceFile($path);
-
-            for ($page = 1; $page <= $pageCount; $page++) {
-                $template = $pdf->importPage($page);
-                $size = $pdf->getTemplateSize($template);
-                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-                $pdf->useTemplate($template);
-            }
-        }
-
         $path = tempnam(sys_get_temp_dir(), 'praktiki-merged-');
 
         if ($path === false) {
             throw new RuntimeException('Δεν δημιουργήθηκε το προσωρινό αρχείο PDF.');
         }
 
-        $pdf->Output('F', $path);
+        $inputPaths = $documents->map(function (array $item): string {
+            $document = $item['document'];
+
+            return Storage::disk($document->disk)->path($document->path);
+        })->all();
+
+        try {
+            $process = new Process(['qpdf', '--empty', '--pages', ...$inputPaths, '--', $path]);
+            $process->setTimeout(120)->mustRun();
+        } catch (Throwable $exception) {
+            @unlink($path);
+
+            throw new RuntimeException('Δεν ολοκληρώθηκε η συγχώνευση των PDF.', previous: $exception);
+        }
 
         return $path;
     }
@@ -111,16 +113,5 @@ class StudentDocumentMergeService
     private function result(string $title, ?StudentDocument $document, ?string $reason, ?int $pages = null): array
     {
         return compact('title', 'document', 'pages', 'reason');
-    }
-
-    private function pdf(): Fpdi
-    {
-        $commercialParser = base_path('fpdi-pdf-parser/src/autoload.php');
-
-        if (is_file($commercialParser)) {
-            require_once $commercialParser;
-        }
-
-        return new Fpdi;
     }
 }
