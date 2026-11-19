@@ -455,7 +455,7 @@ class StudentsController extends Controller
             $emailTypes = $emails->typesForPendingActions($section, $pendingActions);
             $emailEntries = $emailTypes === []
                 ? collect()
-                : $emails->entries($student)->whereIn('type', $emailTypes)->values();
+                : $emails->entries($student, $emailTypes, $actions);
             if ($request->user()->view_only) {
                 $emailEntries = $emailEntries->map(function (array $email): array {
                     $email['unavailable_reason'] = 'Δεν έχετε δικαίωμα αποστολής.';

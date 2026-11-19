@@ -94,9 +94,10 @@ class Student extends Authenticatable
         return in_array($this->workflowStatus('action', $code), (array) $statuses, true);
     }
 
-    public function actionIsComplete(string $code): bool
+    /** @param Collection<int, WorkflowAction>|null $workflowActions */
+    public function actionIsComplete(string $code, ?Collection $workflowActions = null): bool
     {
-        $action = WorkflowAction::activeForFunding($this->fundingCode())
+        $action = ($workflowActions ?? WorkflowAction::activeForFunding($this->fundingCode()))
             ->first(fn (WorkflowAction $action): bool => $action->source_type === 'action'
                 && $action->source_key === $code);
 

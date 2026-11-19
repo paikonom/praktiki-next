@@ -127,6 +127,13 @@ class StudentsControllerTest extends TestCase
         $this->assertSame('A', $nextSection['section']);
         $this->assertCount(6, $nextSection['pendingActions']);
 
+        $workflowQueries = 0;
+        DB::listen(function ($query) use (&$workflowQueries): void {
+            if (str_contains($query->sql, 'workflow_actions')) {
+                $workflowQueries++;
+            }
+        });
+
         $this->actingAs($user)
             ->get(route('students.index'))
             ->assertOk()
@@ -142,6 +149,7 @@ class StudentsControllerTest extends TestCase
             ->assertSee('Έγκριση Εντύπων:')
             ->assertDontSee('Κρυφός')
             ->assertDontSee('Κρυφό Τμήμα');
+        $this->assertSame(1, $workflowQueries);
 
         $this->actingAs($user)
             ->get(route('students.index', ['year' => 'all', 'funding' => 'all']))

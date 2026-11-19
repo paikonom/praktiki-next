@@ -32,16 +32,21 @@ class StudentEmailService
         )->all();
     }
 
-    /** @return Collection<int, array<string, mixed>> */
-    public function entries(Student $student): Collection
+    /**
+     * @param  array<int, string>|null  $types
+     * @param  Collection<int, WorkflowAction>|null  $workflowActions
+     * @return Collection<int, array<string, mixed>>
+     */
+    public function entries(Student $student, ?array $types = null, ?Collection $workflowActions = null): Collection
     {
         $counts = $student->sentEmailCounts();
+        $definitions = collect(self::EMAILS)->when($types !== null, fn (Collection $emails) => $emails->only($types));
 
-        return collect(self::EMAILS)->map(function (array $definition, string $type) use ($student, $counts): array {
+        return $definitions->map(function (array $definition, string $type) use ($student, $counts, $workflowActions): array {
             return $definition + [
                 'type' => $type,
                 'count' => (int) $counts->get($type, 0),
-                'unavailable_reason' => $this->unavailableReason($student, $type),
+                'unavailable_reason' => $this->unavailableReason($student, $type, $workflowActions),
             ];
         })->values();
     }
@@ -131,7 +136,8 @@ class StudentEmailService
         return [];
     }
 
-    public function unavailableReason(Student $student, string $type): ?string
+    /** @param Collection<int, WorkflowAction>|null $workflowActions */
+    public function unavailableReason(Student $student, string $type, ?Collection $workflowActions = null): ?string
     {
         if (! isset(self::EMAILS[$type])) {
             return 'Άγνωστος τύπος email.';
@@ -139,7 +145,7 @@ class StudentEmailService
 
         return match (true) {
             $student->isCancelled() => 'Η πρακτική έχει ακυρωθεί.',
-            $type === 'stoixeiaFoitEgkrish' && (! $student->actionIsComplete('stoix_student') || ! $student->actionIsComplete('stoix_forea')) => 'Απαιτείται πρώτα έγκριση στοιχείων.',
+            $type === 'stoixeiaFoitEgkrish' && (! $student->actionIsComplete('stoix_student', $workflowActions) || ! $student->actionIsComplete('stoix_forea', $workflowActions)) => 'Απαιτείται πρώτα έγκριση στοιχείων.',
             $type === 'stoixeiaFoitEgkrish' && ! $student->hasApprovedDocument('symf_initial') => 'Απαιτείται πρώτα η αποθήκευση του αρχικού συμφωνητικού.',
             $type === 'symf_SN_f_f_ey' && ! $student->hasApprovedDocument('symf_SN_f_f') => 'Δεν έχει εγκριθεί το συμφωνητικό με δύο υπογραφές.',
             in_array($type, ['symf_SN_FULL', 'erganh_enarxh'], true) && (! $student->hasApprovedDocument('symf_SN_FULL') || ! $student->hasApprovedDocument('ADA_diaugeia')) => 'Απαιτούνται τελικό συμφωνητικό και ΑΔΑ.',
@@ -147,8 +153,8 @@ class StudentEmailService
             $type === 'input' && (! $student->startDate || $student->startDate->isFuture()) => 'Δεν έχει φτάσει η ημερομηνία έναρξης.',
             $type === 'input' && in_array($student->workflowStatus('apografiko', 'input'), ['completed', 'not_required', 'cancelled'], true) => 'Το απογραφικό εισόδου έχει ήδη ολοκληρωθεί.',
             in_array($type, ['lhxh', 'lhxh_foreas', 'lhxh_ey'], true) && (! $student->endDate || $student->endDate->isFuture()) => 'Δεν έχει φτάσει η ημερομηνία λήξης.',
-            $type === 'lhxh' && $this->endActionsAreCompleteFor($student, 'student') => 'Οι ενέργειες λήξης του φοιτητή έχουν ήδη ολοκληρωθεί.',
-            $type === 'lhxh_foreas' && $this->endActionsAreCompleteFor($student, 'provider') => 'Οι ενέργειες λήξης του φορέα έχουν ήδη ολοκληρωθεί.',
+            $type === 'lhxh' && $this->endActionsAreCompleteFor($student, 'student', $workflowActions) => 'Οι ενέργειες λήξης του φοιτητή έχουν ήδη ολοκληρωθεί.',
+            $type === 'lhxh_foreas' && $this->endActionsAreCompleteFor($student, 'provider', $workflowActions) => 'Οι ενέργειες λήξης του φορέα έχουν ήδη ολοκληρωθεί.',
             default => null,
         };
     }
@@ -165,11 +171,12 @@ class StudentEmailService
         return collect($emails)->filter(fn ($email): bool => filter_var($email, FILTER_VALIDATE_EMAIL) !== false)->unique()->values()->all();
     }
 
-    private function endActionsAreCompleteFor(Student $student, string $role): bool
+    /** @param Collection<int, WorkflowAction>|null $preloadedActions */
+    private function endActionsAreCompleteFor(Student $student, string $role, ?Collection $preloadedActions = null): bool
     {
         $funding = $student->fundingCode();
-        $workflowActions = $this->workflowActions[$funding]
-            ??= WorkflowAction::activeForFunding($funding);
+        $workflowActions = $preloadedActions
+            ?? ($this->workflowActions[$funding] ??= WorkflowAction::activeForFunding($funding));
 
         $actions = $workflowActions
             ->where('section', 'G')
