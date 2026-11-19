@@ -23,6 +23,7 @@ RUN composer install \
     --no-interaction \
     --no-progress \
     --prefer-dist \
+    --ignore-platform-req=ext-gd \
     --optimize-autoloader
 
 
