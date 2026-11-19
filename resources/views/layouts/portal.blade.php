@@ -17,7 +17,7 @@
                 'details' => ['label' => 'Στοιχεία πρακτικής', 'route' => 'provider.details'],
                 'student-details' => ['label' => 'Στοιχεία φοιτητή', 'route' => 'provider.details.section', 'parameters' => ['section' => 'student']],
                 'provider-details' => ['label' => 'Στοιχεία φορέα', 'route' => 'provider.details.section', 'parameters' => ['section' => 'provider']],
-                'questionnaire' => ['label' => 'Ερωτηματολόγιο', 'route' => 'provider.questionnaire'],
+                'questionnaire' => ['label' => 'Δελτία / Αξιολογήσεις', 'route' => 'provider.questionnaire'],
                 'documents' => ['label' => 'Έντυπα και ιστορικό', 'route' => 'provider.documents'],
             ];
     @endphp
