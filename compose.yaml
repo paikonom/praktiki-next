@@ -20,6 +20,7 @@ services:
         volumes:
             - '.:/var/www/html'
             - '${PRAKTIKI_PRIVATE_STORAGE_HOST_PATH:-./storage/app/private}:/praktiki-private'
+            - '../FPDI_PDF-Parser-2.1.4:/var/www/html/fpdi-pdf-parser:ro'
         networks:
             - sail
         depends_on:

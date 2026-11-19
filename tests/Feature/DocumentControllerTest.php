@@ -19,6 +19,66 @@ class DocumentControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_handler_previews_and_downloads_the_latest_approved_document_versions_as_one_pdf(): void
+    {
+        Storage::fake('local');
+        $student = $this->student();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $type = DocumentType::where('code', 'f_atlas')->firstOrFail();
+
+        $pdf = new \FPDF;
+        $pdf->AddPage();
+        $pdf->SetFont('Arial');
+        $pdf->Cell(20, 10, 'PDF');
+        Storage::disk('local')->put('old.pdf', $pdf->Output('S'));
+        Storage::disk('local')->put('latest.pdf', $pdf->Output('S'));
+        Storage::disk('local')->put('extra-1.pdf', $pdf->Output('S'));
+        Storage::disk('local')->put('extra-2.pdf', $pdf->Output('S'));
+
+        foreach ([1 => 'old.pdf', 2 => 'latest.pdf'] as $version => $path) {
+            StudentDocument::create([
+                's_id' => $student->id,
+                'document_type_id' => $type->id,
+                'version' => $version,
+                'disk' => 'local',
+                'path' => $path,
+                'original_name' => $path,
+                'mime_type' => 'application/pdf',
+                'size' => Storage::disk('local')->size($path),
+                'status' => 'approved',
+            ]);
+        }
+
+        $extraType = DocumentType::factory()->create(['code' => 'extra_docs', 'title' => 'Πρόσθετα έγγραφα']);
+        $extraType->fundings()->create(['funding_code' => $student->fundingCode()]);
+        $extraType->roles()->create(['role' => 'member', 'can_view' => true, 'can_upload' => true]);
+
+        foreach ([1 => 'extra-1.pdf', 2 => 'extra-2.pdf'] as $version => $path) {
+            StudentDocument::create([
+                's_id' => $student->id,
+                'document_type_id' => $extraType->id,
+                'version' => $version,
+                'disk' => 'local',
+                'path' => $path,
+                'original_name' => $path,
+                'mime_type' => 'application/pdf',
+                'size' => Storage::disk('local')->size($path),
+                'status' => 'approved',
+            ]);
+        }
+
+        $this->actingAs($admin)
+            ->get(route('students.documents.merge', $student))
+            ->assertOk()
+            ->assertSeeInOrder(['latest.pdf', 'extra-1.pdf', 'extra-2.pdf'])
+            ->assertDontSee('old.pdf')
+            ->assertSee('Θα συμπεριληφθεί');
+
+        $this->actingAs($admin)
+            ->post(route('students.documents.merge.download', $student))
+            ->assertDownload("student-{$student->id}-documents.pdf");
+    }
+
     public function test_handler_stores_the_generated_initial_agreement_as_approved(): void
     {
         Storage::fake('local');

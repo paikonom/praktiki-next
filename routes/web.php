@@ -14,6 +14,7 @@ use App\Http\Controllers\CompletionCertificateController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FaseisController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PortalDashboardController;
 use App\Http\Controllers\PraktikesController;
 use App\Http\Controllers\ProviderInternshipDetailsController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\RescomCitiesController;
 use App\Http\Controllers\StudentAgreementController;
 use App\Http\Controllers\StudentApografikoController;
 use App\Http\Controllers\StudentApografikoReviewController;
+use App\Http\Controllers\StudentDocumentMergeController;
 use App\Http\Controllers\StudentEmailController;
 use App\Http\Controllers\StudentImportController;
 use App\Http\Controllers\StudentPortalController;
@@ -32,16 +34,15 @@ use App\Http\Controllers\StudentWorkflowActionController;
 use App\Http\Controllers\SupervisorPortalController;
 use App\Http\Middleware\EnsureSelectedInternshipIsActive;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\NotificationController;
 
 Route::middleware('auth:web')->group(function () {
     Route::patch(
         '/notifications/{id}/read',
         [NotificationController::class, 'markAsRead']
     )->name('notifications.read');
-    
+
     Route::get('/notifications', [NotificationController::class, 'index'])
-    ->name('notifications.index');
+        ->name('notifications.index');
 });
 
 Route::middleware(['auth', 'can:view-admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -217,6 +218,8 @@ Route::middleware('auth')->group(function () {
         ->name('students.completion-certificates.provider');
     Route::get('/students/{student}/completion-certificates/supervisor', [CompletionCertificateController::class, 'supervisor'])
         ->name('students.completion-certificates.supervisor');
+    Route::get('/students/{student}/documents/merge', [StudentDocumentMergeController::class, 'show'])->name('students.documents.merge');
+    Route::post('/students/{student}/documents/merge', [StudentDocumentMergeController::class, 'download'])->name('students.documents.merge.download');
     Route::post('/students/{student}/documents/{documentType}', [DocumentController::class, 'store'])->name('students.documents.store');
     Route::post('/students/{student}/documents/{documentType}/not-required', [DocumentController::class, 'markNotRequired'])->name('students.documents.not-required');
     Route::post('/students/{student}/documents/{documentType}/require-again', [DocumentController::class, 'requireAgain'])->name('students.documents.require-again');

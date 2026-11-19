@@ -10,6 +10,14 @@
     </div>
 @endif
 
+@if ($role === 'member')
+    <div class="d-flex justify-content-end mb-3">
+        <a class="btn btn-outline-primary" href="{{ route('students.documents.merge', $student) }}">
+            <i class="bi bi-files me-1"></i>Ενιαίο PDF εντύπων
+        </a>
+    </div>
+@endif
+
 @php
     $showsUploadInstructions = $types->contains(fn ($type) => $type->roles->contains(
         fn ($typeRole) => $typeRole->role === $role && $typeRole->can_upload

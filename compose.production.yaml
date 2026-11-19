@@ -15,6 +15,7 @@ services:
             - '${APP_PORT:-8080}:80'
         volumes:
             - '/srv/praktiki-data/private:/var/www/html/storage/app/private'
+            - '/srv/praktiki-pdf-parser:/var/www/html/fpdi-pdf-parser:ro'
         depends_on:
             mysql:
                 condition: service_healthy

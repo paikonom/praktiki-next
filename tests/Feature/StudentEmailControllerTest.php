@@ -60,6 +60,9 @@ class StudentEmailControllerTest extends TestCase
                 'subject' => 'Παλιό email χωρίς ημερομηνία',
                 'body' => 'Legacy',
                 'status' => 'sent',
+                'sent_at' => null,
+                'created_at' => null,
+                'updated_at' => null,
             ],
             [
                 'student_id' => $student->id,
