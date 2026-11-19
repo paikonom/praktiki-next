@@ -22,7 +22,9 @@
 
     @include('students.partials.filters')
 
-   
+    <form id="student-list-email-form" class="js-email-send-form" method="POST" action="#">
+        @csrf
+    </form>
 
     @forelse ($studentGroups as $departmentStudents)
         @php
@@ -110,7 +112,17 @@
                                     @endif
                                     <div class="d-flex flex-column align-items-start gap-1">
                                         @forelse ($nextAction['emails'] ?? [] as $email)
-                                            <x-email-send-button :student="$student" :email="$email" />
+                                            <div class="d-inline-flex align-items-center gap-2" data-email-action>
+                                                <button
+                                                    class="btn btn-sm {{ $email['class'] ?? 'btn-primary' }}"
+                                                    type="submit"
+                                                    form="student-list-email-form"
+                                                    formaction="{{ route('students.emails.store', [$student, $email['type']]) }}"
+                                                    @disabled($email['unavailable_reason'])
+                                                >{{ $email['button'] }}</button>
+                                                <span class="badge js-email-count {{ $email['count'] > 0 ? 'text-bg-success' : 'text-bg-danger' }}">({{ $email['count'] }})</span>
+                                                <span class="small js-email-status" role="status" aria-live="polite"></span>
+                                            </div>
                                         @empty
                                             @if (! empty($nextAction['code']))
                                                 <a class="btn btn-sm btn-outline-primary" href="{{ route('students.show', $student) }}">Άνοιγμα</a>

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Student;
 use App\Models\User;
+use App\Models\WorkflowAction;
 use App\Models\WorkflowSectionRule;
 use App\Support\ProviderQuestionnaireDefinition;
 use App\Support\StudentApografikoDefinition;
@@ -78,6 +79,20 @@ class StudentWorkflowActionControllerTest extends TestCase
             ->update(['available_after' => 'always']);
 
         $this->assertNull(app(StudentApografikoDefinition::class)->unavailableReason($student->fresh(), 'input'));
+    }
+
+    public function test_list_waiting_message_uses_the_section_date_rule(): void
+    {
+        $student = Student::forceCreate([
+            'fash_id' => $this->internshipPhase('Espa'),
+            'startDate' => now()->addMonth(),
+            'endDate' => now()->addMonths(3),
+        ]);
+        $actions = WorkflowAction::activeForFunding('Espa');
+        $display = app(WorkflowDisplay::class);
+
+        $this->assertSame('Αναμονή έναρξης', $display->dateWaitingReason($student, $actions->firstWhere('section', 'B')));
+        $this->assertSame('Αναμονή λήξης', $display->dateWaitingReason($student, $actions->firstWhere('section', 'G')));
     }
 
     public function test_payment_is_required_before_completing_the_internship(): void

@@ -29,7 +29,7 @@ class StudentsController extends Controller
 {
     private const PANELS = ['office', 'agreement', 'student', 'provider', 'questionnaires', 'documents', 'emails', 'notes'];
 
-    public function index(Request $request, StudentEmailService $emails): View
+    public function index(Request $request, StudentEmailService $emails, WorkflowDisplay $workflowDisplay): View
     {
         $request->session()->put('students.index_url', $request->getRequestUri());
 
@@ -87,7 +87,7 @@ class StudentsController extends Controller
             $search,
             $filters,
         );
-        $nextActions = $this->nextActions($students, $emails, $request);
+        $nextActions = $this->nextActions($students, $emails, $workflowDisplay, $request);
         $studentGroups = $students->groupBy('department_id');
         $studentCount = $students->count();
 
@@ -427,13 +427,13 @@ class StudentsController extends Controller
         }
     }
 
-    private function nextActions(Collection $students, StudentEmailService $emails, Request $request): Collection
+    private function nextActions(Collection $students, StudentEmailService $emails, WorkflowDisplay $workflowDisplay, Request $request): Collection
     {
         $workflowActions = $students->map->fundingCode()->unique()->mapWithKeys(
             fn (string $fundingCode) => [$fundingCode => WorkflowAction::activeForFunding($fundingCode)],
         );
 
-        return $students->mapWithKeys(function (Student $student) use ($workflowActions, $emails, $request): array {
+        return $students->mapWithKeys(function (Student $student) use ($workflowActions, $emails, $workflowDisplay, $request): array {
             if ($student->isCancelled()) {
                 return [$student->id => ['title' => 'Άκυρη', 'class' => 'text-bg-danger']];
             }
@@ -452,6 +452,11 @@ class StudentsController extends Controller
             $section = $nextSection['section'];
             $sectionLabel = ['A' => 'Α', 'B' => 'Β', 'G' => 'Γ', 'D' => 'Δ'][$section];
             $pendingActions = $nextSection['pendingActions'];
+            $waitingReason = $workflowDisplay->dateWaitingReason($student, $pendingActions->first());
+            if ($waitingReason) {
+                return [$student->id => ['title' => $waitingReason, 'class' => 'text-bg-warning']];
+            }
+
             $emailTypes = $emails->typesForPendingActions($section, $pendingActions);
             $emailEntries = $emailTypes === []
                 ? collect()

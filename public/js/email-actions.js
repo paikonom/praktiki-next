@@ -11,8 +11,8 @@ document.addEventListener('submit', async (event) => {
         return;
     }
 
-    const wrapper = form.closest('[data-email-action]');
-    const button = form.querySelector('button[type="submit"]');
+    const button = event.submitter || form.querySelector('button[type="submit"]');
+    const wrapper = button.closest('[data-email-action]') || form.closest('[data-email-action]');
     const counter = wrapper.querySelector('.js-email-count');
     const status = wrapper.querySelector('.js-email-status');
     const originalText = button.textContent;
@@ -23,7 +23,7 @@ document.addEventListener('submit', async (event) => {
     status.textContent = '';
 
     try {
-        const response = await fetch(form.action, {
+        const response = await fetch(button.formAction || form.action, {
             method: 'POST',
             body: new FormData(form),
             headers: {

@@ -134,6 +134,19 @@ class WorkflowDisplay
         };
     }
 
+    public function dateWaitingReason(Student $student, WorkflowAction $action): ?string
+    {
+        $rule = $this->rulesFor($student->fundingCode(), $action->responsible_role)->get($action->section);
+
+        return match ($this->dateIssue($student, $rule?->available_after ?? 'always')) {
+            'missing_start_date' => 'Δεν έχει οριστεί ημερομηνία έναρξης.',
+            'missing_end_date' => 'Δεν έχει οριστεί ημερομηνία λήξης.',
+            'internship_not_started' => 'Αναμονή έναρξης',
+            'internship_active' => 'Αναμονή λήξης',
+            default => null,
+        };
+    }
+
     public function unavailableIssue(
         Student $student,
         WorkflowAction $action,
