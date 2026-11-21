@@ -330,22 +330,38 @@ class StudentsControllerTest extends TestCase
             'amka' => '12345678901',
             'email' => 'student@example.test',
             'data_CAS' => ['attributes' => ['givenName;lang-el' => 'ΟΡΑΤΟΣ']],
-            'atlas_Antistoixish' => ['AssignedStudent' => [
+            'atlas_Antistoixish' => ['GroupDetails' => [
+                'Supervisor' => 'ΔΟΚΙΜΗΣ ΕΠΟΠΤΗΣ',
+                'SupervisorEmail' => 'atlas-supervisor@example.test',
+            ], 'AssignedStudent' => [
                 'GreekLastName' => ' ',
                 'LatinLastName' => 'Atlas Latin Surname',
                 'SystemLastName' => 'Ignored System Surname',
                 'SystemFirstName' => 'Atlas System First Name',
             ]],
-            'atlas_Provider' => ['Name' => 'ΑΛΛΟΣ ΦΟΡΕΑΣ'],
+            'atlas_Provider' => [
+                'Name' => 'ΑΛΛΟΣ ΦΟΡΕΑΣ',
+                'ContactName' => 'ΔΟΚΙΜΗΣ ΕΚΠΡΟΣΩΠΟΣ',
+                'ContactEmail' => 'provider@example.test',
+                'ContactPhone' => '2100000000',
+            ],
         ])->save();
         DB::table('providers')->where('s_id', $visibleStudentId)->update([
             'f_afm' => '123456789',
             'f_email' => 'provider@example.test',
+            'f_thl' => '2100000000',
+            'f_ekprFname' => 'Εκπρόσωπος',
+            'f_ekprLname' => 'Δοκιμής',
+            'f_epopt_foreaFname' => 'Επόπτης',
+            'f_epopt_foreaLname' => 'Δοκιμής',
+            'f_epopt_email' => 'local-supervisor@example.test',
         ]);
+        DB::table('fields')->where('field', 'f_epopt_email')
+            ->update(['label' => 'EMAIL ΕΠΟΠΤΗ ΤΟΥ Φ.Υ. — TEST']);
 
         $this->get(route('students.show', $visibleStudentId))
             ->assertOk()
-            ->assertSee('text-bg-danger ms-1">(3)</span>', false)
+            ->assertSee('text-bg-danger ms-1">(4)</span>', false)
             ->assertDontSee('Atlas Latin Surname');
         $this->get(route('students.show', ['student' => $visibleStudentId, 'panel' => 'details-check']))
             ->assertOk()
@@ -355,6 +371,10 @@ class StudentsControllerTest extends TestCase
             ->assertSee('Atlas System First Name')
             ->assertDontSee('Ignored System Surname')
             ->assertSee('ΑΛΛΟΣ ΦΟΡΕΑΣ')
+            ->assertSee('ΔΟΚΙΜΗΣ ΕΚΠΡΟΣΩΠΟΣ')
+            ->assertSee('2100000000')
+            ->assertSee('atlas-supervisor@example.test')
+            ->assertSee('EMAIL ΕΠΟΠΤΗ ΤΟΥ Φ.Υ. — TEST')
             ->assertSee('Διαφορά');
         $this->get(route('students.show', ['student' => $hiddenStudentId, 'panel' => 'details-check']))
             ->assertNotFound();

@@ -584,7 +584,7 @@ class StudentsController extends Controller
             }
         }
 
-        $detailsCheck = $this->checkDetails($student);
+        $detailsCheck = $this->checkDetails($student, $studentFields + $providerFields + $officeFields);
 
         return view('students.show', compact(
             'student', 'panel', 'department', 'phase', 'praktiki', 'funding', 'provider',
@@ -704,16 +704,16 @@ class StudentsController extends Controller
         );
     }
 
-    private function checkDetails(Student $student): array
+    private function checkDetails(Student $student, array $labels): array
     {
         $provider = $student->provider;
         $afmRule = 'regex:/^(?:[0-9]{7}|[0-9]{9})$/D';
         $checks = [
-            ['ΑΦΜ φοιτητή', $student->afm, $afmRule, 'Απαιτούνται 7 ή 9 ψηφία'],
-            ['ΑΜΚΑ φοιτητή', $student->amka, 'regex:/^[0-9]{11}$/D', 'Απαιτούνται 11 ψηφία'],
-            ['Email φοιτητή', $student->email, 'email:rfc', 'Μη έγκυρο email'],
-            ['ΑΦΜ φορέα', $provider?->f_afm, $afmRule, 'Απαιτούνται 7 ή 9 ψηφία'],
-            ['Email φορέα', $provider?->f_email, 'email:rfc', 'Μη έγκυρο email'],
+            ['afm', $student->afm, $afmRule, 'Απαιτούνται 7 ή 9 ψηφία'],
+            ['amka', $student->amka, 'regex:/^[0-9]{11}$/D', 'Απαιτούνται 11 ψηφία'],
+            ['email', $student->email, 'email:rfc', 'Μη έγκυρο email'],
+            ['f_afm', $provider?->f_afm, $afmRule, 'Απαιτούνται 7 ή 9 ψηφία'],
+            ['f_email', $provider?->f_email, 'email:rfc', 'Μη έγκυρο email'],
         ];
 
         $cas = $student->data_CAS['attributes'] ?? $student->data_CAS ?? [];
@@ -728,30 +728,37 @@ class StudentsController extends Controller
             return null;
         };
         $groups['Φοιτητής · CAS'] = [
-            ['Όνομα', $student->fName, $cas['givenName;lang-el'] ?? $cas['givenName-lang-el'] ?? null],
-            ['Επώνυμο', $student->lName, $cas['sn;lang-el'] ?? $cas['sn-lang-el'] ?? null],
-            ['ΑΜΦ', $student->AMF, $cas['uoastudentid'] ?? null],
-            ['ΑΜΚΑ', $student->amka, $cas['schGrAcPersonSSN'] ?? null],
-            ['Φύλο', $student->fylo_rescom, $cas['schacGender'] ?? null],
+            ['fName', $student->fName, $cas['givenName;lang-el'] ?? $cas['givenName-lang-el'] ?? null],
+            ['lName', $student->lName, $cas['sn;lang-el'] ?? $cas['sn-lang-el'] ?? null],
+            ['AMF', $student->AMF, $cas['uoastudentid'] ?? null],
+            ['amka', $student->amka, $cas['schGrAcPersonSSN'] ?? null],
+            ['fylo_rescom', $student->fylo_rescom, $cas['schacGender'] ?? null],
         ];
         $groups['Φοιτητής · ΑΤΛΑΣ'] = [
-            ['Όνομα', $student->fName, $atlasName('FirstName')],
-            ['Επώνυμο', $student->lName, $atlasName('LastName')],
-            ['ΑΜΦ', $student->AMF, data_get($atlas, 'AssignedStudent.StudentNumber')],
-            ['Έναρξη', $student->startDate?->format('d/m/Y'), $atlas['ImplementationStartDateString'] ?? null],
-            ['Λήξη', $student->endDate?->format('d/m/Y'), $atlas['ImplementationEndDateString'] ?? null],
-            ['Group ID', $student->id_group, $atlas['GroupID'] ?? null],
-            ['ID θέσης', $student->id_thesh, $atlas['ID'] ?? null],
-            ['Χρηματοδότηση', $student->fundingCode(), $atlas['FundingType'] ?? null],
+            ['fName', $student->fName, $atlasName('FirstName')],
+            ['lName', $student->lName, $atlasName('LastName')],
+            ['AMF', $student->AMF, data_get($atlas, 'AssignedStudent.StudentNumber')],
+            ['startDate', $student->startDate?->format('d/m/Y'), $atlas['ImplementationStartDateString'] ?? null],
+            ['endDate', $student->endDate?->format('d/m/Y'), $atlas['ImplementationEndDateString'] ?? null],
+            ['id_group', $student->id_group, $atlas['GroupID'] ?? null],
+            ['id_thesh', $student->id_thesh, $atlas['ID'] ?? null],
+            ['funding', $student->fundingCode(), $atlas['FundingType'] ?? null],
         ];
         $groups['Φορέας · ΑΤΛΑΣ'] = [
-            ['ΑΦΜ', $provider?->f_afm, data_get($student->atlas_Provider, 'AFM')],
-            ['Επωνυμία', $provider?->f_epwnymia, data_get($student->atlas_Provider, 'Name')],
+            ['f_afm', $provider?->f_afm, data_get($student->atlas_Provider, 'AFM')],
+            ['f_epwnymia', $provider?->f_epwnymia, data_get($student->atlas_Provider, 'Name')],
+            ['f_ekprLname f_ekprFname', trim(($provider?->f_ekprLname ?? '').' '.($provider?->f_ekprFname ?? '')), data_get($student->atlas_Provider, 'ContactName')],
+            ['f_email', $provider?->f_email, data_get($student->atlas_Provider, 'ContactEmail')],
+            ['f_thl', $provider?->f_thl, data_get($student->atlas_Provider, 'ContactPhone')],
+        ];
+        $groups['Επόπτης φορέα · Θέση ΑΤΛΑΣ'] = [
+            ['f_epopt_foreaLname f_epopt_foreaFname', trim(($provider?->f_epopt_foreaLname ?? '').' '.($provider?->f_epopt_foreaFname ?? '')), data_get($atlas, 'GroupDetails.Supervisor')],
+            ['f_epopt_email', $provider?->f_epopt_email, data_get($atlas, 'GroupDetails.SupervisorEmail')],
         ];
 
         $normalize = static function (string $label, mixed $value): string {
             $value = is_scalar($value) ? trim((string) $value) : '';
-            if (in_array($label, ['Όνομα', 'Επώνυμο', 'Επωνυμία'], true)) {
+            if (in_array($label, ['fName', 'lName', 'f_epwnymia', 'f_ekprLname f_ekprFname', 'f_epopt_foreaLname f_epopt_foreaFname'], true)) {
                 return strtr(mb_strtoupper($value), [
                     'Ά' => 'Α', 'Έ' => 'Ε', 'Ή' => 'Η', 'Ί' => 'Ι', 'Ό' => 'Ο', 'Ύ' => 'Υ', 'Ώ' => 'Ω',
                 ]);
@@ -760,6 +767,11 @@ class StudentsController extends Controller
             return $value;
         };
 
+        $labelFor = static fn (string $fields): string => implode(' / ', array_map(
+            static fn (string $field): string => $labels[$field] ?? $field,
+            explode(' ', $fields),
+        ));
+
         $problemCount = 0;
         foreach ($checks as $index => [$label, $value, $rule, $message]) {
             [$status, $color] = match (true) {
@@ -767,7 +779,7 @@ class StudentsController extends Controller
                 validator(['value' => $value], ['value' => [$rule]])->passes() => ['ok', 'success'],
                 default => [$message, 'danger'],
             };
-            $checks[$index] = [$label, $status, $color];
+            $checks[$index] = [$labelFor($label), $status, $color];
             $problemCount += (int) ($color !== 'success');
         }
 
@@ -782,7 +794,7 @@ class StudentsController extends Controller
                     default => ['Διαφορά', 'danger'],
                 };
                 $groups[$source][$index] = [
-                    $label,
+                    $labelFor($label),
                     $localValue === '' ? '—' : $local,
                     $externalValue === '' ? '—' : $external,
                     $status,
