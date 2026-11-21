@@ -56,14 +56,14 @@ class StudentEmailService
     {
         $definition = self::EMAILS[$type] ?? throw ValidationException::withMessages(['email' => 'Άγνωστος τύπος email.']);
         $to = $this->recipientAddresses($student, $definition['recipient_role']);
-        $handler = $student->handler();
+        $handlers = $student->handlers();
 
         if ($to === []) {
             throw ValidationException::withMessages(['email' => 'Δεν υπάρχει έγκυρη διεύθυνση παραλήπτη.']);
         }
 
-        if (! $handler) {
-            throw ValidationException::withMessages(['email' => 'Δεν βρέθηκε μοναδικός χειριστής για το Τμήμα και τη χρηματοδότηση.']);
+        if ($handlers->isEmpty()) {
+            throw ValidationException::withMessages(['email' => 'Δεν βρέθηκε χειριστής για το Τμήμα και τη χρηματοδότηση.']);
         }
 
         $name = trim("{$student->fName} {$student->lName}");
@@ -79,7 +79,7 @@ class StudentEmailService
             'lhxh_ey' => "Εκκρεμότητες Λήξης ΕΠ.ΥΠ. - {$name}",
         };
 
-        $cc = collect([$handler->email, 'paoikon@uoa.gr'])
+        $cc = $handlers->pluck('email')->push('paoikon@uoa.gr')
             ->filter(fn ($email): bool => filter_var($email, FILTER_VALIDATE_EMAIL) !== false)
             ->diff($to)
             ->unique()
@@ -91,7 +91,7 @@ class StudentEmailService
             'subject' => $subject,
             'to' => $to,
             'cc' => $cc,
-            'data' => compact('type', 'student', 'handler'),
+            'data' => compact('type', 'student', 'handlers'),
         ];
     }
 

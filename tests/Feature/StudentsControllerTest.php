@@ -120,9 +120,10 @@ class StudentsControllerTest extends TestCase
 
         $visibleStudent = Student::with(['actions', 'documents.type', 'apografika', 'questionnaire', 'providerQuestionnaire'])
             ->findOrFail($visibleStudentId);
-        $nextSection = WorkflowAction::nextIncompleteSectionFor(
+        $nextSection = app(\App\Support\WorkflowDisplay::class)->nextIncompleteSection(
             $visibleStudent,
             WorkflowAction::activeForFunding('Espa'),
+            'member',
         );
         $this->assertSame('A', $nextSection['section']);
         $this->assertCount(6, $nextSection['pendingActions']);

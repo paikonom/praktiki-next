@@ -31,7 +31,7 @@ class CompletionCertificateController extends Controller
     public function supervisor(Request $request, Student $student): Response
     {
         if ($request->routeIs('scientific_supervisor.*')) {
-            abort_unless($student->supervisor_id === $request->user('scientific_supervisor')->id, 404);
+            abort_unless($student->isAssignedTo($request->user('scientific_supervisor')), 404);
         } else {
             abort_unless(Gate::allows('view', $student), 404);
         }

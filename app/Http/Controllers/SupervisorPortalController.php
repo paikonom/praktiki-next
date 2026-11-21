@@ -98,6 +98,6 @@ class SupervisorPortalController extends Controller
 
     private function ensureStudentBelongsToSupervisor(Request $request, Student $student): void
     {
-        abort_unless($student->supervisor_id === $request->user('scientific_supervisor')->id, 404);
+        abort_unless($student->isAssignedTo($request->user('scientific_supervisor')), 404);
     }
 }

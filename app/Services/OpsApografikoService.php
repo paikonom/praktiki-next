@@ -245,7 +245,7 @@ class OpsApografikoService
 
     private function mis(Student $student): string
     {
-        $mis = trim((string) (config('praktiki_apografika.mis_override') ?: data_get($student->phase?->praktiki?->details, 'kwdikos_OPS')));
+        $mis = $student->phase?->praktiki?->opsMis() ?? '';
 
         if ($mis === '' || ! ctype_digit($mis)) {
             throw new RuntimeException('Δεν έχει οριστεί έγκυρος κωδικός ΟΠΣ/MIS για την πρακτική.');

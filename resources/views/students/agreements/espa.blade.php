@@ -211,7 +211,7 @@
         <td>ΔΙΕΥΘΥΝΣΗ ΚΑΤΟΙΚΙΑΣ</td>
         <td>:</td>
         <td>
-            <x-pdf.value :value="$student->studentAddress()" />,
+            <x-pdf.value :value="$student->studentAddress()" />
             <!-- <x-pdf.value :value="$student->address_odos" />
             ΤΚ:
             <x-pdf.value :value="$student->address_tk" /> -->

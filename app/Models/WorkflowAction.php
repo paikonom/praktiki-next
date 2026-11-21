@@ -41,31 +41,6 @@ class WorkflowAction extends Model
             && in_array($status, $action->allowed_statuses ?? [], true);
     }
 
-    /**
-     * @param  Collection<int, self>  $availableActions
-     * @return array{section: string, pendingActions: Collection<int, self>, approvalAction: self|null}|null
-     */
-    public static function nextIncompleteSectionFor(Student $student, Collection $availableActions): ?array
-    {
-        foreach (['A', 'B', 'G', 'D'] as $section) {
-            $sectionActions = $availableActions->where('section', $section);
-            $pendingActions = $sectionActions
-                ->where('counts_for_section', true)
-                ->reject(fn (self $action): bool => $action->isCompleteFor($student))
-                ->values();
-
-            if ($pendingActions->isNotEmpty()) {
-                return [
-                    'section' => $section,
-                    'pendingActions' => $pendingActions,
-                    'approvalAction' => null,
-                ];
-            }
-        }
-
-        return null;
-    }
-
     public function statusFor(Student $student): ?string
     {
         return $student->workflowStatus($this->source_type, $this->source_key);

@@ -54,25 +54,12 @@ class DocumentController extends Controller
 
         if ($context['role'] !== 'member') {
             $student = $context['student'];
-            $handler = $student->handler();
+            $recipients = $student->handlers()->collect()->push(User::find(1))->filter()->unique('id');
 
             $senderLabel = config('praktiki_workflow.role_labels.'.$context['role'], $context['role']);
 
-            if ($handler) {
-                $handler->notify(new StudentActionNotification(
-                    $senderLabel.' - Νέο έγγραφο',
-                    $student->full_name.': '.$documentType->title,
-                    route('students.show', ['student' => $student->id, 'panel' => 'documents']),
-                    $context['role'],
-                    (int) $context['user']->getAuthIdentifier(),
-                    'bi-file-earmark-arrow-up',
-                ));
-            }
-
-            $admin = User::find(1);
-
-            if ($admin && $admin->id !== $handler?->id) {
-                $admin->notify(new StudentActionNotification(
+            foreach ($recipients as $recipient) {
+                $recipient->notify(new StudentActionNotification(
                     $senderLabel.' - Νέο έγγραφο',
                     $student->full_name.': '.$documentType->title,
                     route('students.show', ['student' => $student->id, 'panel' => 'documents']),
@@ -170,7 +157,7 @@ class DocumentController extends Controller
         if ($request->routeIs('scientific_supervisor.*')) {
             /** @var ScientificSupervisor $supervisor */
             $supervisor = $request->user('scientific_supervisor');
-            abort_unless($student->supervisor_id === $supervisor->id, 404);
+            abort_unless($student->isAssignedTo($supervisor), 404);
 
             return ['user' => $supervisor, 'role' => 'scientific_supervisor', 'student' => $student];
         }

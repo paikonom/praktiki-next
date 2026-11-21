@@ -5,7 +5,6 @@ return [
     'endpoint' => env('OPS_APOGRAFIKA_ENDPOINT'),
     'username' => env('OPS_APOGRAFIKA_USERNAME'),
     'password' => env('OPS_APOGRAFIKA_PASSWORD'),
-    'mis_override' => env('OPS_APOGRAFIKA_MIS'),
     'region_id' => 55,
     'timeout' => (int) env('OPS_APOGRAFIKA_TIMEOUT', 30),
 

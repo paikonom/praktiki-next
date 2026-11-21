@@ -88,11 +88,19 @@ class StudentWorkflowActionControllerTest extends TestCase
             'startDate' => now()->addMonth(),
             'endDate' => now()->addMonths(3),
         ]);
+        $this->completeWorkflowSection($student, 'A');
+        WorkflowSectionRule::where('section', 'B')->where('role', 'member')
+            ->update(['available_after' => 'internship_start']);
+        WorkflowSectionRule::where('section', 'B')->where('role', 'student')
+            ->update(['available_after' => 'always']);
         $actions = WorkflowAction::activeForFunding('Espa');
         $display = app(WorkflowDisplay::class);
 
-        $this->assertSame('Αναμονή έναρξης', $display->dateWaitingReason($student, $actions->firstWhere('section', 'B')));
-        $this->assertSame('Αναμονή λήξης', $display->dateWaitingReason($student, $actions->firstWhere('section', 'G')));
+        $nextSection = $display->nextIncompleteSection($student, $actions, 'member');
+        $firstPending = collect($display->sections($student, 'member'))->firstWhere('done', false);
+        $this->assertSame('B', $nextSection['section']);
+        $this->assertSame($firstPending['code'], $nextSection['section']);
+        $this->assertSame('Αναμονή έναρξης', $display->dateWaitingReason($nextSection['dateIssue']));
     }
 
     public function test_payment_is_required_before_completing_the_internship(): void

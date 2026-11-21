@@ -50,6 +50,11 @@ class Student extends Authenticatable
         return $this->hasOne(StudentProvider::class, 's_id');
     }
 
+    public function isAssignedTo(ScientificSupervisor $supervisor): bool
+    {
+        return $supervisor->id !== null && $this->supervisor_id === $supervisor->id;
+    }
+
     public function supervisor(): BelongsTo
     {
         return $this->belongsTo(ScientificSupervisor::class);
@@ -169,7 +174,8 @@ class Student extends Authenticatable
         return $this->hasMany(EmailLog::class);
     }
 
-    public function handler(): ?User
+    /** @return Collection<int, User> */
+    public function handlers(): Collection
     {
         $managementColumn = match ($this->fundingCode()) {
             'Espa' => 'can_manage_espa',
@@ -179,17 +185,14 @@ class Student extends Authenticatable
         };
 
         if (! $this->department_id || ! $managementColumn) {
-            return null;
+            return collect();
         }
 
-        $handlers = User::query()
+        return User::query()
             ->whereHas('departments', fn ($query) => $query
                 ->where('departments.id', $this->department_id)
                 ->where("user_department_access.{$managementColumn}", true))
-            ->limit(2)
             ->get();
-
-        return $handlers->count() === 1 ? $handlers->first() : null;
     }
 
     public function hasApprovedDocument(string $code): bool

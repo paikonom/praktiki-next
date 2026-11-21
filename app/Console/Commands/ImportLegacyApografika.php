@@ -19,7 +19,7 @@ class ImportLegacyApografika extends Command
         $studentIds = DB::table('students')->pluck('id')->flip();
 
         foreach (['input' => ['apografikaIn', 'commentsIn'], 'output' => ['apografikaOut', 'commentsOut']] as $type => [$table, $commentsColumn]) {
-            foreach (DB::table("praktiki_legacy_inventory.{$table}")->orderBy('sid')->cursor() as $row) {
+            foreach (DB::table("praktiki_legacy_final.{$table}")->orderBy('sid')->cursor() as $row) {
                 $stats['found']++;
 
                 if (! $studentIds->has($row->sid)) {
@@ -29,7 +29,7 @@ class ImportLegacyApografika extends Command
                 }
 
                 $existing = StudentApografiko::query()->where('student_id', $row->sid)->where('type', $type)->first();
-                if ($existing && (str_starts_with((string) $existing->request_payload, '<?xml') || str_starts_with((string) $existing->response_payload, '<?xml'))) {
+                if ($existing) {
                     $stats['protected']++;
 
                     continue;
@@ -40,6 +40,8 @@ class ImportLegacyApografika extends Command
                 $legacyDetails = $this->decode($row->stoixeia);
                 if (isset($legacyAnswers['_legacy_raw']) || isset($legacyResponse['_legacy_raw']) || isset($legacyDetails['_legacy_raw'])) {
                     $stats['invalid']++;
+
+                    continue;
                 }
 
                 $answers = [];
@@ -56,10 +58,7 @@ class ImportLegacyApografika extends Command
 
                 $deltioId = $this->deltioId($legacyResponse);
                 $progressId = $this->value($row->longCode) ?: ($this->value($row->pendingCode) === '-' ? null : $this->value($row->pendingCode));
-                $status = $existing?->status;
-                if (! in_array($status, [StudentApografiko::STATUS_COMPLETED, StudentApografiko::STATUS_NOT_REQUIRED], true)) {
-                    $status = $deltioId ? StudentApografiko::STATUS_COMPLETED : ($progressId ? StudentApografiko::STATUS_PROCESSING : StudentApografiko::STATUS_DRAFT);
-                }
+                $status = $deltioId ? StudentApografiko::STATUS_COMPLETED : ($progressId ? StudentApografiko::STATUS_PROCESSING : StudentApografiko::STATUS_DRAFT);
 
                 $imports[] = [
                     'student_id' => (int) $row->sid,
@@ -67,7 +66,7 @@ class ImportLegacyApografika extends Command
                     'status' => $status,
                     'answers' => json_encode($answers, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
                     'request_progress_id' => $progressId,
-                    'deltio_id' => $deltioId ?: $existing?->deltio_id,
+                    'deltio_id' => $deltioId,
                     'response_payload' => $legacyResponse === [] ? null : json_encode($legacyResponse, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
                     'legacy_data' => json_encode([
                         'answers' => $legacyAnswers,
@@ -79,14 +78,14 @@ class ImportLegacyApografika extends Command
                     ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
                     'submitted_at' => $row->submitTime,
                     'completed_at' => $status === StudentApografiko::STATUS_COMPLETED ? $row->submitTime : null,
-                    'created_at' => $existing?->created_at ?? $row->submitTime,
+                    'created_at' => $row->submitTime,
                     'updated_at' => now(),
                 ];
                 $stats['ready']++;
             }
         }
 
-        $this->table(['Found', 'Ready', 'Protected new', 'Missing student', 'Invalid'], [array_values($stats)]);
+        $this->table(['Found', 'Ready', 'Existing (protected)', 'Missing student', 'Invalid'], [array_values($stats)]);
         if (! $this->option('write')) {
             $this->info('Dry run only. Run again with --write to persist.');
 
@@ -98,7 +97,7 @@ class ImportLegacyApografika extends Command
                 DB::table('student_apografika')->upsert(
                     $chunk,
                     ['student_id', 'type'],
-                    ['status', 'answers', 'request_progress_id', 'deltio_id', 'response_payload', 'legacy_data', 'submitted_at', 'completed_at', 'updated_at'],
+                    ['student_id'],
                 );
             }
         });
@@ -120,7 +119,8 @@ class ImportLegacyApografika extends Command
 
     private function deltioId(array $response): ?int
     {
-        $message = (string) ($response['errorDescr'] ?? '');
+        $message = (string) ($response['errorDescr']
+            ?? data_get($response, 'env_Body.ofel_SymetexontesResponse.ofel_OfeloumenosOutput.ofel_DeltioOfeloumenou.ofel_ErrorMessage', ''));
 
         return preg_match('/Α\/Α:\s*(\d+)/u', $message, $matches) ? (int) $matches[1] : null;
     }

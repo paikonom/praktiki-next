@@ -84,6 +84,11 @@ class StudentPortalTest extends TestCase
     {
         $admin = User::factory()->create(['id' => 1, 'role' => 'admin']);
         $student = $this->student(['funding' => 'Espa']);
+        $second = User::factory()->create();
+        DB::table('user_department_access')->insert([
+            ['user_id' => $admin->id, 'department_id' => $student->department_id, 'can_manage_espa' => true],
+            ['user_id' => $second->id, 'department_id' => $student->department_id, 'can_manage_espa' => true],
+        ]);
         $rescomReferenceData = app(RescomReferenceData::class);
 
         $data = [
@@ -119,6 +124,8 @@ class StudentPortalTest extends TestCase
         ]);
         $this->assertDatabaseHas('student_actions', ['student_id' => $student->id, 'action' => 'stoix_student', 'status' => 'submitted']);
         $this->assertDatabaseHas('notifications', ['notifiable_id' => $admin->id]);
+        $this->assertDatabaseHas('notifications', ['notifiable_id' => $second->id]);
+        $this->assertDatabaseCount('notifications', 2);
 
         $this->actingAs($student->fresh(), 'student')
             ->patch(route('student.details.student.update'), $data + ['afm' => '987654321'])

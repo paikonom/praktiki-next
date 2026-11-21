@@ -29,11 +29,15 @@
                         <div class="text-danger small mt-2">{{ $apografiko->error_message }}</div>
                     @endif
                 </div>
-                @if ($processing)
+                @if ($status === 'submitted')
+                    <span class="text-warning-emphasis">Η υποβολή είναι σε εξέλιξη ή δεν έχει επιβεβαιωθεί από το ΟΠΣ. Αν η κατάσταση παραμένει ίδια, επικοινωνήστε με το Γραφείο Πρακτικής Άσκησης.</span>
+                @elseif ($processing && filled($apografiko->request_progress_id))
                     <form method="POST" action="{{ route('student.apografika.check', $type) }}">
                         @csrf
                         <button class="btn btn-warning">Έλεγχος αποτελέσματος</button>
                     </form>
+                @elseif ($processing)
+                    <span class="text-warning-emphasis">Λείπει ο κωδικός ελέγχου ΟΠΣ. Επικοινωνήστε με το Γραφείο Πρακτικής Άσκησης.</span>
                 @elseif ($status === 'completed')
                     <a class="btn btn-outline-primary" href="{{ route('student.apografika.pdf', $type) }}" target="_blank">Προβολή PDF</a>
                 @endif

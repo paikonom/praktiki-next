@@ -64,7 +64,7 @@ class StudentDocumentPolicy
 
         if ($loggedInUser instanceof ScientificSupervisor) {
             return $loggedInRole === 'scientific_supervisor'
-                && $internshipStudent->supervisor_id === $loggedInUser->id;
+                && $internshipStudent->isAssignedTo($loggedInUser);
         }
 
         return app(StudentPolicy::class)->view($loggedInUser, $internshipStudent);

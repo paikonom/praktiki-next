@@ -19,12 +19,20 @@ class StudentEmailControllerTest extends TestCase
     public function test_handler_previews_and_sends_a_known_email_while_recording_the_log(): void
     {
         [$user, $student] = $this->handlerAndStudent();
+        $second = User::factory()->create(['name' => 'Δεύτερος χειριστής', 'email' => 'second@example.test']);
+        $other = User::factory()->create(['email' => 'other@example.test']);
+        DB::table('user_department_access')->insert([
+            ['user_id' => $second->id, 'department_id' => $student->department_id, 'can_manage_espa' => true, 'can_manage_institution' => false],
+            ['user_id' => $other->id, 'department_id' => $student->department_id, 'can_manage_espa' => false, 'can_manage_institution' => true],
+        ]);
         Mail::fake();
 
         $this->actingAs($user)
             ->get(route('students.emails.preview', [$student, 'stoixeiaFoit']))
             ->assertOk()
             ->assertSee('student@example.test')
+            ->assertSee('Δεύτερος χειριστής')
+            ->assertDontSee('other@example.test')
             ->assertSee('Με αυτό το email θα θέλαμε να σας καλωσορίσουμε');
 
         $this->actingAs($user)
@@ -33,7 +41,10 @@ class StudentEmailControllerTest extends TestCase
 
         Mail::assertSent(WorkflowEmail::class, fn (WorkflowEmail $mail): bool => $mail->hasTo('student@example.test')
             && $mail->hasCc('handler@example.test')
+            && $mail->hasCc('second@example.test')
+            && ! $mail->hasCc('other@example.test')
             && $mail->hasCc('paoikon@uoa.gr'));
+        Mail::assertSentCount(1);
         $this->assertDatabaseHas('email_logs', [
             'student_id' => $student->id,
             'sent_by_user_id' => $user->id,
@@ -247,7 +258,7 @@ class StudentEmailControllerTest extends TestCase
         ]);
 
         $student = Student::findOrFail($studentId);
-        $this->assertTrue($student->handler()?->is($user));
+        $this->assertTrue($student->handlers()->sole()->is($user));
 
         return [$user, $student];
     }

@@ -25,20 +25,13 @@ class WorkflowDisplay
         $funding = $student->fundingCode();
         $actions = $this->actionsFor($funding);
         $this->currentActions = $actions;
-        $rules = $this->rulesFor($funding, $currentRole);
         $rows = $actions->mapWithKeys(fn (WorkflowAction $action): array => [
             $action->code => $this->row($student, $action, $currentRole),
         ]);
-        $previousDone = true;
+        $sections = [];
 
-        return collect(['A', 'B', 'G', 'D'])->map(function (string $section) use ($student, $actions, $rows, $rules, &$previousDone): array {
-            $rule = $rules->get($section);
-            $availableByDate = $this->dateReached($rule?->available_after ?? 'always', $student);
-            $previousSectionReady = ! $rule?->requires_previous_section || $previousDone;
-            $sectionActions = $actions->where('section', $section)->where('counts_for_section', true);
-            $done = $availableByDate
-                && $previousSectionReady
-                && $sectionActions->every(fn (WorkflowAction $action): bool => $rows->get($action->code)['done'] ?? false);
+        foreach ($this->sectionProgress($student, $currentRole, $actions) as $section => $progress) {
+            ['done' => $done, 'previousSectionReady' => $previousSectionReady] = $progress;
             $sectionRows = $actions->where('section', $section)->map(function (WorkflowAction $action) use ($section, $rows, $previousSectionReady): array {
                 $row = $rows->get($action->code);
                 $canChangeImmediately = $action->code === 'katastash_praktikis';
@@ -49,9 +42,7 @@ class WorkflowDisplay
 
                 return $row;
             })->values();
-            $previousDone = $done;
-
-            return [
+            $sections[] = [
                 'code' => $section,
                 'title' => match ($section) {
                     'A' => 'Α. Πριν την έναρξη',
@@ -63,31 +54,50 @@ class WorkflowDisplay
                 'status' => $done ? 'completed' : 'pending',
                 'rows' => $sectionRows->values()->all(),
             ];
-        })->all();
+        }
+
+        return $sections;
     }
 
     public function sectionIsComplete(Student $student, string $section, string $role = 'member'): bool
     {
         $student->loadMissing(['actions', 'documents.type', 'apografika', 'questionnaire', 'providerQuestionnaire']);
         $actions = $this->actionsFor($student->fundingCode());
+        foreach ($this->sectionProgress($student, $role, $actions) as $code => $progress) {
+            if ($code === $section) {
+                return $progress['done'];
+            }
+        }
+
+        return false;
+    }
+
+    public function nextIncompleteSection(Student $student, Collection $actions, string $role): ?array
+    {
+        foreach ($this->sectionProgress($student, $role, $actions) as $section => $progress) {
+            if (! $progress['done']) {
+                return ['section' => $section] + $progress;
+            }
+        }
+
+        return null;
+    }
+
+    private function sectionProgress(Student $student, string $role, Collection $actions): \Generator
+    {
         $rules = $this->rulesFor($student->fundingCode(), $role);
         $previousDone = true;
 
         foreach (['A', 'B', 'G', 'D'] as $sectionCode) {
             $rule = $rules->get($sectionCode);
-            $done = $this->dateReached($rule?->available_after ?? 'always', $student)
-                && (! $rule?->requires_previous_section || $previousDone)
-                && $actions->where('section', $sectionCode)->where('counts_for_section', true)
-                    ->every(fn (WorkflowAction $action): bool => $action->isCompleteFor($student));
-
-            if ($sectionCode === $section) {
-                return $done;
-            }
-
+            $dateIssue = $this->dateIssue($student, $rule?->available_after ?? 'always');
+            $previousSectionReady = ! $rule?->requires_previous_section || $previousDone;
+            $pendingActions = $actions->where('section', $sectionCode)->where('counts_for_section', true)
+                ->reject(fn (WorkflowAction $action): bool => $action->isCompleteFor($student))->values();
+            $done = $dateIssue === null && $previousSectionReady && $pendingActions->isEmpty();
+            yield $sectionCode => compact('done', 'previousSectionReady', 'pendingActions', 'dateIssue');
             $previousDone = $done;
         }
-
-        return false;
     }
 
     public function canPerform(Student $student, string $code, string $role, ?string $newStatus = null): bool
@@ -134,11 +144,9 @@ class WorkflowDisplay
         };
     }
 
-    public function dateWaitingReason(Student $student, WorkflowAction $action): ?string
+    public function dateWaitingReason(?string $issue): ?string
     {
-        $rule = $this->rulesFor($student->fundingCode(), $action->responsible_role)->get($action->section);
-
-        return match ($this->dateIssue($student, $rule?->available_after ?? 'always')) {
+        return match ($issue) {
             'missing_start_date' => 'Δεν έχει οριστεί ημερομηνία έναρξης.',
             'missing_end_date' => 'Δεν έχει οριστεί ημερομηνία λήξης.',
             'internship_not_started' => 'Αναμονή έναρξης',
@@ -233,15 +241,6 @@ class WorkflowDisplay
         $action = $this->currentActions->firstWhere('code', $code);
 
         return $action?->isCompleteFor($student) ?? false;
-    }
-
-    private function dateReached(string $availableAfter, Student $student): bool
-    {
-        return match ($availableAfter) {
-            'internship_start' => $student->startDate && now()->gte($student->startDate),
-            'internship_end' => $student->endDate && now()->gte($student->endDate),
-            default => true,
-        };
     }
 
     private function blockedMessage(Student $student, WorkflowAction $action, string $role, ?string $status): ?string

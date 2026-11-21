@@ -11,6 +11,11 @@ class Praktiki extends Model
 {
     protected $table = 'praktiki_cycles';
 
+    public function opsMis(): string
+    {
+        return trim((string) ($this->details['kwdikos_OPS'] ?? ''));
+    }
+
     public function funding(): BelongsTo
     {
         return $this->belongsTo(Funding::class);

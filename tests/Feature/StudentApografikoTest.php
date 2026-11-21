@@ -42,8 +42,8 @@ class StudentApografikoTest extends TestCase
         config()->set('praktiki_apografika.endpoint', 'https://ops.example.test/participants');
         config()->set('praktiki_apografika.username', 'test-user');
         config()->set('praktiki_apografika.password', 'test-password');
-        config()->set('praktiki_apografika.mis_override', '6020906');
         $student = $this->eligibleStudent();
+        $student->phase->praktiki->forceFill(['details' => ['kwdikos_OPS' => ' 6020906 ']])->save();
 
         Http::fake(fn ($request) => str_contains($request->body(), 'RequestProgressID')
             ? Http::response($this->completedResponse(3207964), 200)
@@ -111,6 +111,32 @@ class StudentApografikoTest extends TestCase
         $this->assertSame('<original-response/>', $apografiko->response_payload);
         $this->assertSame([57 => '5321'], $apografiko->answers);
         Http::assertNothingSent();
+    }
+
+    public function test_unconfirmed_delivery_cannot_be_submitted_again(): void
+    {
+        config()->set('praktiki_apografika.enabled', true);
+        config()->set('praktiki_apografika.endpoint', 'https://ops.example.test/participants');
+        config()->set('praktiki_apografika.username', 'test-user');
+        config()->set('praktiki_apografika.password', 'test-password');
+        $student = $this->eligibleStudent();
+        $student->phase->praktiki->forceFill(['details' => ['kwdikos_OPS' => '6020906']])->save();
+        Http::fake(['*' => Http::response('temporarily unavailable', 200)]);
+
+        $this->actingAs($student, 'student');
+        for ($attempt = 0; $attempt < 2; $attempt++) {
+            $this->post(route('student.apografika.store', 'input'), $this->inputAnswers())
+                ->assertRedirect(route('student.apografika.show', 'input'))
+                ->assertSessionHas('status_type', 'warning');
+        }
+
+        Http::assertSentCount(1);
+        $this->assertDatabaseHas('student_apografika', [
+            'student_id' => $student->id,
+            'type' => 'input',
+            'status' => StudentApografiko::STATUS_SUBMITTED,
+            'error_code' => 'delivery_uncertain',
+        ]);
     }
 
     public function test_temporary_check_failure_keeps_the_pending_request(): void

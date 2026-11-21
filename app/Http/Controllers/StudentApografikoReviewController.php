@@ -29,7 +29,7 @@ class StudentApografikoReviewController extends Controller
             'student' => $student,
             'apografiko' => $apografiko,
             'questions' => $definition->answeredQuestions($apografiko),
-            'mis' => config('praktiki_apografika.mis_override') ?: data_get($student->phase?->praktiki?->details, 'kwdikos_OPS'),
+            'mis' => $student->phase?->praktiki?->opsMis(),
         ])->setPaper('a4')->stream("apografiko-{$type}-{$student->id}.pdf");
     }
 

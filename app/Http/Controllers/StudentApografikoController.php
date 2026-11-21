@@ -12,6 +12,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -35,7 +37,7 @@ class StudentApografikoController extends Controller
             'educationQuestions' => $definition->educationQuestions(),
             'indicatorQuestions' => $definition->indicatorQuestions(),
             'outputQuestions' => $definition->outputQuestions(),
-            'mis' => config('praktiki_apografika.mis_override') ?: data_get($student->phase?->praktiki?->details, 'kwdikos_OPS'),
+            'mis' => $student->phase?->praktiki?->opsMis(),
         ]);
     }
 
@@ -49,53 +51,74 @@ class StudentApografikoController extends Controller
         $student = $request->user('student');
         $newStatus = $request->isDraft() ? StudentApografiko::STATUS_DRAFT : StudentApografiko::STATUS_SUBMITTED;
         $this->assertStatusAllowed($student, $type, $newStatus);
-        $existingApografiko = $student->apografika()->where('type', $type)->first();
+        $answers = $definition->normalizedAnswers($type, $request->submittedAnswers());
 
-        if ($existingApografiko?->status === StudentApografiko::STATUS_PROCESSING
-            && filled($existingApografiko->request_progress_id)) {
-            return $this->back(
-                $type,
-                'Το απογραφικό έχει ήδη σταλεί και αναμένει επεξεργασία. Πατήστε «Έλεγχος αποτελέσματος».',
-                'warning',
-            );
+        try {
+            [$apografiko, $payload] = DB::transaction(function () use ($student, $type, $newStatus, $answers, $ops) {
+                // Lock the parent even when the form does not have a row yet.
+                Student::query()->lockForUpdate()->findOrFail($student->id);
+                $apografiko = $student->apografika()->firstOrNew(['type' => $type]);
+                abort_if($apografiko->isFinal(), 409);
+
+                if (in_array($apografiko->status, [StudentApografiko::STATUS_SUBMITTED, StudentApografiko::STATUS_PROCESSING], true)) {
+                    return [$apografiko, null];
+                }
+
+                $apografiko->forceFill(['answers' => $answers, 'status' => $newStatus]);
+                if ($newStatus === StudentApografiko::STATUS_DRAFT) {
+                    $apografiko->save();
+
+                    return [$apografiko, null];
+                }
+
+                $payload = $ops->buildSubmissionRequest($student, $apografiko);
+                $apografiko->forceFill([
+                    'request_payload' => $ops->sanitizedRequest($payload),
+                    'response_payload' => null,
+                    'request_progress_id' => null,
+                    'deltio_id' => null,
+                    'error_code' => null,
+                    'error_message' => null,
+                    'submitted_at' => now(),
+                    'completed_at' => null,
+                ])->save();
+
+                return [$apografiko, $payload];
+            });
+        } catch (RuntimeException $exception) {
+            if ($exception instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface || $exception instanceof \PDOException) {
+                throw $exception;
+            }
+
+            return $this->back($type, $exception->getMessage(), 'danger');
         }
 
-        $answers = $definition->normalizedAnswers($type, $request->submittedAnswers());
-        $apografiko = StudentApografiko::query()->updateOrCreate(
-            ['student_id' => $student->id, 'type' => $type],
-            ['answers' => $answers],
-        );
-
-        if ($request->isDraft()) {
-            $apografiko->forceFill(['status' => StudentApografiko::STATUS_DRAFT])->save();
-
-            return $this->back($type, 'Η προσωρινή αποθήκευση ολοκληρώθηκε.');
+        if ($payload === null) {
+            return match ($apografiko->status) {
+                StudentApografiko::STATUS_DRAFT => $this->back($type, 'Η προσωρινή αποθήκευση ολοκληρώθηκε.'),
+                StudentApografiko::STATUS_PROCESSING => $this->resultRedirect($apografiko),
+                default => $this->submissionPending($type),
+            };
         }
 
         try {
-            $payload = $ops->buildSubmissionRequest($student, $apografiko);
-            $apografiko->forceFill([
-                'status' => StudentApografiko::STATUS_SUBMITTED,
-                'request_payload' => $ops->sanitizedRequest($payload),
-                'response_payload' => null,
-                'request_progress_id' => null,
-                'deltio_id' => null,
-                'error_code' => null,
-                'error_message' => null,
-                'submitted_at' => now(),
-                'completed_at' => null,
-            ])->save();
             $result = $ops->send($payload, 'sentParticipants');
         } catch (Throwable $exception) {
             report($exception);
-            $this->assertStatusAllowed($student, $type, StudentApografiko::STATUS_FAILED);
             $apografiko->forceFill([
-                'status' => StudentApografiko::STATUS_FAILED,
-                'error_code' => 'transport_or_configuration',
-                'error_message' => $exception->getMessage(),
+                'error_code' => 'delivery_uncertain',
             ])->save();
 
-            return $this->resultRedirect($apografiko->fresh());
+            return $this->submissionPending($type);
+        }
+
+        if ($ops->isTemporaryFailure($result)) {
+            $apografiko->forceFill([
+                'response_payload' => $result['response'],
+                'error_code' => 'delivery_uncertain',
+            ])->save();
+
+            return $this->submissionPending($type);
         }
 
         $this->applyResult($student, $apografiko, $result);
@@ -139,7 +162,7 @@ class StudentApografikoController extends Controller
             'student' => $student,
             'apografiko' => $apografiko,
             'questions' => $definition->answeredQuestions($apografiko),
-            'mis' => config('praktiki_apografika.mis_override') ?: data_get($student->phase?->praktiki?->details, 'kwdikos_OPS'),
+            'mis' => $student->phase?->praktiki?->opsMis(),
         ])->setPaper('a4')->stream("apografiko-{$type}-{$student->id}.pdf");
     }
 
@@ -181,6 +204,11 @@ class StudentApografikoController extends Controller
         return redirect()->route('student.apografika.show', $type)
             ->with('status', $message)
             ->with('status_type', $statusType);
+    }
+
+    private function submissionPending(string $type): RedirectResponse
+    {
+        return $this->back($type, 'Η υποβολή είναι σε εξέλιξη ή δεν έχει επιβεβαιωθεί από το ΟΠΣ. Αν η κατάσταση παραμένει ίδια, επικοινωνήστε με το Γραφείο Πρακτικής Άσκησης.', 'warning');
     }
 
     private function student(Request $request): Student

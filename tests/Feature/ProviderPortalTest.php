@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\ProviderQuestionnaire;
 use App\Models\Student;
+use App\Support\ProviderQuestionnaireDefinition;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -76,7 +77,7 @@ class ProviderPortalTest extends TestCase
         $this->actingAs($student, 'provider')
             ->get(route('provider.dashboard'))
             ->assertOk()
-            ->assertSee('Ερωτηματολόγιο')
+            ->assertSee('Δελτία / Αξιολογήσεις')
             ->assertDontSee('>Συμπλήρωση<', false)
             ->assertDontSee('>Ανέβασμα αρχείου<', false);
     }
@@ -107,14 +108,11 @@ class ProviderPortalTest extends TestCase
     public function test_provider_can_submit_questionnaire_and_then_view_only_the_pdf(): void
     {
         $student = $this->eligibleStudent();
-        $questions = DB::table('provider_questionnaire_questions')
-            ->where('version', 1)
-            ->whereNotIn('code', ['G1', 'G2', 'G3', 'D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7'])
-            ->whereNotLike('code', '%_oik')
-            ->get();
+        $questions = collect(app(ProviderQuestionnaireDefinition::class)->sections($student))
+            ->flatMap(fn (array $section) => $section['questions']);
         $answers = $questions->mapWithKeys(fn ($question) => [
             $question->code => $question->type === 'radio'
-                ? json_decode($question->options, true)[0]
+                ? $question->options[0]
                 : 'Δοκιμαστική αξιολόγηση του φορέα.',
         ])->all();
 
@@ -124,7 +122,7 @@ class ProviderPortalTest extends TestCase
 
         $questionnaire = ProviderQuestionnaire::query()->whereBelongsTo($student)->first();
         $this->assertNotNull($questionnaire);
-        $this->assertCount($questions->count(), $questionnaire->answers);
+        $this->assertEquals($answers, $questionnaire->answers);
         $this->assertSame(ProviderQuestionnaire::STATUS_SUBMITTED, $questionnaire->status);
 
         $this->actingAs($student->fresh(), 'provider')
@@ -182,15 +180,16 @@ class ProviderPortalTest extends TestCase
             ->assertSee('Πρόχειρη αξιολόγηση');
     }
 
-    public function test_questionnaire_includes_the_department_specific_questions(): void
+    public function test_questionnaire_shows_economics_questions_and_omits_retired_psychology_sections(): void
     {
         $psychologyStudent = $this->eligibleStudent(departmentAtlasId: 171);
 
         $this->actingAs($psychologyStudent, 'provider')
             ->get(route('provider.questionnaire'))
             ->assertOk()
-            ->assertSee('Γνώσεις ψυχολογίας')
-            ->assertSee('Προσωπικές και διαπροσωπικές δεξιότητες');
+            ->assertSee('Έκθεση επίδοσης ασκούμενου/ης')
+            ->assertDontSee('Γνώσεις ψυχολογίας')
+            ->assertDontSee('Προσωπικές και διαπροσωπικές δεξιότητες');
 
         $economicsStudent = $this->eligibleStudent(departmentAtlasId: 309);
 

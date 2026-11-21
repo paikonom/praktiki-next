@@ -161,7 +161,7 @@ class StudentsController extends Controller
         string $year,
         string $funding,
         ?int $departmentId,
-    ): Collection {
+        ): Collection {
         return DB::table('praktiki_phases')
             ->join('praktiki_cycles', 'praktiki_cycles.id', '=', 'praktiki_phases.praktiki_cycle_id')
             ->join('fundings', 'fundings.id', '=', 'praktiki_cycles.funding_id')
@@ -183,7 +183,7 @@ class StudentsController extends Controller
         string $phase,
         string $search,
         array $filters,
-    ): Collection {
+        ): Collection {
         $query = Student::query()
             ->join('departments', 'departments.id', '=', 'students.department_id')
             ->leftJoin('praktiki_phases', 'praktiki_phases.id', '=', 'students.fash_id')
@@ -443,7 +443,7 @@ class StudentsController extends Controller
             }
 
             $actions = $workflowActions->get($student->fundingCode(), collect());
-            $nextSection = WorkflowAction::nextIncompleteSectionFor($student, $actions);
+            $nextSection = $workflowDisplay->nextIncompleteSection($student, $actions, 'member');
 
             if (! $nextSection) {
                 return [$student->id => ['title' => 'Ολοκληρωμένη', 'class' => 'text-bg-success']];
@@ -452,7 +452,7 @@ class StudentsController extends Controller
             $section = $nextSection['section'];
             $sectionLabel = ['A' => 'Α', 'B' => 'Β', 'G' => 'Γ', 'D' => 'Δ'][$section];
             $pendingActions = $nextSection['pendingActions'];
-            $waitingReason = $workflowDisplay->dateWaitingReason($student, $pendingActions->first());
+            $waitingReason = $workflowDisplay->dateWaitingReason($nextSection['dateIssue']);
             if ($waitingReason) {
                 return [$student->id => ['title' => $waitingReason, 'class' => 'text-bg-warning']];
             }
@@ -489,7 +489,7 @@ class StudentsController extends Controller
         StudentCardMetadata $metadata,
         StudentEmailService $emails,
         WorkflowDisplay $workflowDisplay,
-    ): View {
+        ): View {
         abort_unless(Gate::allows('view', $student), 404);
 
         $panel = $request->string('panel')->toString();
@@ -729,7 +729,7 @@ class StudentsController extends Controller
         string $section,
         StudentCardMetadata $metadata,
         WorkflowDisplay $workflowDisplay,
-    ): RedirectResponse {
+        ): RedirectResponse {
         $data = $request->validated();
         $changedFields = [];
 

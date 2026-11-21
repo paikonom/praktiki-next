@@ -9,6 +9,7 @@ use App\Models\StudentDocument;
 use App\Models\StudentQuestionnaire;
 use App\Models\User;
 use App\Models\WorkflowAction;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -26,14 +27,10 @@ class DocumentControllerTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin']);
         $type = DocumentType::where('code', 'f_atlas')->firstOrFail();
 
-        $pdf = new \FPDF;
-        $pdf->AddPage();
-        $pdf->SetFont('Arial');
-        $pdf->Cell(20, 10, 'PDF');
-        Storage::disk('local')->put('old.pdf', $pdf->Output('S'));
-        Storage::disk('local')->put('latest.pdf', $pdf->Output('S'));
-        Storage::disk('local')->put('extra-1.pdf', $pdf->Output('S'));
-        Storage::disk('local')->put('extra-2.pdf', $pdf->Output('S'));
+        $pdf = Pdf::loadHTML('<p>PDF</p>')->output();
+        foreach (['old.pdf', 'latest.pdf', 'extra-1.pdf', 'extra-2.pdf'] as $path) {
+            Storage::disk('local')->put($path, $pdf);
+        }
 
         foreach ([1 => 'old.pdf', 2 => 'latest.pdf'] as $version => $path) {
             StudentDocument::create([

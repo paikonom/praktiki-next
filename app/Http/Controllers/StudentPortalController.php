@@ -236,7 +236,7 @@ class StudentPortalController extends Controller
 
     private function notifyMembers(Student $student, string $title, string $message, string $panel): void
     {
-        $recipients = collect([$student->handler(), User::find(1)])->filter()->unique('id');
+        $recipients = $student->handlers()->collect()->push(User::find(1))->filter()->unique('id');
 
         foreach ($recipients as $recipient) {
             $recipient->notify(new StudentActionNotification(

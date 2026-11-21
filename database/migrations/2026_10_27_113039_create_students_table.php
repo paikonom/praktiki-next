@@ -74,9 +74,6 @@ return new class extends Migration
             $table->string('kwdForea', 20)->nullable();
             $table->string('ar_prwt', 40)->nullable();
             $table->string('ADA', 40)->nullable();
-            $table->string('id_ofel', 20)->nullable();
-            $table->string('id_input', 20)->nullable();
-            $table->string('id_output', 20)->nullable();
             $table->string('epopt_kath', 100)->nullable();
             $table->decimal('numMhnes', 4, 2)->nullable();
             $table->unsignedTinyInteger('wresPerDays')->nullable();
