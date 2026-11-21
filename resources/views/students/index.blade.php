@@ -84,10 +84,10 @@
                                         <span class="{{ in_array($student->stoix_student_status, ['approved', 'not_required'], true) && in_array($student->stoix_forea_status, ['approved', 'not_required'], true) ? 'bg-success' : 'bg-danger' }} bg-opacity-25 px-2 py-1 fw-semibold text-nowrap">ΠΑ</span>
                                         <span class="{{ $inputClass }} bg-opacity-25 px-2 py-1 fw-semibold text-nowrap">←</span>
                                         <span class="{{ $outputClass }} bg-opacity-25 px-2 py-1 fw-semibold text-nowrap">→</span>
-                                        <a class="btn btn-warning btn-sm" href="{{ route('students.show', $student->id) }}" title="Καρτέλα φοιτητή">C</a>
+                                        <a class="btn btn-warning btn-sm" href="{{ route('students.show', $student->id) }}" target="_blank" rel="noopener" title="Καρτέλα φοιτητή">C</a>
                                         <a class="btn btn-success btn-sm"
                                         href="{{ route('students.show', ['student' => $student->id, 'panel' => 'documents']) }}"
-                                        title="Καρτέλα φοιτητή">F</a>
+                                        target="_blank" rel="noopener" title="Καρτέλα φοιτητή">F</a>
                                         <!-- <a class="btn btn-primary btn-sm" href="{{ route('students.show', ['student' => $student->id, 'panel' => 'emails']) }}" title="Emails / Log">e</a> -->
                                         <button class="btn btn-info btn-sm" type="button" disabled title="Το Rescom θα προστεθεί αργότερα">R</button>
                                         <span class="badge rounded-pill text-bg-success ms-2">{{ $student->fashName ?: '—' }}</span>

@@ -324,6 +324,40 @@ class StudentsControllerTest extends TestCase
         $this->actingAs($user)
             ->get(route('students.show', $hiddenStudentId))
             ->assertNotFound();
+
+        Student::findOrFail($visibleStudentId)->forceFill([
+            'afm' => '123456789',
+            'amka' => '12345678901',
+            'email' => 'student@example.test',
+            'data_CAS' => ['attributes' => ['givenName;lang-el' => 'ΟΡΑΤΟΣ']],
+            'atlas_Antistoixish' => ['AssignedStudent' => [
+                'GreekLastName' => ' ',
+                'LatinLastName' => 'Atlas Latin Surname',
+                'SystemLastName' => 'Ignored System Surname',
+                'SystemFirstName' => 'Atlas System First Name',
+            ]],
+            'atlas_Provider' => ['Name' => 'ΑΛΛΟΣ ΦΟΡΕΑΣ'],
+        ])->save();
+        DB::table('providers')->where('s_id', $visibleStudentId)->update([
+            'f_afm' => '123456789',
+            'f_email' => 'provider@example.test',
+        ]);
+
+        $this->get(route('students.show', $visibleStudentId))
+            ->assertOk()
+            ->assertSee('text-bg-danger ms-1">(3)</span>', false)
+            ->assertDontSee('Atlas Latin Surname');
+        $this->get(route('students.show', ['student' => $visibleStudentId, 'panel' => 'details-check']))
+            ->assertOk()
+            ->assertSee('Ταιριάζει')
+            ->assertSee('Δεν υπάρχει στην πηγή')
+            ->assertSee('Atlas Latin Surname')
+            ->assertSee('Atlas System First Name')
+            ->assertDontSee('Ignored System Surname')
+            ->assertSee('ΑΛΛΟΣ ΦΟΡΕΑΣ')
+            ->assertSee('Διαφορά');
+        $this->get(route('students.show', ['student' => $hiddenStudentId, 'panel' => 'details-check']))
+            ->assertNotFound();
     }
 
     public function test_student_calculates_duration_including_interruption(): void

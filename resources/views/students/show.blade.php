@@ -10,6 +10,7 @@
             'agreement' => 'Αρχικό συμφωνητικό',
             'student' => 'Στοιχεία φοιτητή',
             'provider' => 'Στοιχεία φορέα',
+            'details-check' => 'Έλεγχος',
             'questionnaires' => 'Δελτία / Αξιολογήσεις',
             'documents' => 'Έντυπα και ιστορικό',
             'emails' => 'Emails / Log',
@@ -27,9 +28,14 @@
             <div class="list-group shadow-sm">
                 @foreach ($navigation as $key => $label)
                     <a class="list-group-item list-group-item-action @if ($panel === $key) active @endif"
-                       href="{{ route('students.show', ['student' => $student->id, 'panel' => $key]) }}">{{ $label }}</a>
+                       href="{{ route('students.show', ['student' => $student->id, 'panel' => $key]) }}">
+                        {{ $label }}
+                        @if ($key === 'details-check' && $detailsCheck['problemCount'] > 0)
+                            <span class="badge rounded-pill text-bg-danger ms-1">({{ $detailsCheck['problemCount'] }})</span>
+                        @endif
+                    </a>
                 @endforeach
-                @foreach (['ResCom', 'Έλεγχοι / Προειδοποιήσεις'] as $label)
+                @foreach (['ResCom'] as $label)
                     <button class="list-group-item list-group-item-action" type="button" disabled>{{ $label }}</button>
                 @endforeach
                 @if ($canEdit)
@@ -207,6 +213,8 @@
                     'embedded' => true,
                     'allowMemberActions' => true,
                 ])
+            @elseif ($panel === 'details-check')
+                @include('students.details-check', $detailsCheck)
             @elseif ($panel === 'emails')
                 @include('students.partials.emails')
             @else
