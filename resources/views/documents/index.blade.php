@@ -204,7 +204,7 @@
                 <div class="alert alert-danger border-0 rounded-2 py-2 px-3 mb-3" role="alert">
                     <div class="d-flex align-items-center flex-wrap gap-2">
                         <i class="bi bi-exclamation-triangle-fill"></i>
-                        <span><strong>Προσοχή!</strong> Πριν ξεκινήσετε, παρακαλούμε διαβάστε τις παρακάτω οδηγίες.</span>
+                        <span><strong>Προσοχή!</strong> Πριν ξεκινήσετε, πατήστε το πλαίσιο για να διαβάσετε τις οδηγίες.</span>
 
                         <button class="btn btn-sm btn-outline-danger ms-auto"
                                 type="button"
