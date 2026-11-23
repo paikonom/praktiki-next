@@ -35,9 +35,11 @@
                         @endif
                     </a>
                 @endforeach
-                @foreach (['ResCom'] as $label)
-                    <button class="list-group-item list-group-item-action" type="button" disabled>{{ $label }}</button>
-                @endforeach
+                @can('submitToRescom', $student)
+                    <a class="list-group-item list-group-item-action text-primary" href="{{ route('students.rescom.preview', $student) }}">
+                        <i class="bi bi-send me-1" aria-hidden="true"></i> RESCOM
+                    </a>
+                @endcan
                 @if ($canEdit)
                     <form method="POST" action="{{ route('students.atlas-position', $student) }}"
                           onsubmit="return confirm('Να αναζητηθεί ξανά η ενεργή θέση του φοιτητή στον ΑΤΛΑ;')">

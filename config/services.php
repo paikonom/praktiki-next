@@ -41,6 +41,11 @@ return [
         'ca_cert' => env('CAS_CA_CERT', '/etc/ssl/certs/ca-certificates.crt'),
     ],
 
+    'rescom' => [
+        'url' => env('RESCOM_CONTRACT_URL', 'https://rescomcoreapi.elke.uoa.gr/api/contract'),
+        'token' => env('RESCOM_TOKEN'),
+    ],
+
     'atlas' => [
         'url' => env('ATLAS_URL', 'https://submit-atlas.grnet.gr/Api/Offices/v1'),
         'username' => env('ATLAS_USERNAME'),

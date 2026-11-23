@@ -208,6 +208,8 @@ Route::middleware('auth')->group(function () {
         ->name('students.atlas-data');
     Route::get('/students/{student}/rescom-data', [StudentsController::class, 'showRescomData'])
         ->name('students.rescom-data');
+    Route::get('/students/{student}/rescom', [\App\Http\Controllers\StudentRescomController::class, 'preview'])->name('students.rescom.preview');
+    Route::post('/students/{student}/rescom', [\App\Http\Controllers\StudentRescomController::class, 'store'])->name('students.rescom.store');
     Route::post('/students/{student}/atlas-position', [StudentsController::class, 'fetchAtlasPosition'])
         ->name('students.atlas-position');
     Route::get('/students/{student}/emails/{type}/preview', [StudentEmailController::class, 'preview'])->name('students.emails.preview');

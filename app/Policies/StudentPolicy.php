@@ -7,6 +7,13 @@ use App\Models\User;
 
 class StudentPolicy
 {
+    public function submitToRescom(User $user, Student $student): bool
+    {
+        return $this->update($user, $student)
+            && ! $student->isCancelled()
+            && in_array($student->fundingCode(), ['Espa', 'Institution'], true);
+    }
+
     public function view(User $user, Student $student): bool
     {
         return $user->role === 'admin'
