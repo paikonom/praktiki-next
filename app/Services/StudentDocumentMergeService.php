@@ -8,6 +8,7 @@ use App\Models\StudentDocument;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 use Throwable;
 
@@ -99,7 +100,19 @@ class StudentDocumentMergeService
 
         try {
             $process = new Process(['qpdf', '--empty', '--pages', ...$inputPaths, '--', $path]);
-            $process->setTimeout(120)->mustRun();
+            $exitCode = $process->setTimeout(120)->run();
+
+            if ($exitCode === 3) {
+                $check = new Process(['qpdf', '--warning-exit-0', '--show-npages', $path]);
+                $check->setTimeout(30)->mustRun();
+
+                $expectedPages = (int) $documents->sum('pages');
+                if ($expectedPages < 1 || (int) trim($check->getOutput()) !== $expectedPages) {
+                    throw new RuntimeException('Το συγχωνευμένο PDF δεν έχει τον αναμενόμενο αριθμό σελίδων.');
+                }
+            } elseif ($exitCode !== 0) {
+                throw new ProcessFailedException($process);
+            }
         } catch (Throwable $exception) {
             @unlink($path);
 

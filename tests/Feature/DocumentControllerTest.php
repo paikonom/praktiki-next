@@ -31,6 +31,13 @@ class DocumentControllerTest extends TestCase
         foreach (['old.pdf', 'latest.pdf', 'extra-1.pdf', 'extra-2.pdf'] as $path) {
             Storage::disk('local')->put($path, $pdf);
         }
+        // A wrong trailer size makes qpdf return warnings while retaining the page.
+        $warningPdf = preg_replace('/\/Size\s+\d+/', '/Size 99', $pdf, 1);
+        Storage::disk('local')->put('latest.pdf', $warningPdf);
+        $check = new \Symfony\Component\Process\Process([
+            'qpdf', '--show-npages', Storage::disk('local')->path('latest.pdf'),
+        ]);
+        $this->assertSame(3, $check->run());
 
         foreach ([1 => 'old.pdf', 2 => 'latest.pdf'] as $version => $path) {
             StudentDocument::create([
