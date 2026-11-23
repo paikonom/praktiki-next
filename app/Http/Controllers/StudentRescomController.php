@@ -82,16 +82,38 @@ class StudentRescomController extends Controller
         }
 
         if (($response->successful() || $response->clientError()) && in_array($success, [false, 0, '0'], true)) {
-            $message = $result['ErrorMessage'] ?? $result['Message'] ?? null;
-            $message = is_string($message) ? Str::limit(strip_tags(str_replace($token, '[REDACTED]', $message)), 500) : '';
+            $result = $this->redactResponse($result, $token);
+            $message = collect($result)->only(['ErrorMessage', 'Message', 'Errors', 'ErrorMessages', 'ValidationErrors', 'errors', 'message'])
+                ->flatten()->filter(fn ($value) => is_string($value) && filled($value))->unique()->implode(' · ');
+            $message = Str::limit(trim(strip_tags($message)), 500);
             $student->forceFill(['rescom_resp' => [
                 '_submission' => array_replace($submission, ['status' => 'rejected']),
+                'response' => $result,
             ]])->save();
 
-            return $this->failure($student, 'Το RESCOM απέρριψε την αίτηση. '.($message ?: 'Δεν επέστρεψε περιγραφή σφάλματος.'));
+            return $this->failure($student, 'Το RESCOM απέρριψε την αίτηση. '.($message ?: 'Δείτε την πλήρη απάντηση στο «Δες ResCom».'));
         }
 
         return $this->failure($student, $uncertain.' (HTTP '.$response->status().')');
+    }
+
+    private function redactResponse(array $response, string $token): array
+    {
+        $safe = [];
+        foreach ($response as $key => $value) {
+            if (is_string($key) && in_array(strtolower($key), ['authentication', 'authorization', 'token', 'access_token', 'password'], true)) {
+                continue;
+            }
+
+            $key = is_string($key) ? str_replace($token, '[REDACTED]', $key) : $key;
+            $safe[$key] = match (true) {
+                is_array($value) => $this->redactResponse($value, $token),
+                is_string($value) => str_replace($token, '[REDACTED]', $value),
+                default => $value,
+            };
+        }
+
+        return $safe;
     }
 
     private function signature(Student $student, array $data): string
