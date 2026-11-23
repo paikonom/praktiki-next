@@ -65,7 +65,7 @@
 
                             <dt class="col-sm-5">Ημερομηνίες</dt>
                             <dd class="col-sm-7">
-                                {{ $student->startDate?->format('d/m/Y') ?? '—' }} – {{ $student->endDate?->format('d/m/Y') ?? '—' }}
+                                {{ $student->startDate?->format('Y-m-d') ?? '—' }} – {{ $student->endDate?->format('Y-m-d') ?? '—' }}
                             </dd>
 
                             <dt class="col-sm-5">Διάρκεια</dt>

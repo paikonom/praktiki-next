@@ -93,7 +93,7 @@ class VisibleInternshipDetails
             } elseif (! $missing && isset(config('praktiki_fields.select_options')[$field])) {
                 $value = config('praktiki_fields.select_options.'.$field.'.'.$value, $value);
             } elseif (! $missing && config('praktiki_fields.field_types.'.$field) === 'date') {
-                $value = Carbon::parse($value)->format('d/m/Y');
+                $value = Carbon::parse($value)->format('Y-m-d');
             }
 
             return ['label' => $label, 'value' => $missing ? '—' : $value, 'missing' => $missing];

@@ -175,7 +175,7 @@
                                         <span class="badge {{ $item['record']->isSubmitted() ? 'text-bg-success' : ($item['record']->status === 'rejected' ? 'text-bg-danger' : 'text-bg-secondary') }}">
                                             {{ match ($item['record']->status) { 'submitted' => 'Υποβλήθηκε', 'rejected' => 'Απορρίφθηκε', default => 'Πρόχειρο' } }}
                                         </span>
-                                        <span class="small text-muted">{{ $item['record']->submitted_at?->format('d/m/Y H:i') }}</span>
+                                        <span class="small text-muted">{{ $item['record']->submitted_at?->format('Y-m-d H:i') }}</span>
                                     @else
                                         <span class="badge text-bg-secondary">Δεν υποβλήθηκε</span>
                                     @endif

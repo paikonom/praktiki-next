@@ -69,7 +69,7 @@
     <tr>
         <td>Ημερομηνία γέννησης</td><td>:</td>
         <td>
-            <x-pdf.value :value="filled($student->dob) ? \Illuminate\Support\Carbon::parse($student->dob)->format('d/m/Y') : null" />
+            <x-pdf.value :value="filled($student->dob) ? \Illuminate\Support\Carbon::parse($student->dob)->format('Y-m-d') : null" />
         </td>
     </tr>
     <tr>
@@ -153,18 +153,18 @@
         για διάστημα
         <x-pdf.value :value="$student->numMhnes" />
         μηνών και συγκεκριμένα από
-        <x-pdf.value :value="$student->startDate?->format('d/m/Y')" />
+        <x-pdf.value :value="$student->startDate?->format('Y-m-d')" />
         έως
-        <x-pdf.value :value="$student->endDate?->format('d/m/Y')" />
+        <x-pdf.value :value="$student->endDate?->format('Y-m-d')" />
 
         @if ($student->diakoptomeno)
             (Υλοποίηση Πρακτικής Άσκησης:
             από
-            [<x-pdf.value :value="$student->startDate?->format('d/m/Y')" /> -
-            <x-pdf.value :value="$student->endDate_DKPT_A?->format('d/m/Y')" />]
+            [<x-pdf.value :value="$student->startDate?->format('Y-m-d')" /> -
+            <x-pdf.value :value="$student->endDate_DKPT_A?->format('Y-m-d')" />]
             και
-            [<x-pdf.value :value="$student->startDate_DKPT_B?->format('d/m/Y')" /> -
-            <x-pdf.value :value="$student->endDate?->format('d/m/Y')" />])
+            [<x-pdf.value :value="$student->startDate_DKPT_B?->format('Y-m-d')" /> -
+            <x-pdf.value :value="$student->endDate?->format('Y-m-d')" />])
         @endif
 
         με ωράριο

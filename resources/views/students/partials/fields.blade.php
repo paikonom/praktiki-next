@@ -84,7 +84,7 @@
                             <input id="{{ $section }}-{{ $field }}" type="hidden" name="{{ $field }}" value="{{ $item }}" @disabled(! $canEdit)>
                             <div id="{{ $section }}-{{ $field }}-results" class="list-group position-absolute z-3"></div>
                         @else
-                            <input id="{{ $section }}-{{ $field }}" name="{{ $field }}" type="{{ $type }}"
+                            <input id="{{ $section }}-{{ $field }}" name="{{ $field }}" type="{{ $type === 'date' ? 'text' : $type }}" @if ($type === 'date') placeholder="YYYY-MM-DD" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}" maxlength="10" @endif
                                    class="form-control @error($field) is-invalid @enderror" value="{{ $displayItem }}"
                                    @if ($minimum !== null) min="{{ $minimum }}" @endif
                                    @if ($field === 'wresPerDays') max="8" @endif

@@ -34,7 +34,7 @@
 </header>
 
 <footer>
-    Ημερομηνία συμπλήρωσης: <x-pdf.value :value="$questionnaire->submitted_at?->format('d/m/Y H:i')" plain />
+    Ημερομηνία συμπλήρωσης: <x-pdf.value :value="$questionnaire->submitted_at?->format('Y-m-d H:i')" plain />
     · Σελίδα <span class="page-number"></span>
     @if ($funding === 'Espa')
         <img src="{{ public_path('images/epsa-koinwnikh-synoxh-2021-2027.jpg') }}" alt="ΕΣΠΑ">
@@ -52,10 +52,10 @@
     <div class="detail"><strong>Επιβλέπων/ουσα στον χώρο άσκησης:</strong> <x-pdf.value :value="$provider?->providerSupervisor()" plain /></div>
     <div class="detail"><strong>Email Επιβλέποντος/ουσας:</strong> <x-pdf.value :value="$provider?->f_epopt_email" plain /></div>
     <div class="detail"><strong>ΔΙΑΣΤΗΜΑ ΠΟΥ ΠΡΑΓΜΑΤΟΠΟΙΗΘΗΚΕ Η ΠΡΑΚΤΙΚΗ ΑΣΚΗΣΗ:</strong>
-        <x-pdf.value :value="$student->startDate?->format('d/m/Y')" plain /> έως <x-pdf.value :value="$student->endDate?->format('d/m/Y')" plain />
+        <x-pdf.value :value="$student->startDate?->format('Y-m-d')" plain /> έως <x-pdf.value :value="$student->endDate?->format('Y-m-d')" plain />
         @if ($student->diakoptomeno)
-            (<x-pdf.value :value="$student->startDate?->format('d/m/Y')" plain />–<x-pdf.value :value="$student->endDate_DKPT_A?->format('d/m/Y')" plain />
-            και <x-pdf.value :value="$student->startDate_DKPT_B?->format('d/m/Y')" plain />–<x-pdf.value :value="$student->endDate?->format('d/m/Y')" plain />)
+            (<x-pdf.value :value="$student->startDate?->format('Y-m-d')" plain />–<x-pdf.value :value="$student->endDate_DKPT_A?->format('Y-m-d')" plain />
+            και <x-pdf.value :value="$student->startDate_DKPT_B?->format('Y-m-d')" plain />–<x-pdf.value :value="$student->endDate?->format('Y-m-d')" plain />)
         @endif
     </div>
 </div>

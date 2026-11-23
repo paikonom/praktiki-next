@@ -102,7 +102,7 @@
                                 <input id="{{ $field }}" type="hidden" name="{{ $field }}" value="{{ $item }}" @disabled(! $canEdit)>
                                 <div id="{{ $field }}-results" class="list-group position-absolute z-3"></div>
                             @else
-                                <input class="form-control @error($field) is-invalid @enderror" id="{{ $field }}" name="{{ $field }}" type="{{ $type }}" value="{{ $displayItem }}"
+                                <input class="form-control @error($field) is-invalid @enderror" id="{{ $field }}" name="{{ $field }}" type="{{ $type === 'date' ? 'text' : $type }}" @if ($type === 'date') placeholder="YYYY-MM-DD" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}" maxlength="10" @endif value="{{ $displayItem }}"
                                        @if ($uppercase) oninput="this.value = this.value.toUpperCase()" @endif
                                        @if ($field === 'wresPerDays') min="1" max="8" @endif
                                        @if ($field === 'wresPerWeek') min="1" max="40" @endif

@@ -21,7 +21,7 @@
             <td class="fw-semibold">{{ $student->full_name }}</td><td>{{ $student->AMF }}</td>
             <td>{{ $student->phase?->name ?: '—' }}</td>
             <td>{{ $student->praxh_year ?: '—' }}</td>
-            <td>{{ $student->startDate?->format('d/m/Y') ?: '—' }} – {{ $student->endDate?->format('d/m/Y') ?: '—' }}</td>
+            <td>{{ $student->startDate?->format('Y-m-d') ?: '—' }} – {{ $student->endDate?->format('Y-m-d') ?: '—' }}</td>
             <td><span class="badge {{ $labels[$state][1] }}">{{ $labels[$state][0] }}</span></td>
             <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ route('scientific_supervisor.students.show', $student) }}">Καρτέλα</a></td>
         </tr>

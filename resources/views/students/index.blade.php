@@ -95,9 +95,9 @@
                                     </div>
                                 </td>
                                 <td class="text-nowrap">
-                                    {{ $student->startDate?->format('d/m/Y') ?? '—' }}
+                                    {{ $student->startDate?->format('Y-m-d') ?? '—' }}
                                     –
-                                    {{ $student->endDate?->format('d/m/Y') ?? '—' }}
+                                    {{ $student->endDate?->format('Y-m-d') ?? '—' }}
                                     @if ($student->duration_days !== null)
                                         <span class="text-muted">({{ $student->duration_days }})</span>
                                     @endif

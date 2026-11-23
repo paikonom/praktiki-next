@@ -160,9 +160,9 @@
                     Έναρξη – Λήξη
                 </div>
                 <div class="fw-semibold">
-                    {{ $student->startDate?->format('d/m/Y') ?? '—' }}
+                    {{ $student->startDate?->format('Y-m-d') ?? '—' }}
                     –
-                    {{ $student->endDate?->format('d/m/Y') ?? '—' }}
+                    {{ $student->endDate?->format('Y-m-d') ?? '—' }}
                 </div>
             </div>
 

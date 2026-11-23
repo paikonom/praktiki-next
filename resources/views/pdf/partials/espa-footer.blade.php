@@ -7,7 +7,7 @@
     footer.espa-footer .dqs-logo { width: 52px; opacity: .5; }
 </style>
 <footer class="espa-footer">
-    <div class="line"><strong>Ημερομηνία Εκτύπωσης</strong> {{ now()->format('d/m/Y') }}</div>
+    <div class="line"><strong>Ημερομηνία Εκτύπωσης</strong> {{ now()->format('Y-m-d') }}</div>
     <table>
         <tr>
             <td style="width:70%"><img class="espa-logo" src="{{ public_path('images/espa-logo-2021-2027.png') }}" alt="ΕΣΠΑ 2021-2027"></td>

@@ -226,7 +226,7 @@
                                 @endif
                             </td>
                             <td>
-                                {{ ($document->uploaded_at ?? $document->reviewed_at)?->format('d/m/Y H:i') ?? '—' }}
+                                {{ ($document->uploaded_at ?? $document->reviewed_at)?->format('Y-m-d H:i') ?? '—' }}
                                 @if ($document->uploaded_by_role)<br><small class="text-muted">{{ $document->uploaded_by_role }}</small>@endif
                             </td>
                             <td>

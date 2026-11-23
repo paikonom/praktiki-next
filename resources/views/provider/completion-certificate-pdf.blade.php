@@ -18,14 +18,14 @@
 @if ($funding === 'Espa')
     @include('pdf.partials.espa-footer')
 @else
-    <footer class="print-date"><strong>Ημερομηνία Εκτύπωσης</strong> {{ now()->format('d/m/Y') }}</footer>
+    <footer class="print-date"><strong>Ημερομηνία Εκτύπωσης</strong> {{ now()->format('Y-m-d') }}</footer>
 @endif
 @php
     $studentName = filled($student->full_name) ? mb_strtoupper($student->full_name) : null;
     $providerName = filled($provider?->f_epwnymia) ? mb_strtoupper($provider->f_epwnymia) : null;
 @endphp
 
-<p class="city">Αθήνα, {{ now()->format('d/m/Y') }}</p>
+<p class="city">Αθήνα, {{ now()->format('Y-m-d') }}</p>
 <h1>Βεβαίωση Ολοκλήρωσης Πρακτικής Άσκησης φοιτητή/τριας από τον/την Νόμιμο Εκπρόσωπο του Φορέα Απασχόλησης</h1>
 
 <p>

@@ -66,7 +66,7 @@
         <td><span class="label">ΑΦΜ</span><span class="value"><x-pdf.value :value="$student->afm" plain /></span></td>
     </tr>
     <tr><td><span class="label">Τμήμα</span><span class="value"><x-pdf.value :value="$student->department?->tmhma" plain /></span></td>
-    <td><span class="label">Ημερομηνία δελτίου</span><span class="value"><x-pdf.value :value="($isInput ? $student->startDate : $student->endDate)?->format('d/m/Y')" plain /></span></td><td><span class="label">Ημερομηνία υποβολής</span><span class="value"><x-pdf.value :value="$apografiko->submitted_at?->format('d/m/Y H:i')" plain /></span></td></tr>
+    <td><span class="label">Ημερομηνία δελτίου</span><span class="value"><x-pdf.value :value="($isInput ? $student->startDate : $student->endDate)?->format('Y-m-d')" plain /></span></td><td><span class="label">Ημερομηνία υποβολής</span><span class="value"><x-pdf.value :value="$apografiko->submitted_at?->format('Y-m-d H:i')" plain /></span></td></tr>
 </table>
 
 <div class="ops">

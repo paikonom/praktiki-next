@@ -10,7 +10,7 @@
     @if (session('error'))<div class="alert alert-danger">{{ session('error') }}</div>@endif
 
     @if ($completed)
-        <div class="alert alert-success">Υποβλήθηκε οριστικά στις {{ $questionnaire->submitted_at->format('d/m/Y H:i') }}.</div>
+        <div class="alert alert-success">Υποβλήθηκε οριστικά στις {{ $questionnaire->submitted_at->format('Y-m-d H:i') }}.</div>
         <div class="d-flex justify-content-end mb-4">
             <a class="btn btn-primary" href="{{ route('provider.questionnaire.pdf') }}" target="_blank">Προβολή PDF</a>
         </div>

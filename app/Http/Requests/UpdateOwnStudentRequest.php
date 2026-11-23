@@ -34,7 +34,7 @@ class UpdateOwnStudentRequest extends FormRequest
             'iban' => ['required', 'regex:/^GR[0-9]{25}$/'],
             'adt' => ['required', 'string', 'max:50'],
             'adt_ek_arxh' => ['required', 'string', 'max:100'],
-            'adt_ek_date' => ['required', 'date'],
+            'adt_ek_date' => ['required', 'date_format:Y-m-d'],
             'fatFName' => ['required', 'string', 'max:100'],
             'fatLName' => ['required', 'string', 'max:100'],
             'momFName' => ['required', 'string', 'max:100'],
@@ -44,7 +44,7 @@ class UpdateOwnStudentRequest extends FormRequest
             'syzName' => ['required', 'string', 'max:100'],
             'numChild' => ['required', 'integer', 'between:0,255'],
             'doy_rescom' => ['required', Rule::in(array_keys($rescomReferenceData->options('doys')))],
-            'dob' => ['required', 'date'],
+            'dob' => ['required', 'date_format:Y-m-d'],
             'placeDob' => ['required', 'string', 'max:100'],
             'ithagen' => ['required', 'string', 'max:100'],
             'xwra_rescom' => ['required', Rule::in(array_keys($rescomReferenceData->options('countries')))],
@@ -58,8 +58,8 @@ class UpdateOwnStudentRequest extends FormRequest
             'payTotal' => ['required', 'decimal:0,2', 'between:0,99999999.99'],
             'wresPerDays' => ['required', 'integer', 'between:1,8'],
             'wresPerWeek' => ['required', 'integer', 'between:1,40'],
-            'startDate' => ['required', 'date'],
-            'endDate' => ['required', 'date'],
+            'startDate' => ['required', 'date_format:Y-m-d'],
+            'endDate' => ['required', 'date_format:Y-m-d'],
         ];
 
         if ($this->fundingCode() === 'Espa') {

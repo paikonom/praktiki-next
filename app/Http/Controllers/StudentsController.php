@@ -718,6 +718,14 @@ class StudentsController extends Controller
 
         $cas = $student->data_CAS['attributes'] ?? $student->data_CAS ?? [];
         $atlas = $student->atlas_Antistoixish ?? [];
+        $atlasDate = static function (mixed $value): mixed {
+            if (is_string($value) && preg_match('/^([0-9]{2})\/([0-9]{2})\/([0-9]{4})$/D', $value, $parts)
+                && checkdate((int) $parts[2], (int) $parts[1], (int) $parts[3])) {
+                return "{$parts[3]}-{$parts[2]}-{$parts[1]}";
+            }
+
+            return $value;
+        };
         $atlasName = static function (string $field) use ($atlas): ?string {
             foreach (['Greek', 'Latin', 'System'] as $prefix) {
                 $value = data_get($atlas, "AssignedStudent.{$prefix}{$field}");
@@ -738,8 +746,8 @@ class StudentsController extends Controller
             ['fName', $student->fName, $atlasName('FirstName')],
             ['lName', $student->lName, $atlasName('LastName')],
             ['AMF', $student->AMF, data_get($atlas, 'AssignedStudent.StudentNumber')],
-            ['startDate', $student->startDate?->format('d/m/Y'), $atlas['ImplementationStartDateString'] ?? null],
-            ['endDate', $student->endDate?->format('d/m/Y'), $atlas['ImplementationEndDateString'] ?? null],
+            ['startDate', $student->startDate?->toDateString(), $atlasDate($atlas['ImplementationStartDateString'] ?? null)],
+            ['endDate', $student->endDate?->toDateString(), $atlasDate($atlas['ImplementationEndDateString'] ?? null)],
             ['id_group', $student->id_group, $atlas['GroupID'] ?? null],
             ['id_thesh', $student->id_thesh, $atlas['ID'] ?? null],
             ['funding', $student->fundingCode(), $atlas['FundingType'] ?? null],

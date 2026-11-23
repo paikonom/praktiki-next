@@ -195,7 +195,7 @@
         <td>
             <x-pdf.value :value="$student->placeDob" />
             /
-            <x-pdf.value :value="filled($student->dob) ? \Illuminate\Support\Carbon::parse($student->dob)->format('d/m/Y') : null" />
+            <x-pdf.value :value="filled($student->dob) ? \Illuminate\Support\Carbon::parse($student->dob)->format('Y-m-d') : null" />
         </td>
     </tr>
     <tr>
@@ -230,7 +230,7 @@
         <td>ΗΜΕΡΟΜΗΝΙΑ ΕΚΔΟΣΗΣ</td>
         <td>:</td>
         <td>
-            <x-pdf.value :value="filled($student->adt_ek_date) ? \Illuminate\Support\Carbon::parse($student->adt_ek_date)->format('d/m/Y') : null" />
+            <x-pdf.value :value="filled($student->adt_ek_date) ? \Illuminate\Support\Carbon::parse($student->adt_ek_date)->format('Y-m-d') : null" />
         </td>
     </tr>
     <tr>

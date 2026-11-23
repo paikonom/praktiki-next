@@ -127,7 +127,7 @@ class UpdateStudentSectionRequest extends FormRequest
         }
 
         if (in_array($field, ['startDate', 'endDate', 'endDate_DKPT_A', 'startDate_DKPT_B', 'adt_ek_date', 'dob'], true)) {
-            return ['nullable', 'date'];
+            return ['nullable', 'date_format:Y-m-d'];
         }
 
         if (in_array($field, ['diakoptomeno', 'id_group', 'fylo_rescom', 'katEkp_rescom', 'doy_rescom', 'xwra_rescom', 'address_polh_rescom', 'doseis_count', 'f_nomikhMorfh_rescom', 'f_doy_rescom', 'dhm_idiwt_rescom', 'f_proeleush_rescom', 'f_polh_rescom', 'f_xwra_rescom', 'f_ektPrakt_polh_rescom', 'f_perifereia'], true)) {

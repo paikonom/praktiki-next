@@ -36,7 +36,7 @@
                 <tbody>
                     @foreach ($visibleEmailLogs as $log)
                         <tr>
-                            <td class="text-nowrap">{{ ($log->sent_at ?? $log->created_at)?->format('d/m/Y H:i') ?? 'Άγνωστη ημερομηνία' }}</td>
+                            <td class="text-nowrap">{{ ($log->sent_at ?? $log->created_at)?->format('Y-m-d H:i') ?? 'Άγνωστη ημερομηνία' }}</td>
                             <td>{{ $log->subject }}</td>
                             <td>{{ implode(', ', $log->to) }}</td>
                             <td>{{ $log->sentBy?->name ?? '—' }}</td>

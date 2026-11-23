@@ -18,7 +18,7 @@
 
     @if ($completed)
         <div class="alert alert-success">
-            Υποβλήθηκε οριστικά στις {{ $questionnaire->submitted_at->format('d/m/Y H:i') }}.
+            Υποβλήθηκε οριστικά στις {{ $questionnaire->submitted_at->format('Y-m-d H:i') }}.
         </div>
 
         <div class="d-flex justify-content-end mb-4">

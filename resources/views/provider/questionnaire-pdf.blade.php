@@ -30,7 +30,7 @@
 @endphp
 <header><img src="{{ public_path('images/190_logo_UOA_BW_cntr_GR_sites.png') }}" alt="ΕΚΠΑ"></header>
 <footer>
-    Ημερομηνία συμπλήρωσης: <x-pdf.value :value="$questionnaire->submitted_at?->format('d/m/Y H:i')" plain /> · Σελίδα <span class="page-number"></span>
+    Ημερομηνία συμπλήρωσης: <x-pdf.value :value="$questionnaire->submitted_at?->format('Y-m-d H:i')" plain /> · Σελίδα <span class="page-number"></span>
     @if ($funding === 'Espa')<img src="{{ public_path('images/epsa-koinwnikh-synoxh-2021-2027.jpg') }}" alt="ΕΣΠΑ">@endif
 </footer>
 <br>
@@ -43,7 +43,7 @@
     <div class="detail"><strong>Φορέας Απασχόλησης:</strong> <x-pdf.value :value="$provider?->f_epwnymia" plain /></div>
     <div class="detail"><strong>Επόπτης/τρια στον χώρο άσκησης:</strong> <x-pdf.value :value="$provider?->providerSupervisor()" plain /></div>
     <div class="detail"><strong>Email Επόπτη/τριας:</strong> <x-pdf.value :value="$provider?->f_epopt_email" plain /></div>
-    <div class="detail"><strong>ΔΙΑΣΤΗΜΑ ΠΡΑΚΤΙΚΗΣ ΑΣΚΗΣΗΣ:</strong> <x-pdf.value :value="$student->startDate?->format('d/m/Y')" plain /> έως <x-pdf.value :value="$student->endDate?->format('d/m/Y')" plain /></div>
+    <div class="detail"><strong>ΔΙΑΣΤΗΜΑ ΠΡΑΚΤΙΚΗΣ ΑΣΚΗΣΗΣ:</strong> <x-pdf.value :value="$student->startDate?->format('Y-m-d')" plain /> έως <x-pdf.value :value="$student->endDate?->format('Y-m-d')" plain /></div>
     <div class="detail"><strong>Τύπος Φορέα Απασχόλησης:</strong> <x-pdf.value :value="$provider?->organizationTypeLabel()" plain /></div>
 
 </div>

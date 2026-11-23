@@ -57,7 +57,7 @@
                     <div class="col-md-4"><div class="small text-body-secondary">ΑΦΜ</div><strong>{{ $student->afm ?: 'Λείπει' }}</strong></div>
                     <div class="col-md-4"><div class="small text-body-secondary">Αριθμός Μητρώου</div><strong>{{ $student->AMF ?: 'Λείπει' }}</strong></div>
                     <div class="col-md-4"><div class="small text-body-secondary">Φύλο</div><strong>{{ config('praktiki_fields.select_options.fylo_rescom.'.$student->fylo_rescom, 'Λείπει') }}</strong></div>
-                    <div class="col-md-4"><div class="small text-body-secondary">Ημερομηνία δελτίου</div><strong>{{ ($type === 'input' ? $student->startDate : $student->endDate)?->format('d/m/Y') ?: 'Λείπει' }}</strong></div>
+                    <div class="col-md-4"><div class="small text-body-secondary">Ημερομηνία δελτίου</div><strong>{{ ($type === 'input' ? $student->startDate : $student->endDate)?->format('Y-m-d') ?: 'Λείπει' }}</strong></div>
                     <div class="col-md-4"><div class="small text-body-secondary">Περιφέρεια ΟΠΣ</div><strong>55</strong></div>
                     <div class="col-md-4"><div class="small text-body-secondary">Κωδικός συμμετέχοντα δικαιούχου</div><strong>{{ $student->AMF ?: 'Λείπει' }}</strong></div>
                 </div>

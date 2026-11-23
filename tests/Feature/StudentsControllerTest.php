@@ -541,9 +541,11 @@ class StudentsControllerTest extends TestCase
             'startDate' => '2026-01-01',
         ]);
 
-        $this->actingAs($user)
-            ->patch(route('students.section.update', [$studentId, 'student']), ['startDate' => 'όχι ημερομηνία'])
-            ->assertSessionHasErrors('startDate');
+        foreach (['όχι ημερομηνία', '08/03/2026', '2026-02-30'] as $date) {
+            $this->actingAs($user)
+                ->patch(route('students.section.update', [$studentId, 'student']), ['startDate' => $date])
+                ->assertSessionHasErrors('startDate');
+        }
 
         $this->assertDatabaseHas('students', ['id' => $studentId, 'startDate' => '2026-01-01']);
     }
