@@ -47,7 +47,8 @@ class StudentRescomTest extends TestCase
         Http::fake([$url => Http::sequence()
             ->push(['WasSuccessful' => false, 'Errors' => [['Message' => 'Δοκιμαστική απόρριψη', 'Authentication' => 'test-token']], 'Details' => 'echo test-token'])
             ->push(['WasSuccessful' => true, 'ContractId' => 10])
-            ->push('unavailable', 503)]);
+            ->push('unavailable', 503)
+            ->pushFailedConnection()]);
         $this->actingAs(User::factory()->create(['role' => 'member']))
             ->post(route('students.rescom.store', $student))->assertForbidden();
         $this->actingAs($viewOnly)
@@ -61,17 +62,16 @@ class StudentRescomTest extends TestCase
         $this->post($route, ['signature' => $signature])
             ->assertSessionHas('status_type', 'danger')
             ->assertSessionHas('status', 'Το RESCOM απέρριψε την αίτηση. Δοκιμαστική απόρριψη');
-        $this->assertSame('rejected', $student->fresh()->rescom_resp['_submission']['status']);
-        $this->assertEquals([
-            'WasSuccessful' => false,
-            'Errors' => [['Message' => 'Δοκιμαστική απόρριψη']],
-            'Details' => 'echo [REDACTED]',
-        ], $student->fresh()->rescom_resp['response']);
-        $this->assertSame($user->id, $student->fresh()->rescom_resp['_submission']['sent_by_user_id']);
+        $this->assertNull($student->fresh()->rescom_resp);
         $this->actingAs($member)->get(route('students.rescom.preview', $student))
             ->assertOk()->assertSee('Επιβεβαίωση αποστολής');
         $this->post($route, ['signature' => $signature])->assertRedirect(route('students.show', $student));
         $this->assertSame(10, $student->fresh()->rescom_resp['ContractId']);
+        $this->get(route('students.rescom.preview', $student))
+            ->assertOk()
+            ->assertSee('Αποθηκευμένη απάντηση RESCOM')
+            ->assertSee('"ContractId": 10')
+            ->assertDontSee('Επιβεβαίωση αποστολής');
         $this->assertEquals([
             'status' => 'accepted',
             'sent_by_user_id' => $member->id,
@@ -82,11 +82,16 @@ class StudentRescomTest extends TestCase
         Http::assertSent(fn ($request) => $request->url() === $url
             && $request['Authentication'] === 'test-token'
             && $request['Data']['Έργου_Αριθμός'] === '98765');
+        $panelUrl = route('students.show', ['student' => $student, 'panel' => 'rescom-data']);
+        $this->get(route('students.index', ['rescom' => 'with']))
+            ->assertOk()->assertSee($panelUrl);
+        $this->get(route('students.index', ['rescom' => 'without']))
+            ->assertOk()->assertDontSee($panelUrl);
 
         Student::query()->whereKey($student->id)->update(['rescom_resp' => null]);
         $this->post($route, ['signature' => $signature])->assertSessionHas('status_type', 'danger');
-        $this->assertSame('pending', $student->fresh()->rescom_resp['_submission']['status']);
+        $this->assertNull($student->fresh()->rescom_resp);
         $this->post($route, ['signature' => $signature])->assertSessionHas('status_type', 'danger');
-        Http::assertSentCount(3);
+        $this->assertNull($student->fresh()->rescom_resp);
     }
 }

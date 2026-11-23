@@ -67,6 +67,7 @@ class StudentsController extends Controller
             'date_stage' => $this->selectedFilter($request, 'date_stage', ['before_start', 'in_progress', 'after_end']),
             'weekly_hours' => $this->selectedFilter($request, 'weekly_hours', ['20', '40']),
             'atlas_position' => $this->selectedFilter($request, 'atlas_position', ['with', 'without']),
+            'rescom' => $this->selectedFilter($request, 'rescom', ['with', 'without']),
             'details_status' => $this->selectedFilter($request, 'details_status', ['completed', 'pending']),
             'input_status' => $this->selectedFilter($request, 'input_status', ['completed', 'pending', 'not_required']),
             'output_status' => $this->selectedFilter($request, 'output_status', ['completed', 'pending', 'not_required']),
@@ -213,6 +214,7 @@ class StudentsController extends Controller
                 'praktiki_phases.name as fashName', 'praktiki_cycles.praxh_year',
                 'fundings.code as funding_code', 'fundings.name as funding_name',
             ])
+            ->selectRaw('students.rescom_resp IS NOT NULL AS has_rescom_response')
             ->selectRaw("(SELECT status FROM student_actions WHERE student_id = students.id AND action = 'stoix_student') AS stoix_student_status")
             ->selectRaw("(SELECT status FROM student_actions WHERE student_id = students.id AND action = 'stoix_forea') AS stoix_forea_status")
             ->selectRaw("(SELECT sa.status FROM student_apografika sa WHERE sa.student_id = students.id AND sa.type = 'input' LIMIT 1) AS input_status")
@@ -261,6 +263,12 @@ class StudentsController extends Controller
             $query->whereNotNull('students.id_thesh');
         } elseif ($filters['atlas_position'] === 'without') {
             $query->whereNull('students.id_thesh');
+        }
+
+        if ($filters['rescom'] === 'with') {
+            $query->whereNotNull('students.rescom_resp');
+        } elseif ($filters['rescom'] === 'without') {
+            $query->whereNull('students.rescom_resp');
         }
 
         if ($filters['details_status'] !== '') {

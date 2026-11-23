@@ -59,6 +59,7 @@
                 'date_stage' => ['before_start' => 'Πριν την έναρξη', 'in_progress' => 'Σε εξέλιξη', 'after_end' => 'Μετά τη λήξη'],
                 'weekly_hours' => ['20' => '20 ώρες/εβδομάδα', '40' => '40 ώρες/εβδομάδα'],
                 'atlas_position' => ['with' => 'Με θέση ΑΤΛΑΣ', 'without' => 'Χωρίς θέση ΑΤΛΑΣ'],
+                'rescom' => ['with' => 'Με απάντηση RESCOM', 'without' => 'Χωρίς απάντηση RESCOM'],
                 'details_status' => ['completed' => 'Στοιχεία ολοκληρωμένα', 'pending' => 'Στοιχεία σε εκκρεμότητα'],
                 'input_status' => ['completed' => 'Είσοδος: ολοκληρώθηκε', 'pending' => 'Είσοδος: εκκρεμεί', 'not_required' => 'Είσοδος: δεν απαιτείται'],
                 'output_status' => ['completed' => 'Έξοδος: ολοκληρώθηκε', 'pending' => 'Έξοδος: εκκρεμεί', 'not_required' => 'Έξοδος: δεν απαιτείται'],
@@ -131,6 +132,14 @@
 
                 <div class="small fw-semibold text-uppercase text-muted mb-2">Συμπληρώσεις</div>
                 <div class="row g-3 mb-4">
+                    <div class="col-md-4 col-xl-3">
+                        <label for="rescom" class="form-label">RESCOM</label>
+                        <select id="rescom" name="rescom" class="form-select">
+                            <option value="">Όλες</option>
+                            <option value="with" @selected($filters['rescom'] === 'with')>Με απάντηση</option>
+                            <option value="without" @selected($filters['rescom'] === 'without')>Χωρίς απάντηση</option>
+                        </select>
+                    </div>
                     <div class="col-md-4 col-xl-3">
                         <label for="details_status" class="form-label">Στοιχεία φοιτητή / φορέα</label>
                         <select id="details_status" name="details_status" class="form-select">

@@ -7,6 +7,7 @@ use App\Services\RescomContract;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -17,6 +18,10 @@ class StudentRescomController extends Controller
     public function preview(Student $student, RescomContract $contract): View|RedirectResponse
     {
         Gate::authorize('submitToRescom', $student);
+
+        if ($student->rescom_resp !== null) {
+            return view('students.rescom-preview', ['student' => $student]);
+        }
 
         try {
             $data = $contract->data($student);
@@ -50,51 +55,52 @@ class StudentRescomController extends Controller
             return $this->failure($student, 'Τα στοιχεία άλλαξαν. Ανοίξτε ξανά την προεπισκόπηση.');
         }
 
-        // Claim this student before sending, including while another request is in flight.
-        $submission = [
-            'status' => 'pending',
-            'sent_by_user_id' => $request->user()->id,
-            'sent_at' => now()->toIso8601String(),
-        ];
-        $claimed = Student::query()->whereKey($student->id)
-            ->where(fn ($query) => $query->whereNull('rescom_resp')->orWhere('rescom_resp->_submission->status', 'rejected'))
-            ->update(['rescom_resp' => json_encode(['_submission' => $submission], JSON_THROW_ON_ERROR)]);
-        if (! $claimed) {
-            return $this->failure($student, 'Υπάρχει ήδη απάντηση ή εκκρεμής αποστολή RESCOM για αυτή την πρακτική.');
+        $lock = Cache::lock("rescom-submit:{$student->id}", 120);
+        if (! $lock->get()) {
+            return $this->failure($student, 'Υπάρχει ήδη αποστολή RESCOM σε εξέλιξη.');
         }
 
-        $uncertain = 'Η αποστολή δεν επιβεβαιώθηκε. Ελέγξτε στο RESCOM αν δημιουργήθηκε σύμβαση πριν από νέα προσπάθεια.';
         try {
-            $response = Http::acceptJson()->withoutRedirecting()->timeout(60)
-                ->post($url, ['Authentication' => $token, 'Data' => $data]);
-        } catch (\Illuminate\Http\Client\ConnectionException) {
-            return $this->failure($student, $uncertain);
+            if ($student->fresh()->rescom_resp !== null) {
+                return $this->failure($student, 'Υπάρχει ήδη αποθηκευμένη απάντηση RESCOM για αυτή την πρακτική.');
+            }
+
+            $sentAt = now()->toIso8601String();
+            $uncertain = 'Η αποστολή δεν επιβεβαιώθηκε. Ελέγξτε στο RESCOM αν δημιουργήθηκε σύμβαση πριν από νέα προσπάθεια.';
+            try {
+                $response = Http::acceptJson()->withoutRedirecting()->timeout(60)
+                    ->post($url, ['Authentication' => $token, 'Data' => $data]);
+            } catch (\Illuminate\Http\Client\ConnectionException) {
+                return $this->failure($student, $uncertain);
+            }
+
+            $result = $response->json();
+            $success = is_array($result) ? ($result['WasSuccessful'] ?? null) : null;
+            if ($response->successful() && in_array($success, [true, 1, '1'], true)) {
+                $result = $this->redactResponse($result, $token);
+                $result['_submission'] = [
+                    'status' => 'accepted',
+                    'sent_by_user_id' => $request->user()->id,
+                    'sent_at' => $sentAt,
+                ];
+                $student->forceFill(['rescom_resp' => $result])->save();
+
+                return redirect()->route('students.show', $student)->with('status', 'Η αίτηση στάλθηκε επιτυχώς στο RESCOM.');
+            }
+
+            if (($response->successful() || $response->clientError()) && in_array($success, [false, 0, '0'], true)) {
+                $result = $this->redactResponse($result, $token);
+                $message = collect($result)->only(['ErrorMessage', 'Message', 'Errors', 'ErrorMessages', 'ValidationErrors', 'errors', 'message', 'Text'])
+                    ->flatten()->filter(fn ($value) => is_string($value) && filled($value))->unique()->implode(' · ');
+                $message = Str::limit(trim(strip_tags($message)), 500);
+
+                return $this->failure($student, 'Το RESCOM απέρριψε την αίτηση. '.($message ?: 'Δεν επέστρεψε αναγνωρίσιμη περιγραφή σφάλματος.'));
+            }
+
+            return $this->failure($student, $uncertain.' (HTTP '.$response->status().')');
+        } finally {
+            $lock->release();
         }
-
-        $result = $response->json();
-        $success = is_array($result) ? ($result['WasSuccessful'] ?? null) : null;
-        if ($response->successful() && in_array($success, [true, 1, '1'], true)) {
-            unset($result['Authentication']);
-            $result['_submission'] = array_replace($submission, ['status' => 'accepted']);
-            $student->forceFill(['rescom_resp' => $result])->save();
-
-            return redirect()->route('students.show', $student)->with('status', 'Η αίτηση στάλθηκε επιτυχώς στο RESCOM.');
-        }
-
-        if (($response->successful() || $response->clientError()) && in_array($success, [false, 0, '0'], true)) {
-            $result = $this->redactResponse($result, $token);
-            $message = collect($result)->only(['ErrorMessage', 'Message', 'Errors', 'ErrorMessages', 'ValidationErrors', 'errors', 'message'])
-                ->flatten()->filter(fn ($value) => is_string($value) && filled($value))->unique()->implode(' · ');
-            $message = Str::limit(trim(strip_tags($message)), 500);
-            $student->forceFill(['rescom_resp' => [
-                '_submission' => array_replace($submission, ['status' => 'rejected']),
-                'response' => $result,
-            ]])->save();
-
-            return $this->failure($student, 'Το RESCOM απέρριψε την αίτηση. '.($message ?: 'Δείτε την πλήρη απάντηση στο «Δες ResCom».'));
-        }
-
-        return $this->failure($student, $uncertain.' (HTTP '.$response->status().')');
     }
 
     private function redactResponse(array $response, string $token): array

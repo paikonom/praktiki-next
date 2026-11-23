@@ -89,7 +89,11 @@
                                         href="{{ route('students.show', ['student' => $student->id, 'panel' => 'documents']) }}"
                                         target="_blank" rel="noopener" title="Καρτέλα φοιτητή">F</a>
                                         <!-- <a class="btn btn-primary btn-sm" href="{{ route('students.show', ['student' => $student->id, 'panel' => 'emails']) }}" title="Emails / Log">e</a> -->
-                                        <button class="btn btn-info btn-sm" type="button" disabled title="Το Rescom θα προστεθεί αργότερα">R</button>
+                                        @if ($student->has_rescom_response)
+                                            <a class="btn btn-info btn-sm" href="{{ route('students.show', ['student' => $student, 'panel' => 'rescom-data']) }}" title="Δες ResCom">R</a>
+                                        @else
+                                            <button class="btn btn-info btn-sm" type="button" disabled title="Δεν υπάρχει απάντηση RESCOM">R</button>
+                                        @endif
                                         <span class="badge rounded-pill text-bg-success ms-2">{{ $student->fashName ?: '—' }}</span>
                                         <span class="fw-bold">{{ $student->full_name ?: 'ΑΜΦ '.$student->AMF }}</span>
                                     </div>
