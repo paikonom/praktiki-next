@@ -49,10 +49,10 @@
                         </button>
                     </form>
                 @endif
-                <a class="list-group-item list-group-item-action" href="{{ route('students.atlas-data', $student) }}" target="_blank">
+                <a class="list-group-item list-group-item-action @if ($panel === 'atlas-data') active @endif" href="{{ route('students.show', ['student' => $student, 'panel' => 'atlas-data']) }}">
                     <i class="bi bi-braces me-1"></i> Δες ΑΤΛΑ
                 </a>
-                <a class="list-group-item list-group-item-action" href="{{ route('students.rescom-data', $student) }}" target="_blank">
+                <a class="list-group-item list-group-item-action @if ($panel === 'rescom-data') active @endif" href="{{ route('students.show', ['student' => $student, 'panel' => 'rescom-data']) }}">
                     <i class="bi bi-braces me-1"></i> Δες ResCom
                 </a>
             </div>
@@ -217,6 +217,14 @@
                 ])
             @elseif ($panel === 'details-check')
                 @include('students.details-check', $detailsCheck)
+            @elseif (in_array($panel, ['atlas-data', 'rescom-data'], true))
+                <h2 class="h4">{{ $panel === 'atlas-data' ? 'Στοιχεία ΑΤΛΑ' : 'Στοιχεία RESCOM' }}</h2>
+                <pre class="border rounded bg-body p-3 overflow-auto">{{ json_encode(
+                    $panel === 'atlas-data'
+                        ? ['atlas_Antistoixish' => $student->atlas_Antistoixish, 'atlas_Provider' => $student->atlas_Provider]
+                        : ['rescom_resp' => $student->rescom_resp],
+                    JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
+                ) }}</pre>
             @elseif ($panel === 'emails')
                 @include('students.partials.emails')
             @else

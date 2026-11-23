@@ -27,7 +27,7 @@ use Illuminate\Validation\ValidationException;
 
 class StudentsController extends Controller
 {
-    private const PANELS = ['office', 'agreement', 'student', 'provider', 'questionnaires', 'documents', 'emails', 'notes', 'details-check'];
+    private const PANELS = ['office', 'agreement', 'student', 'provider', 'questionnaires', 'documents', 'emails', 'notes', 'details-check', 'atlas-data', 'rescom-data'];
 
     public function index(Request $request, StudentEmailService $emails, WorkflowDisplay $workflowDisplay): View
     {
