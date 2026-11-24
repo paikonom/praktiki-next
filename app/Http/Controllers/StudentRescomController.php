@@ -94,7 +94,14 @@ class StudentRescomController extends Controller
                     ->flatten()->filter(fn ($value) => is_string($value) && filled($value))->unique()->implode(' · ');
                 $message = Str::limit(trim(strip_tags($message)), 500);
 
-                return $this->failure($student, 'Το RESCOM απέρριψε την αίτηση. '.($message ?: 'Δεν επέστρεψε αναγνωρίσιμη περιγραφή σφάλματος.'));
+                if ($message === '') {
+                    $message = 'Απάντηση RESCOM: '.Str::limit(json_encode(
+                        $result,
+                        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR,
+                    ), 2000);
+                }
+
+                return $this->failure($student, 'Το RESCOM απέρριψε την αίτηση. '.$message);
             }
 
             return $this->failure($student, $uncertain.' (HTTP '.$response->status().')');

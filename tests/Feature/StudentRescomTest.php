@@ -45,7 +45,7 @@ class StudentRescomTest extends TestCase
         $this->freezeTime();
         Http::preventStrayRequests();
         Http::fake([$url => Http::sequence()
-            ->push(['WasSuccessful' => false, 'Errors' => [['Message' => 'Δοκιμαστική απόρριψη', 'Authentication' => 'test-token']], 'Details' => 'echo test-token'])
+            ->push(['WasSuccessful' => false, 'Details' => [['Text' => 'Δοκιμαστική απόρριψη test-token', 'Authentication' => 'test-token']]])
             ->push(['WasSuccessful' => true, 'ContractId' => 10])
             ->push('unavailable', 503)
             ->pushFailedConnection()]);
@@ -61,7 +61,8 @@ class StudentRescomTest extends TestCase
 
         $this->post($route, ['signature' => $signature])
             ->assertSessionHas('status_type', 'danger')
-            ->assertSessionHas('status', 'Το RESCOM απέρριψε την αίτηση. Δοκιμαστική απόρριψη');
+            ->assertSessionHas('status', fn (string $message): bool => str_contains($message, 'Δοκιμαστική απόρριψη [REDACTED]')
+                && ! str_contains($message, 'test-token'));
         $this->assertNull($student->fresh()->rescom_resp);
         $this->actingAs($member)->get(route('students.rescom.preview', $student))
             ->assertOk()->assertSee('Επιβεβαίωση αποστολής');
