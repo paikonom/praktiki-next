@@ -4,7 +4,9 @@
 @section('title', 'Ιδιωτικό Συμφωνητικό Πρακτικής Άσκησης - Φορέας Υποδοχής')
 
 @section('content')
-
+@php
+    $taxOfficeLabel = app(\App\Support\RescomReferenceData::class)->label('doys', $student->doy_rescom);
+@endphp
 <h1>
     ΙΔΙΩΤΙΚΟ ΣΥΜΦΩΝΗΤΙΚΟ ΠΡΑΚΤΙΚΗΣ ΑΣΚΗΣΗΣ ΦΟΙΤΗΤΩΝ Ε.Κ.Π.Α.
     <br>
@@ -95,7 +97,7 @@
         <td>
             <x-pdf.value :value="$student->afm" />
              / 
-             <x-pdf.value :value="$student->doy_rescom" />
+             <x-pdf.value :value="$taxOfficeLabel" />
         </td>
     </tr>
     <tr>
