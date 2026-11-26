@@ -121,7 +121,7 @@ class DocumentControllerTest extends TestCase
             ->orderBy('version')
             ->get();
         $this->assertSame([1, 2], $documents->pluck('version')->all());
-        $this->assertSame(['first.pdf', 'second.pdf'], $documents->pluck('original_name')->all());
+        $this->assertSame(["{$student->id}_{$type->code}_v1.pdf", "{$student->id}_{$type->code}_v2.pdf"], $documents->pluck('original_name')->all());
         Storage::disk('local')->assertExists($documents[0]->path);
         Storage::disk('local')->assertExists($documents[1]->path);
     }
@@ -169,7 +169,7 @@ class DocumentControllerTest extends TestCase
         }
 
         $documents = StudentDocument::where('document_type_id', $type->id)->orderBy('version')->get();
-        $this->assertSame(['first.pdf', 'second.pdf'], $documents->pluck('original_name')->all());
+        $this->assertSame(["{$student->id}_{$type->code}_v1.pdf", "{$student->id}_{$type->code}_v2.pdf"], $documents->pluck('original_name')->all());
         $this->assertSame(['approved', 'approved'], $documents->pluck('status')->all());
     }
 

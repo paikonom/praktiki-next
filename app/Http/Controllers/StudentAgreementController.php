@@ -35,7 +35,7 @@ class StudentAgreementController extends Controller
 
         try {
             $file = new UploadedFile($temporaryPath, "symf_initial_{$student->id}.pdf", 'application/pdf', null, true);
-            $documents->store($student, $documentType, $file, request()->user(), 'member');
+            $documents->store($student, $documentType, $file, request()->user(), 'member', keepOriginalName: true);
         } finally {
             if (is_file($temporaryPath)) {
                 unlink($temporaryPath);

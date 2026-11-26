@@ -20,11 +20,12 @@ class StudentDocumentService
         UploadedFile $uploadedFile,
         Authenticatable $loggedInUser,
         string $loggedInRole,
+        bool $keepOriginalName = false,
         ): StudentDocument {
         $storedPath = null;
 
         try {
-            return DB::transaction(function () use ($internshipStudent, $documentType, $uploadedFile, $loggedInUser, $loggedInRole, &$storedPath): StudentDocument {
+            return DB::transaction(function () use ($internshipStudent, $documentType, $uploadedFile, $loggedInUser, $loggedInRole, $keepOriginalName, &$storedPath): StudentDocument {
                 $version = (int) $internshipStudent->documents()->where('document_type_id', $documentType->id)->lockForUpdate()->max('version') + 1;
                 $uploadedByMember = $loggedInRole === 'member';
                 $studentDocument = StudentDocument::create([
@@ -33,7 +34,9 @@ class StudentDocumentService
                     'version' => $version,
                     'disk' => 'local',
                     'path' => 'pending',
-                    'original_name' => $uploadedFile->getClientOriginalName(),
+                    'original_name' => $keepOriginalName
+                        ? $uploadedFile->getClientOriginalName()
+                        : "{$internshipStudent->id}_{$documentType->code}_v{$version}.pdf",
                     'mime_type' => $uploadedFile->getMimeType() ?? 'application/pdf',
                     'size' => $uploadedFile->getSize(),
                     'status' => $uploadedByMember ? 'approved' : 'submitted',
