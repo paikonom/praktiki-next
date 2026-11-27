@@ -124,7 +124,7 @@
                 </div>
             </div>
             @endif
-        @if ($role === 'scientific_supervisor' && $fundingCode === 'Espa' && $type->code === 'vevaiwsh_EY')
+        @if ($role === 'scientific_supervisor' && $type->code === 'vevaiwsh_EY')
             <a class="btn btn-outline-primary mb-3" href="{{ route('scientific_supervisor.completion-certificate.preview', $student) }}" target="_blank" rel="noopener">
                 Προεπισκόπηση έτοιμης βεβαίωσης PDF
             </a>
@@ -142,7 +142,7 @@
             </a>
         @endif
 
-        @if ($role === 'member' && $fundingCode === 'Espa' && $type->code === 'vevaiwsh_EY')
+        @if ($role === 'member' && $type->code === 'vevaiwsh_EY')
             <a class="btn btn-outline-primary mb-3" href="{{ route('students.completion-certificates.supervisor', $student) }}" target="_blank" rel="noopener">
                 Προεπισκόπηση βεβαίωσης Υπεύθυνου/η Π.Τ.
             </a>

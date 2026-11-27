@@ -15,7 +15,9 @@
     </style>
 </head>
 <body>
-@include('pdf.partials.espa-footer')
+@if ($funding === 'Espa')
+    @include('pdf.partials.espa-footer')
+@endif
 @php
     $studentName = filled($student->full_name) ? mb_strtoupper($student->full_name) : null;
     $providerName = filled($provider?->f_epwnymia) ? mb_strtoupper($provider->f_epwnymia) : null;
@@ -35,19 +37,31 @@
 
 <p>
     Βεβαιώνεται ότι ο/η <x-pdf.value :value="$studentName" /> φοιτητής/τρια του Εθνικού και Καποδιστριακού
-    Πανεπιστημίου Αθηνών, με ΑΜ <x-pdf.value :value="$student->AMF" /> υλοποίησε την Πρακτική του Άσκηση στο πλαίσιο
+    Πανεπιστημίου Αθηνών, με ΑΜ <x-pdf.value :value="$student->AMF" /> υλοποίησε την Πρακτική του Άσκηση
+    @if ($funding === 'Espa')
+    στο πλαίσιο
     της Πράξης «<x-pdf.value :value="$details['titlos_praxhs'] ?? null" />» με Κωδικό
     ΟΠΣ <x-pdf.value :value="$details['kwdikos_OPS'] ?? null" /> του Προγράμματος
     «<x-pdf.value :value="$details['titlos_programmatos'] ?? null" />» η οποία
-    συγχρηματοδοτείται από την Ευρωπαϊκή Ένωση (ΕΚΤ+) και από εθνικούς πόρους κατά το
+    συγχρηματοδοτείται από την Ευρωπαϊκή Ένωση (ΕΚΤ+) και από εθνικούς πόρους
+    @endif
+    κατά το
     χρονικό διάστημα από <x-pdf.value :value="$student->startDate?->format('Y-m-d')" />
     έως <x-pdf.value :value="$student->endDate?->format('Y-m-d')" />, στον φορέα απασχόλησης
     <x-pdf.value :value="$providerName" /> και έχει εκπληρώσει τις σχετικές του/της υποχρεώσεις.
 </p>
+@if ($funding === 'InternshipProvider')
+    <p>Ο/Η φοιτητής/τρια ασφαλίστηκε για τον κίνδυνο ατυχήματος σύμφωνα με την παρ. 1 του άρθρου 10 του Ν. 2217/1994 (Α’ 83).</p>
+@elseif ($funding === 'Institution')
+    <p>Σύμφωνα με το άρθρο 69 παρ. 7 και 8 του Ν. 4957/2022, ο/η φοιτητής/τρια δεν αποζημιώθηκε για την πρακτική άσκηση.
+        Η ασφάλιση καλύφθηκε από τον προϋπολογισμό του έργου 21977 που διαχειρίζεται ο ΕΛΚΕ ΕΚΠΑ.</p>
+@endif
+@if ($funding === 'Espa' || ($funding === 'InternshipProvider' && ! in_array((int) $department?->atlasId, [499, 577, 722, 737, 479], true)))
 <p>
     Η συνολική αμοιβή του/της ασκούμενου/νης για το διάστημα της πρακτικής άσκησης ανέρχεται στο
     ποσό των <x-pdf.value :value="$amount" /> ευρώ.
 </p>
+@endif
 
 <div class="signature">
     <p><strong>Υπεύθυνο/η Πρακτικής του Τμήματος</strong></p>

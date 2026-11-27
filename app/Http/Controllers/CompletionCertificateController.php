@@ -58,11 +58,11 @@ class CompletionCertificateController extends Controller
     private function supervisorData(Student $student): array
     {
         $student->loadMissing(['department', 'provider', 'supervisor', 'phase.praktiki.funding']);
-        abort_unless($student->fundingCode() === 'Espa', 404);
 
         return [
             'student' => $student,
             'provider' => $student->provider,
+            'funding' => $student->fundingCode(),
             'supervisor' => $student->supervisor,
             'department' => $student->department,
             'details' => $student->phase?->praktiki?->details ?? [],
