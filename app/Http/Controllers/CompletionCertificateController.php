@@ -51,6 +51,7 @@ class CompletionCertificateController extends Controller
             'provider' => $student->provider,
             'department' => $student->department,
             'funding' => $student->fundingCode(),
+            'details' => $student->phase?->praktiki?->details ?? [],
         ];
     }
 

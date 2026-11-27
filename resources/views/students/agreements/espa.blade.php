@@ -39,11 +39,11 @@
     και τίτλο
     <x-pdf.value :value="$praktiki?->details['titlos_ypoergou'] ?? null" />
     της Πράξης
-    «Πρακτική Άσκηση ΕΚΠΑ ακ. ετών 2025-2027»
+    «<x-pdf.value :value="$praktiki?->details['titlos_praxhs'] ?? null" />»
     με κωδ. ΟΠΣ
     <x-pdf.value :value="$praktiki?->details['kwdikos_OPS'] ?? null" />
     του Προγράμματος
-    «Ανθρώπινο Δυναμικό και Κοινωνική Συνοχή 2021-2027»,
+    «<x-pdf.value :value="$praktiki?->details['titlos_programmatos'] ?? null" />»,
     ο/η οποίος/α, σύμφωνα με τη διάταξη του άρθρου 234
     παρ. 3 του ν. 4957/2022 (ΦΕΚ τ. Α΄ 141/21.07.2022),
     είναι υπεύθυνος/η για την ορθή υλοποίηση και πιστοποίηση
@@ -109,7 +109,7 @@
     (Α/Α Πρόσκλησης ΟΠΣ:
     <x-pdf.value :value="$praktiki?->details['scientific_supervisor_OPS_prosklhsh'] ?? null" />)
     της Ειδικής Υπηρεσίας Διαχείρισης Προγράμματος
-    «Ανθρώπινο Δυναμικό &amp; Κοινωνική Συνοχή».
+    «<x-pdf.value :value="$praktiki?->details['titlos_programmatos'] ?? null" />».
 </p>
 <p>
     <strong>ε) Ο/η Φοιτητής/τρια με τα κάτωθι στοιχεία:</strong>
@@ -344,9 +344,9 @@
         <x-pdf.value :value="$praktiki?->details['K_E_ergou'] ?? null" />
         και τίτλο
         <x-pdf.value :value="$praktiki?->details['titlos_ypoergou'] ?? null" />
-        της Πράξης «Πρακτική Άσκηση ΕΚΠΑ ακ. ετών 2025-2027»
-        με Κωδικό ΟΠΣ 6020906 του Προγράμματος
-        «Ανθρώπινο Δυναμικό και Κοινωνική Συνοχή 2021-2027»
+        της Πράξης «<x-pdf.value :value="$praktiki?->details['titlos_praxhs'] ?? null" />»
+        με Κωδικό ΟΠΣ <x-pdf.value :value="$praktiki?->details['kwdikos_OPS'] ?? null" /> του Προγράμματος
+        «<x-pdf.value :value="$praktiki?->details['titlos_programmatos'] ?? null" />»
         η οποία συγχρηματοδοτείται από την Ευρωπαϊκή Ένωση
         (ΕΚΤ+) και από εθνικούς πόρους, στον ως άνω Φορέα.
     </li>
